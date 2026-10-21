@@ -25,7 +25,7 @@ The newly available historical bytes informed candidate-prefix matching without 
 - Payload omission by default, pattern sanitization, inert imported markup, CSP, local-only operation, and no runtime network senders.
 - Mobile UI with accessible labels, notes, search, comparison, backups, offline analysis, guided errors, and simulation.
 - Locked physical capabilities and finite local virtual/audio previews.
-- CI checks and browser/accessibility gates before Pages; experimental releases after successful publishing.
+- CI checks and browser/accessibility gates before Pages; experimental release metadata publishes after successful software verification independently of Pages setup.
 
 ## Verification findings corrected during development
 
