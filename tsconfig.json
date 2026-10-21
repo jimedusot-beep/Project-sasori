@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "allowJs": true,
+    "checkJs": true,
+    "noEmit": true,
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "strict": true,
+    "lib": ["ES2022", "DOM"],
+    "skipLibCheck": true
+  },
+  "include": [
+    "site/lib/protocol.js",
+    "site/lib/profiles.js",
+    "site/lib/safety.js",
+    "site/lib/types.d.ts"
+  ]
+}

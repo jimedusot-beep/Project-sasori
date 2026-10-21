@@ -1,0 +1,204 @@
+import { normalizeUUID } from './profiles.js';
+import { decodePacket } from './protocol.js';
+import { explainError } from './diagnostics.js';
+
+const ACTIVE = new Set(['selecting', 'connecting', 'discovering', 'inspecting']);
+const transitions = {
+  idle: ['selecting'],
+  selecting: ['connecting', 'error', 'disconnecting'],
+  connecting: ['discovering', 'error', 'disconnecting'],
+  discovering: ['inspecting', 'error', 'disconnecting'],
+  inspecting: ['error', 'disconnecting'],
+  error: ['selecting', 'disconnecting'],
+  disconnecting: ['disconnected'],
+  disconnected: ['selecting'],
+};
+export function withTimeout(promise, ms, label = 'Bluetooth operation') {
+  let timer;
+  return Promise.race([
+    promise,
+    new Promise((_, reject) => {
+      timer = setTimeout(() => reject(new DOMException(label + ' timed out', 'TimeoutError')), ms);
+    }),
+  ]).finally(() => clearTimeout(timer));
+}
+export class BluetoothTransport {
+  constructor({
+    bluetooth = globalThis.navigator?.bluetooth,
+    emit = () => {},
+    operationMs = 6000,
+    chooserMs = 45000,
+  } = {}) {
+    this.bluetooth = bluetooth;
+    this.emit = emit;
+    this.operationMs = operationMs;
+    this.chooserMs = chooserMs;
+    this.state = 'idle';
+    this.generation = 0;
+    this.device = null;
+    this.server = null;
+    this.subscriptions = [];
+    this.services = [];
+    this.timer = null;
+    this.packetCount = 0;
+    this.onDisconnect = null;
+    this.busy = false;
+  }
+  setState(next, details = {}) {
+    if (!transitions[this.state]?.includes(next))
+      throw new Error('Invalid transport transition: ' + this.state + ' → ' + next);
+    this.state = next;
+    this.emit({ type: 'state', state: next, ...details });
+  }
+  check(run) {
+    if (run !== this.generation || !ACTIVE.has(this.state))
+      throw new DOMException('Cancelled inspection', 'AbortError');
+  }
+  async connect({ service, notify = '', namePrefix = 'Elmo', durationMs = 15000 }) {
+    if (this.busy || ACTIVE.has(this.state) || this.state === 'disconnecting')
+      throw new Error('An inspection is already active.');
+    service = normalizeUUID(service);
+    if (notify) notify = normalizeUUID(notify);
+    if (!this.bluetooth?.requestDevice)
+      throw new DOMException('Web Bluetooth unavailable', 'NotSupportedError');
+    if (!Number.isFinite(durationMs) || durationMs < 100 || durationMs > 30000)
+      throw new Error('Inspection duration must be 0.1–30 seconds.');
+    this.busy = true;
+    this.services = [];
+    this.packetCount = 0;
+    const run = ++this.generation;
+    this.setState('selecting');
+    // Invoke the chooser synchronously in the user's click call stack (no preceding await).
+    try {
+      const chooser = Promise.resolve(
+        this.bluetooth.requestDevice({
+          filters: [{ namePrefix: namePrefix || 'Elmo' }],
+          optionalServices: [service],
+        }),
+      );
+      const selected = await withTimeout(chooser, this.chooserMs, 'Device selection');
+      this.check(run);
+      this.device = selected;
+      this.onDisconnect = () => {
+        if (
+          run !== this.generation ||
+          this.state === 'disconnecting' ||
+          this.state === 'disconnected'
+        )
+          return;
+        this.emit({
+          type: 'warning',
+          message: 'Unexpected Bluetooth disconnect. No automatic reconnect will occur.',
+        });
+        this.disconnect('unexpected');
+      };
+      selected.addEventListener('gattserverdisconnected', this.onDisconnect);
+      this.setState('connecting');
+      const attempt = Promise.resolve(selected.gatt.connect());
+      // Web Bluetooth promises cannot be aborted. Close a late connection after cancellation/timeout.
+      attempt.then(
+        (server) => {
+          if (run !== this.generation) server.disconnect();
+        },
+        () => {},
+      );
+      this.server = await withTimeout(attempt, this.operationMs, 'GATT connection');
+      this.check(run);
+      this.timer = setTimeout(() => this.disconnect('inspection-complete'), durationMs);
+      this.setState('discovering');
+      const primary = await withTimeout(
+        this.server.getPrimaryService(service),
+        this.operationMs,
+        'Service discovery',
+      );
+      this.check(run);
+      const chars = await withTimeout(
+        primary.getCharacteristics(),
+        this.operationMs,
+        'Characteristic discovery',
+      );
+      this.check(run);
+      this.services = [
+        {
+          uuid: primary.uuid,
+          evidence: 'observed-this-session',
+          characteristics: chars.map((c) => ({
+            uuid: c.uuid,
+            properties: ['read', 'write', 'writeWithoutResponse', 'notify', 'indicate'].filter(
+              (p) => c.properties[p],
+            ),
+            evidence: 'observed-this-session',
+          })),
+        },
+      ];
+      this.emit({ type: 'services', services: this.services });
+      if (notify) {
+        const characteristic = chars.find((c) => c.uuid.toLowerCase() === notify);
+        if (!characteristic)
+          throw new DOMException(
+            'Configured notification characteristic not found',
+            'NotFoundError',
+          );
+        if (!characteristic.properties.notify && !characteristic.properties.indicate)
+          throw new DOMException(
+            'Configured characteristic cannot notify or indicate',
+            'NotSupportedError',
+          );
+        const handler = (event) => {
+          if (run !== this.generation) return;
+          if (++this.packetCount > 500) {
+            this.emit({ type: 'warning', message: '500-notification budget reached.' });
+            this.disconnect('packet-limit');
+            return;
+          }
+          const packet = decodePacket(event.target?.value, characteristic.uuid);
+          this.emit({ type: 'packet', packet });
+        };
+        this.subscriptions.push({ characteristic, handler });
+        characteristic.addEventListener('characteristicvaluechanged', handler);
+        const subscription = Promise.resolve(characteristic.startNotifications());
+        subscription.then(
+          () => {
+            if (run !== this.generation && selected.gatt?.connected) selected.gatt.disconnect();
+          },
+          () => {},
+        );
+        await withTimeout(subscription, this.operationMs, 'Notification subscription');
+        this.check(run);
+        this.emit({
+          type: 'info',
+          message: 'Notification subscription enabled. No application commands sent.',
+        });
+      }
+      this.setState('inspecting');
+    } catch (error) {
+      if (run !== this.generation) return;
+      this.emit({ type: 'error', error: explainError(error) });
+      this.setState('error');
+      this.disconnect(
+        error?.name === 'NotFoundError' && !this.device ? 'selection-cancelled' : 'operation-error',
+      );
+    } finally {
+      if (run === this.generation) this.busy = false;
+    }
+  }
+  disconnect(reason = 'user') {
+    if (!ACTIVE.has(this.state) && this.state !== 'error') return;
+    ++this.generation;
+    clearTimeout(this.timer);
+    this.timer = null;
+    this.setState('disconnecting', { reason });
+    for (const { characteristic, handler } of this.subscriptions)
+      characteristic.removeEventListener('characteristicvaluechanged', handler);
+    this.subscriptions = [];
+    if (this.device && this.onDisconnect)
+      this.device.removeEventListener('gattserverdisconnected', this.onDisconnect);
+    // Disconnect rather than scheduling GATT writes/stopNotifications against a closing link.
+    if (this.device?.gatt?.connected) this.device.gatt.disconnect();
+    this.server = null;
+    this.device = null;
+    this.onDisconnect = null;
+    this.busy = false;
+    this.setState('disconnected', { reason });
+  }
+}
