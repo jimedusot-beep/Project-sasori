@@ -129,3 +129,25 @@ test('preserved offline analysis labels historical bytes without authentication 
   await page.locator('#packet-decode').click();
   await expect(page.locator('#packet-result')).toContainText('Cannot decode');
 });
+
+test('manual Elmo probes change only the selected candidate UUID; never start hardware', async ({
+  page,
+}) => {
+  await page.goto('/');
+  await page.locator('#load-profile').click();
+  await expect(page.locator('#notify-preset')).toHaveValue('data');
+  await page.locator('#notify-preset').selectOption('control');
+  await expect(page.locator('#notify')).toHaveValue(
+    'dab90756-b5a1-e29c-b041-bcd562613bdf',
+  );
+  await page.locator('#notify-preset').selectOption('p2p');
+  await expect(page.locator('#notify')).toHaveValue(
+    'dab91440-b5a1-e29c-b041-bcd562613bdf',
+  );
+  await page.locator('#notify-preset').selectOption('metadata');
+  await expect(page.locator('#notify')).toHaveValue('');
+  await page.locator('#notify').fill('dab91382-b5a1-e29c-b041-bcd562613bdf');
+  await expect(page.locator('#notify-preset')).toHaveValue('data');
+  await expect(page.locator('#state')).toHaveText('Idle');
+  await expect(page.locator('#inspection-stage')).toContainText('No inspection started');
+});
