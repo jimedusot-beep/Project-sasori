@@ -185,3 +185,45 @@ test('withTimeout forwards success, failure and named timeout', async () => {
   await assert.rejects(withTimeout(Promise.reject(new Error('failed')), 10), /failed/);
   await assert.rejects(withTimeout(new Promise(() => {}), 5), { name: 'TimeoutError' });
 });
+
+test('successful live capture traces each Bluetooth stage without any application writes', async () => {
+  const f = setup();
+  await f.transport.connect({ service, notify });
+  const stages = f.events.filter((e) => e.type === 'stage');
+  assert.deepEqual(
+    stages.map((e) => e.stage),
+    [
+      'device-chooser',
+      'gatt-connection',
+      'service-discovery',
+      'characteristic-discovery',
+      'notification-subscription',
+      'inspection-ready',
+    ],
+  );
+  assert.ok(stages.every((e) => Number.isInteger(e.elapsedMs) && e.elapsedMs >= 0));
+  assert.equal(f.characteristic.subscribed, 1);
+  f.transport.disconnect();
+  assert.equal(f.events.filter((e) => e.type === 'stage').at(-1).stage, 'teardown');
+});
+test('a service failure records the exact failed stage and elapsed time', async () => {
+  const f = setup();
+  f.gatt.getPrimaryService = async () => {
+    throw new DOMException('Unavailable', 'NotFoundError');
+  };
+  await f.transport.connect({ service, notify });
+  const error = f.events.find((e) => e.type === 'error');
+  assert.equal(error.error.name, 'NotFoundError');
+  assert.equal(error.error.stage, 'service-discovery');
+  assert.ok(Number.isInteger(error.error.elapsedMs) && error.error.elapsedMs >= 0);
+  assert.equal(f.transport.state, 'disconnected');
+});
+test('metadata-only inspection omits notification stage and subscription', async () => {
+  const f = setup();
+  await f.transport.connect({ service, notify: '' });
+  const stages = f.events.filter((e) => e.type === 'stage').map((e) => e.stage);
+  assert.ok(!stages.includes('notification-subscription'));
+  assert.ok(stages.includes('inspection-ready'));
+  assert.equal(f.characteristic.subscribed, 0);
+  f.transport.disconnect();
+});
