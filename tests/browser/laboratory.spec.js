@@ -137,13 +137,9 @@ test('manual Elmo probes change only the selected candidate UUID; never start ha
   await page.locator('#load-profile').click();
   await expect(page.locator('#notify-preset')).toHaveValue('data');
   await page.locator('#notify-preset').selectOption('control');
-  await expect(page.locator('#notify')).toHaveValue(
-    'dab90756-b5a1-e29c-b041-bcd562613bdf',
-  );
+  await expect(page.locator('#notify')).toHaveValue('dab90756-b5a1-e29c-b041-bcd562613bdf');
   await page.locator('#notify-preset').selectOption('p2p');
-  await expect(page.locator('#notify')).toHaveValue(
-    'dab91440-b5a1-e29c-b041-bcd562613bdf',
-  );
+  await expect(page.locator('#notify')).toHaveValue('dab91440-b5a1-e29c-b041-bcd562613bdf');
   await page.locator('#notify-preset').selectOption('metadata');
   await expect(page.locator('#notify')).toHaveValue('');
   await page.locator('#notify').fill('dab91382-b5a1-e29c-b041-bcd562613bdf');
