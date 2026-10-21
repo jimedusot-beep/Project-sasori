@@ -2,6 +2,24 @@
 export const ELMO_SOURCE = 'https://github.com/NonaSuomy/Love2LearnElmo';
 export const ELMO_SERVICE = 'dab91435-b5a1-e29c-b041-bcd562613bdf';
 export const ELMO_NOTIFY = 'dab91382-b5a1-e29c-b041-bcd562613bdf';
+/** Community-reported notification endpoints. Exactly one is selected per inspection.
+ * Each subscription may modify the GATT client configuration descriptor (CCCD).
+ * These are never physical command targets in Sasori.
+ */
+export const ELMO_NOTIFY_PROBES = Object.freeze([
+  { id: 'data', label: 'Data notifications (candidate)', uuid: ELMO_NOTIFY },
+  {
+    id: 'control',
+    label: 'Control notifications (candidate)',
+    uuid: 'dab90756-b5a1-e29c-b041-bcd562613bdf',
+  },
+  {
+    id: 'p2p',
+    label: 'P2P notifications (candidate)',
+    uuid: 'dab91440-b5a1-e29c-b041-bcd562613bdf',
+  },
+  { id: 'metadata', label: 'Metadata only (no subscription)', uuid: '' },
+]);
 /** @type {ReadonlyArray<import('./types.js').DeviceProfile>} */
 export const PROFILES = Object.freeze([
   {
