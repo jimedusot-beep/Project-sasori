@@ -160,7 +160,13 @@ export class ResearchStore {
       })),
     );
   }
-  async remove(id) {
+  remove(id) {
+    // Preserve invocation order with queued saves; otherwise an older save can resurrect a deletion.
+    this.writeQueue = this.writeQueue.catch(() => {}).then(() => this.deleteRecord(id));
+    return this.writeQueue;
+  }
+  async deleteRecord(id) {
+    if (this.closed) throw new Error(this.warning);
     if (!this.persistent) {
       this.memory.delete(id);
       return;

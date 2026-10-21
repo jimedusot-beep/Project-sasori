@@ -47,6 +47,47 @@ test('backups and text reports omit payloads even from a raw capture', () => {
   assert.equal(envelope.records[0].packets[0].hex, undefined);
   assert.doesNotMatch(sessionText(r), /private-synthetic-value/);
 });
+test('metadata backups exclude nested raw data and arbitrary imported fields', () => {
+  const r = capture();
+  const hidden = 'synthetic-raw-capture-that-must-not-leave';
+  r.events = [
+    {
+      timestamp: r.startedAt,
+      level: 'info',
+      message: 'Observed',
+      details: { raw: hidden },
+      extra: hidden,
+    },
+  ];
+  r.services = [
+    {
+      uuid: 'service',
+      evidence: 'synthetic',
+      raw: hidden,
+      characteristics: [
+        { uuid: 'notify', properties: ['notify'], evidence: 'synthetic', raw: hidden },
+      ],
+    },
+  ];
+  r.stats.extra = hidden;
+  r.packets[0].extra = hidden;
+  const exported = backup([r]);
+  assert.doesNotMatch(JSON.stringify(exported), new RegExp(hidden));
+  assert.equal(exported.records[0].services[0].characteristics[0].evidence, 'synthetic');
+  assert.equal(exported.records[0].stats.packets, 1);
+  assert.equal(exported.records[0].events[0].message, 'Observed');
+});
+test('large in-memory captures still save as bounded metadata without changing the capture', () => {
+  const r = createSession('simulated');
+  r.packets = Array.from({ length: 100 }, () => decodePacket(new Uint8Array(1024)));
+  r.stats = { packets: 100, bytes: 102400, malformed: 0, truncated: 0 };
+  assert.throws(() => validateRecord(r), /too large/);
+  const saved = portableRecord(r);
+  assert.equal(saved.packets.length, 100);
+  assert.equal(saved.packets[0].hex, undefined);
+  assert.equal(r.packets[0].hex.length, 3071);
+  assert.equal(backup([r]).records[0].stats.bytes, 102400);
+});
 test('v1 records migrate without inventing data', () => {
   const old = createSession('live');
   old.schemaVersion = 1;

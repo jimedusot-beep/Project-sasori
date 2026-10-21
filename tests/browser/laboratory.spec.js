@@ -1,5 +1,7 @@
 import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
+import { readFile } from 'node:fs/promises';
+import { createSession } from '../../site/lib/records.js';
 test('simulation saves a labeled session that survives reload', async ({ page }) => {
   const errors = [];
   page.on('pageerror', (e) => errors.push(e.message));
@@ -37,6 +39,36 @@ test('research notes, search and backup/import form a working local workflow', a
   });
   await page.locator('#record-search').fill('');
   await expect(page.locator('.record-row')).toHaveCount(2);
+});
+test('imported diagnostic details cannot leak through a metadata-only backup', async ({ page }) => {
+  const record = createSession('imported');
+  const hidden = 'synthetic-private-byte-capture';
+  record.events = [
+    {
+      timestamp: record.startedAt,
+      level: 'info',
+      message: 'Capture summary',
+      details: { raw: hidden },
+    },
+  ];
+  record.stats.extra = hidden;
+  await page.goto('/#sessions');
+  await page.locator('#import-file').setInputFiles({
+    name: 'session.json',
+    mimeType: 'application/json',
+    buffer: Buffer.from(JSON.stringify(record)),
+  });
+  await expect(page.locator('.record-row')).toHaveCount(1);
+  const downloading = page.waitForEvent('download');
+  await page.locator('#backup').click();
+  const path = await (await downloading).path();
+  expect(path).toBeTruthy();
+  const text = await readFile(path, 'utf8');
+  expect(text).not.toContain(hidden);
+  const exported = JSON.parse(text);
+  expect(exported.payloadPolicy).toBe('metadata-only');
+  expect(exported.records[0].events[0].message).toBe('Capture summary');
+  expect(exported.records[0].importedAt).toBeTruthy();
 });
 test('imported markup stays inert and malformed JSON does not partially import', async ({
   page,
