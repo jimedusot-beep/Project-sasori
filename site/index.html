@@ -303,6 +303,31 @@
               <p class="lead">A notification is an observation, not proof of a protocol.</p>
             </div>
           </div>
+          <section class="panel" aria-labelledby="offline-title">
+            <div class="panel-head">
+              <h2 id="offline-title">Offline notification analysis</h2>
+              <span class="badge subtle">LOCAL / RX EVIDENCE</span>
+            </div>
+            <p>
+              Paste bytes from an existing notification. Nothing is uploaded or transmitted over
+              Bluetooth. The candidate text offset in the historical examples does not establish
+              general framing.
+            </p>
+            <label for="packet-hex">Received hex bytes</label
+            ><input
+              id="packet-hex"
+              spellcheck="false"
+              autocomplete="off"
+              maxlength="25000"
+              placeholder="60 4e 65 77 …"
+            />
+            <div class="actions">
+              <button id="packet-decode" class="primary">Analyze bytes</button
+              ><button id="packet-sample" class="secondary">Load historical example</button>
+            </div>
+            <pre id="packet-result" tabindex="0" aria-label="Offline analysis result">
+No packet analyzed yet.</pre>
+          </section>
           <div class="two-columns">
             <section class="panel">
               <div class="panel-head">
@@ -396,6 +421,7 @@
                   type="file"
                   accept=".json,.txt,.csv,application/json,text/plain,text/csv" /></label
               ><button id="new-note" class="secondary">New research note</button>
+              <button id="recover-corrupt" class="danger" hidden>Remove invalid records</button>
             </div>
             <p class="hint">
               JSON sessions/backups or TXT/CSV notes · 2 MB file limit · text notes up to 20,000

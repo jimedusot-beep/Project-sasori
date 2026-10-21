@@ -7,6 +7,8 @@ const ignored = new Set([
   'playwright-report',
   'coverage',
   '.openai',
+  'secrets',
+  'private-logs',
 ]);
 const rules = [
   /-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----/,

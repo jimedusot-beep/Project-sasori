@@ -52,6 +52,19 @@ test('concurrent saves preserve both experiments', async () => {
   assert.equal((await store.list()).length, 2);
   store.db.close();
 });
+test('two browser tabs cannot race past the storage capacity', async () => {
+  const store = await open();
+  const other = await new ResearchStore({ indexedDB: store.factory, name: 'test' }).open();
+  await store.saveMany(Array.from({ length: 49 }, () => createSession('imported')));
+  const outcomes = await Promise.allSettled([
+    store.save(createSession('live')),
+    other.save(createSession('live')),
+  ]);
+  assert.equal(outcomes.filter((r) => r.status === 'fulfilled').length, 1);
+  assert.equal((await store.list()).length, 50);
+  store.db.close();
+  other.db.close();
+});
 test('invalid import batch performs no partial writes', async () => {
   const store = await open();
   assert.throws(() => store.saveMany([createSession('live'), {}]));

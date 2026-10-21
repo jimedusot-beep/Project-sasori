@@ -1,3 +1,4 @@
+import { analyzeElmoNotification } from '../elmo-packets.mjs';
 export const MAX_PACKET_BYTES = 1024;
 /** Decode one notification. Notification boundaries are NOT assumed to be protocol frames.
  * @param {unknown} value
@@ -36,17 +37,21 @@ export function decodePacket(
   text = text.replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/g, '·');
   let kind = 'unknown';
   let description = 'Unknown payload; framing and semantics are not established.';
-  const observedText = text
-    .replace(/^[\u0060\u0061](?=(?:NewModeIdx:|Start:))/, '')
-    .replace(/·+$/, '');
-  if (!malformed && !truncated && /^NewModeIdx:\d{1,5}\s*$/.test(observedText)) {
+  let candidate = text;
+  const hasHistoricalPrefix = [0x60, 0x61].includes(limited[0]);
+  if (hasHistoricalPrefix && !malformed && !truncated)
+    candidate = analyzeElmoNotification(limited).bodyText;
+  if (!malformed && !truncated && /^NewModeIdx:\d{1,5}\s*$/.test(candidate)) {
     kind = 'mode-observation';
     description = 'Mode index text seen in historical V4 evidence; index meaning unverified.';
-  } else if (!malformed && !truncated && /^Start:LowPowerSleep\s*$/.test(observedText)) {
+  } else if (!malformed && !truncated && /^Start:LowPowerSleep\s*$/.test(candidate)) {
     kind = 'sleep-observation';
     description =
       'Sleep-related text seen in historical V4 evidence; no authentication implication.';
   }
+  if (kind !== 'unknown' && hasHistoricalPrefix)
+    description +=
+      ' Candidate text begins at byte 1 in the historical example; prefix meaning is unknown.';
   return {
     timestamp,
     characteristic,

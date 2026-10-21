@@ -100,7 +100,7 @@ export class ResearchStore {
         try {
           return [validateRecord(r)];
         } catch (error) {
-          this.corrupt.push({ id: String(r?.id || 'unknown'), error: error.message });
+          this.corrupt.push({ id: r?.id, error: error.message });
           return [];
         }
       })

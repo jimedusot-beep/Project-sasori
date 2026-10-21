@@ -80,5 +80,20 @@ test('all primary screens meet axe accessibility checks and fit the viewport', a
     expect(
       await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1),
     ).toBe(true);
+    await page.screenshot({
+      path: 'test-results/' + test.info().project.name + '-' + section + '.png',
+      fullPage: true,
+    });
   }
+});
+test('preserved offline analysis labels historical bytes without authentication claims', async ({
+  page,
+}) => {
+  await page.goto('/#protocol');
+  await page.locator('#packet-sample').click();
+  await expect(page.locator('#packet-result')).toContainText('NewModeIdx:12');
+  await expect(page.locator('#packet-result')).toContainText('"verifiedCommand": false');
+  await page.locator('#packet-hex').fill('not-hex');
+  await page.locator('#packet-decode').click();
+  await expect(page.locator('#packet-result')).toContainText('Cannot decode');
 });

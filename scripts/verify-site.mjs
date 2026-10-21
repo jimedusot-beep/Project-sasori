@@ -10,7 +10,7 @@ async function check(relative) {
   checked.add(url);
   if (relative === 'index.html' && !body.includes('Project Sasori'))
     throw new Error('Unexpected deployed HTML.');
-  if (relative.endsWith('.js')) {
+  if (/\.(?:js|mjs)$/.test(relative)) {
     const imports = [...body.matchAll(/from\s+['"](\.\/[^'"]+)['"]/g)].map((m) => m[1]);
     for (const name of imports)
       await check(new URL(name, url).pathname.slice(new URL(base).pathname.length));

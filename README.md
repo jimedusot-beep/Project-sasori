@@ -1,37 +1,78 @@
 # Project Sasori — Animatronics & Reverse Engineering Laboratory
 
-A standalone learning laboratory for animatronic toys, BLE observation, robotic puppetry, and future H.E.R.B.I.E. interoperability. Independent fan project; not affiliated with Hasbro or Naruto.
+A mobile workbench for observing Bluetooth devices, preserving research, and developing animatronic behavior safely. Experiment 001 investigates a user-owned Hasbro Love2Learn Elmo B6572 advertising as Elmo L2L.
 
-## Experiment 001: Love2Learn Elmo (B6572)
+**v0.2.0 is an experimental, inspection-only release. Real iPhone/Bluefy/Elmo validation is still required.** Independent fan research; no affiliation with Hasbro or Naruto.
 
-A prior **Elmo Authentication Feasibility Probe V4** was observed connecting through Bluefy on iPhone (2026-10-20). The recorded test showed `Elmo L2L` discovery, GATT connection, custom service discovery, notification subscription, and incoming messages including `NewModeIdx:12` and `Start:LowPowerSleep`. Inspection finished with a disconnect after about fifteen seconds. **Authentication, audio, and motor control are not established.**
+## Try the laboratory
 
-The original V4 probe source has **not** been recovered. Candidate BLE UUIDs have been documented by independent reverse-engineering research at https://github.com/NonaSuomy/Love2LearnElmo, but still require verification on this specific toy. This repository provides a **new inspection-only site**, not a recreation of the original authentication routine. The proposed mobile lab can load community-documented UUIDs and allows verification or editing before testing. No guessed pinouts, passwords, challenge algorithms, or motor commands.
+The intended GitHub Pages address is https://jimedusot-beep.github.io/Project-sasori/ . See [verification results](docs/verification.md) for the actual deployment outcome; this address alone is not proof of deployment.
 
-## Website
+1. Open the site and turn on **Use simulation** to explore without hardware.
+2. Tap **Run simulated inspection**. Three synthetic notifications appear; the finished session saves locally.
+3. Open **Research records** to edit notes, search, compare captures, import JSON/TXT/CSV, or export a metadata backup.
+4. For real inspection, open the HTTPS site in **Bluefy on iPhone**, turn simulation off, load the published Elmo profile, review its source, confirm authorization, and tap **Connect & inspect**.
 
-After GitHub Pages is configured to use **GitHub Actions**, it deploys the `site/` directory. Open the deployed site in **Bluefy** on iPhone for Web Bluetooth. Safari may not expose Web Bluetooth. In live mode, review the community-sourced profile or manually enter verified UUIDs, enable **Show all Bluetooth devices** if the name-filtered picker cannot see Elmo, confirm ownership, and tap **Connect & inspect**. The site disconnects after approximately 15 seconds. Export or copy the diagnostic log if needed.
+The published UUID profile is transcribed from [NonaSuomy's GATT table](https://github.com/NonaSuomy/Love2LearnElmo/blob/82fa312e06af1d8e549cec588856ebce227b5f77/README.md). It is community-reported evidence, not a recovery of the old V4 source or proof of compatibility with your firmware. If service discovery fails, follow the [iPhone UUID capture guide](experiments/001-elmo-l2l/iphone-uuid-capture-guide.md).
 
-## Structure
+## What works in software
 
-- `site/` — static mobile-first inspection application.
-- `experiments/001-elmo-l2l/` — evidence and open questions.
-- `docs/safety.md` — safety boundaries.
-- `tests/` — Node automated checks.
-- `.github/workflows/` — CI and Pages deployment.
+- User-initiated, name-filtered discovery; service/characteristic metadata inspection; optional notification subscription.
+- State tracking, duplicate-attempt prevention, 45-second chooser budget, 6-second operation budgets, 15-second inspection deadline, 500-notification cap, manual reconnect, late-connection cleanup, and foreground-only inspection.
+- Packet timestamps, byte counts, hex/text views, malformed/oversized flags, historical-pattern descriptions, and the preserved offline hex analyzer.
+- IndexedDB records and settings, explicit memory fallback, notes, search, comparisons, JSON/TXT/CSV imports, metadata backups, v1 migration, corruption detection, and bounded storage.
+- Synthetic transport scenarios and authentication outcomes; normalized virtual movement sequences; optional phone-local speech and tone previews.
+- Beginner/engineering modes, large controls, accessible labels, diagnostic copying, JSON/TXT reports, and guided troubleshooting.
 
-## Safety and privacy
+## Evidence boundaries
 
-Only test hardware you own or are authorized to investigate. Keep fingers and cables clear of gears. Stop for electrical heat, exposed conductors, or unexpected movement. Do not upload toy passwords, credentials, personal details, or challenge-response secrets into public Issues/logs. GATT notifications require changing a subscription descriptor, but no application commands or authentication writes are sent by this site. Bluetooth functionality must be verified on the physical device; local static tests do not prove it works.
+| Evidence class                                 | What it establishes                                                                                                                |
+| ---------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| Historical V4, user-reported, October 20, 2026 | Discovery, GATT, custom service, notify subscription, and incoming NewModeIdx:12 / Start:LowPowerSleep text were observed earlier. |
+| Community-reported                             | The cited researcher's GATT UUID table exists. The identifiers still need confirmation on this unit.                               |
+| New live session                               | Only metadata and notifications captured during that particular inspection.                                                        |
+| Synthetic                                      | Software lifecycle and UI behavior only. Never hardware compatibility or successful Elmo authentication.                           |
+| Imported                                       | Source claims are retained and visibly marked as imported; they are not independently verified.                                    |
 
-## Development
+Original [V4 probe](https://elmo-auth-probe-jimbo.jimmysoto1994.chatgpt.site) recovery was attempted through accessible page resources, connected Sites, and prior context. The URL returned HTTP 403, the connected Sites list was empty, and no original source was recovered. This release contains no reconstructed authentication routine.
 
-Run `node --check site/app.js` and `node --test tests/*.test.mjs` in repository root with Node 22+. Development status: experimental / hardware validation pending.
+**Authentication, Elmo audio, sensor semantics, motor control, and safe physical limits remain unverified.** The live transport has no application characteristic-write calls, firmware operation, raw transmitter, automatic reconnect, or credential input. Notification subscription changes the BLE subscription descriptor.
 
-## Research archive and test boundaries
+## Your data
 
-See [Seven-area engineering dossier](docs/research/seven-area-engineering-dossier.md), [Source reuse matrix](docs/research/reuse-matrix.md), [Evidence register](experiments/001-elmo-l2l/evidence-register.md), [UUID capture](experiments/001-elmo-l2l/iphone-uuid-capture-guide.md), and [Historical raw notifications](experiments/001-elmo-l2l/protocol-notifications.md). Original read-only packet-decoder source is retained in `site/elmo-packets.mjs` for research, but the new modular lab uses `site/lib/protocol.js`.
+Records belong to this browser and exact site origin. They do not synchronize across devices, browsers, or the old V4 site. iOS eviction, private browsing, clearing storage, or changing origins can remove or separate them. Export backups regularly.
 
-The browser laboratory's authentication and actuator controls are **simulation-only**. Bluetooth inspection is read-only at the application level, but subscribing to notifications changes the GATT subscription state. Web Bluetooth hardware verification remains pending. IndexedDB data stays local to this browser and may be lost: export backups. No GitHub synchronization backend is implemented.
+Default saves and backups omit raw payload bytes and text. Engineering mode allows deliberate raw session export/storage, reset to off for each new session. Unknown binary secrets cannot be reliably sanitized; raw hex may reveal the original bytes even when text is redacted. Review raw captures privately. Never commit credentials or personal identifiers.
 
-To test the proposed v0.2 lab on Node 24+: `npm ci && npm run check && npm run test:browser` (the last command needs Playwright browsers installed). CI verifies web software but cannot certify iPhone Bluefy compatibility or real Elmo command behavior.
+Limits: 50 records, 8 MB application budget, 250 KB per record, 2 MB per imported file, and 20,000 characters per note. Larger research collections should use multiple metadata backups. No browser GitHub-token synchronization is implemented.
+
+## Development and checks
+
+Use Node 22 or later; CI uses Node 24. No runtime dependencies or build step are required.
+
+```sh
+npm ci
+npm run check
+npm audit --audit-level=high
+npx playwright install --with-deps chromium webkit
+npm run test:browser
+npm run dev
+```
+
+The site serves on port 4173. Live Web Bluetooth requires HTTPS or an eligible localhost secure context. Simulation also works on HTTP previews. GitHub Pages publishes the site directory with relative asset paths.
+
+[Testing details](docs/testing.md) explain fake GATT devices, IndexedDB integration, lifecycle regressions, Chromium/WebKit browser checks, accessibility, and what automation cannot prove.
+
+## Documentation
+
+- [Architecture and module APIs](docs/architecture.md)
+- [Protocol specification and unknowns](docs/protocol.md)
+- [Experiment 001](experiments/001-elmo-l2l/README.md), [evidence register](experiments/001-elmo-l2l/evidence-register.md), and [historical inbound bytes](experiments/001-elmo-l2l/protocol-notifications.md)
+- [iPhone setup](docs/iphone-setup.md), [troubleshooting](docs/troubleshooting.md), and [safety](docs/safety.md)
+- [Current research/source/license register](docs/research/source-register.md)
+- [Preserved seven-area engineering dossier](docs/research/seven-area-engineering-dossier.md) and [technology reuse matrix](docs/research/reuse-matrix.md)
+- [Session format and Python interoperability](docs/interoperability.md), [JSON schema](schemas/session-v2.schema.json)
+- [Audit](docs/audit.md), [verification](docs/verification.md), [roadmap](docs/roadmap.md), [changelog](CHANGELOG.md), [release notes](docs/release-notes.md)
+- [Contributing](CONTRIBUTING.md), [security reporting](SECURITY.md), [MIT license](LICENSE)
+
+The earlier dossier is preserved as a dated research record. The current source register and protocol document supersede its statements that no published Elmo UUID table has been found.
