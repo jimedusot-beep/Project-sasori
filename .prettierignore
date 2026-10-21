@@ -1,0 +1,14 @@
+node_modules
+package-lock.json
+playwright-report
+test-results
+coverage
+
+# Preserve previously merged historical research and unused v0.1 artifacts verbatim
+docs/archived-tests/
+docs/research/
+experiments/001-elmo-l2l/evidence-register.md
+experiments/001-elmo-l2l/iphone-uuid-capture-guide.md
+experiments/001-elmo-l2l/protocol-notifications.md
+site/elmo-packets.mjs
+site/packet-lab.mjs

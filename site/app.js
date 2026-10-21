@@ -1,146 +1,803 @@
-'use strict';
-// Experiment 001 is intentionally read-only. No app-level BLE writes in this file.
-const byId = id => document.getElementById(id);
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-const stateText = byId('state');
-const connectButton = byId('connect');
-const disconnectButton = byId('disconnect');
-let currentSession = null;
-let nextSessionId = 0;
-let lines = [];
+import { BluetoothTransport } from './lib/bluetooth.js';
+import { SimulationTransport } from './lib/simulation.js';
+import { AuthExperiment } from './lib/auth.js';
+import {
+  PROFILES,
+  ELMO_SERVICE,
+  ELMO_NOTIFY,
+  GATT_REGISTRY,
+  normalizeUUID,
+} from './lib/profiles.js';
+import { CAPABILITIES, validateCommand, virtualPosition } from './lib/safety.js';
+import { Diagnostics, explainError } from './lib/diagnostics.js';
+import { ResearchStore } from './lib/storage.js';
+import {
+  createSession,
+  portableRecord,
+  parseImport,
+  backup,
+  compareSessions,
+  sessionText,
+  MAX_FILE_BYTES,
+} from './lib/records.js';
 
-function renderState(label) { stateText.textContent = label; }
-function log(message) {
-  lines.push(new Date().toISOString() + ' ' + message);
-  if (lines.length > 500) lines = lines.slice(-500);
-  byId('log').textContent = lines.join('\n');
-  byId('log').scrollTop = byId('log').scrollHeight;
+const $ = (id) => document.getElementById(id);
+const node = (tag, text, className = '') => {
+  const el = document.createElement(tag);
+  el.textContent = text;
+  if (className) el.className = className;
+  return el;
+};
+const labels = {
+  overview: 'Overview',
+  protocol: 'Protocol explorer',
+  sessions: 'Research records',
+  controls: 'Control laboratory',
+  research: 'Evidence & guides',
+};
+const store = new ResearchStore();
+let diagnostics = new Diagnostics(),
+  session = null,
+  transport = null,
+  running = false,
+  ready = false;
+let records = [],
+  selectedId = null,
+  deleteArmed = null,
+  deleteTimer,
+  settingsTimer,
+  sequenceTimer,
+  sequenceDeadline,
+  audioContext;
+let settings = {};
+function notice(message) {
+  $('notice').textContent = message;
+  $('notice').hidden = false;
 }
-function hex(bytes) { return Array.from(bytes, byte => byte.toString(16).padStart(2, '0')).join(''); }
-function notificationHandler(session, event) {
-  if (currentSession !== session || session.finished) return;
-  const value = event.target.value;
-  const bytes = new Uint8Array(value.buffer, value.byteOffset, value.byteLength);
-  log('RX ' + hex(bytes) + ' | TEXT ' + JSON.stringify(new TextDecoder().decode(bytes)));
-}
-function finish(session, reason) {
-  if (session.finished) return;
-  session.finished = true;
-  if (session.timer !== null) clearTimeout(session.timer);
-  if (session.characteristic && session.listener) {
-    try { session.characteristic.removeEventListener('characteristicvaluechanged', session.listener); } catch (_) {}
+function log(level, message, details = {}) {
+  const event = diagnostics.add(level, message, details);
+  if (session) {
+    session.events.push(event);
+    if (session.events.length > 400) session.events.shift();
   }
-  if (currentSession !== session) return; // Old device events must not disrupt a new connection.
-  currentSession = null;
-  connectButton.disabled = false;
-  disconnectButton.disabled = true;
-  renderState('Disconnected · ' + reason);
-  log('STATE disconnected; reason=' + reason + '; session=' + session.id);
+  $('log').textContent = diagnostics.text();
+  $('raw-log').textContent = JSON.stringify(diagnostics.events, null, 2);
+  $('log').scrollTop = $('log').scrollHeight;
 }
-function stopSession(session, reason) {
-  if (!session || session.finished) return;
-  session.stopReason = reason;
-  // This is subscription cleanup, not a device command.
-  if (session.characteristic) {
+function problem(error) {
+  const explanation = explainError(error);
+  notice(explanation.message + ' ' + explanation.nextStep);
+  log('error', explanation.message);
+}
+function safe(action) {
+  return (event) => {
     try {
-      const promise = session.characteristic.stopNotifications();
-      if (promise && typeof promise.catch === 'function') promise.catch(() => {});
-    } catch (_) {}
-  }
-  try {
-    if (session.server && session.server.connected) session.server.disconnect();
-  } catch (error) {
-    log('DISCONNECT error: ' + (error.message || String(error)));
-  }
-  finish(session, reason);
-}
-async function connect() {
-  if (currentSession) return;
-  const serviceUUID = byId('svc').value.trim();
-  const notifyUUID = byId('notify').value.trim();
-  if (!UUID.test(serviceUUID) || !UUID.test(notifyUUID)) {
-    log('ERROR Enter two verified 128-bit UUIDs from original V4 source or nRF Connect.');
-    return;
-  }
-  if (!navigator.bluetooth) {
-    log('ERROR Web Bluetooth is unavailable in this browser. Try Bluefy.');
-    return;
-  }
-  const session = {
-    id: ++nextSessionId, device: null, server: null, characteristic: null,
-    listener: null, timer: null, stopReason: null, finished: false
+      Promise.resolve(action(event)).catch(problem);
+    } catch (error) {
+      problem(error);
+    }
   };
-  currentSession = session;
-  connectButton.disabled = true;
-  disconnectButton.disabled = true;
-  renderState('Selecting device');
-  log('MODE inspect-only; session=' + session.id + '; no application commands sent');
-  try {
-    const device = await navigator.bluetooth.requestDevice({
-      acceptAllDevices: true, optionalServices: [serviceUUID]
+}
+function navigate(page) {
+  if (!labels[page]) page = 'overview';
+  document.querySelectorAll('.page').forEach((el) => {
+    el.hidden = el.id !== 'page-' + page;
+  });
+  document.querySelectorAll('[data-page]').forEach((el) => {
+    el.classList.toggle('active', el.dataset.page === page);
+    if (el.dataset.page === page) el.setAttribute('aria-current', 'page');
+    else el.removeAttribute('aria-current');
+  });
+  $('breadcrumb').textContent = labels[page];
+  history.replaceState(null, '', '#' + page);
+  window.scrollTo(0, 0);
+  if (page === 'sessions') refreshRecords().catch(problem);
+}
+document
+  .querySelectorAll('[data-page], [data-go]')
+  .forEach((el) => el.addEventListener('click', () => navigate(el.dataset.page || el.dataset.go)));
+window.addEventListener('hashchange', () => navigate(location.hash.slice(1)));
+
+for (const profile of PROFILES) {
+  const option = node('option', profile.id + ' / ' + profile.label);
+  option.value = profile.id;
+  $('profile').append(option);
+}
+function updateMode() {
+  const simulated = $('simulation').checked;
+  $('mode-badge').textContent = simulated ? 'SIMULATION · NO HARDWARE' : 'LIVE · INSPECTION ONLY';
+  $('mode-badge').classList.toggle('warm', simulated);
+  $('simulation-config').hidden = !simulated;
+  $('live-config').hidden = simulated;
+  $('connect').textContent = simulated ? 'Run simulated inspection ↗' : 'Connect & inspect ↗';
+  $('support').textContent = simulated
+    ? 'Synthetic fixtures only. Bluetooth permissions and hardware are never accessed.'
+    : !window.isSecureContext
+      ? 'HTTPS is required for Bluetooth access. Open the published secure URL.'
+      : navigator.bluetooth?.requestDevice
+        ? 'Web Bluetooth detected. Device compatibility still requires physical testing.'
+        : 'Web Bluetooth unavailable. On iPhone, open this HTTPS page in Bluefy. Simulation works here.';
+  const profile = PROFILES.find((p) => p.id === $('profile').value);
+  $('device-title').textContent = profile.label;
+  $('profile-status').textContent = profile.status;
+  $('connect').disabled =
+    !ready ||
+    running ||
+    (!simulated &&
+      (!navigator.bluetooth?.requestDevice || !window.isSecureContext || profile.id !== '001'));
+  $('load-profile').disabled = profile.id !== '001' || running;
+  document.body.classList.toggle('engineering', $('engineering').checked);
+  if (!$('engineering').checked) $('include-payloads').checked = false;
+}
+function saveSettings() {
+  clearTimeout(settingsTimer);
+  settingsTimer = setTimeout(() => {
+    settings = {
+      schemaVersion: 1,
+      profile: $('profile').value,
+      service: $('svc').value,
+      notify: $('notify').value,
+      engineering: $('engineering').checked,
+    };
+    store.setSettings(settings).catch(problem);
+  }, 250);
+}
+for (const id of ['simulation', 'profile', 'engineering'])
+  $(id).addEventListener('change', () => {
+    if (id !== 'engineering') $('consent').checked = false;
+    updateMode();
+    saveSettings();
+  });
+for (const id of ['svc', 'notify']) $(id).addEventListener('input', saveSettings);
+$('load-profile').addEventListener('click', () => {
+  $('svc').value = ELMO_SERVICE;
+  $('notify').value = ELMO_NOTIFY;
+  saveSettings();
+  notice(
+    'Published Elmo profile loaded from NonaSuomy/Love2LearnElmo. Its UUIDs are community-reported; a live inspection will establish whether they exist on your unit. No connection has been started.',
+  );
+});
+function lockConnection(locked) {
+  running = locked;
+  for (const id of [
+    'profile',
+    'simulation',
+    'svc',
+    'notify',
+    'consent',
+    'simulation-scenario',
+    'show-all-devices',
+  ])
+    $(id).disabled = locked;
+  $('disconnect').disabled = !locked;
+  $('global-stop').disabled = !locked;
+  updateMode();
+}
+function renderServices(services) {
+  const target = $('service-map');
+  target.replaceChildren();
+  target.classList.remove('empty');
+  if (!services.length) {
+    target.textContent = 'No service metadata captured.';
+    return;
+  }
+  for (const s of services) {
+    const wrapper = node('div', '', 'gatt-service');
+    wrapper.append(node('code', s.uuid), node('p', s.evidence));
+    for (const c of s.characteristics) {
+      const characteristic = node('div', '', 'gatt-characteristic');
+      characteristic.append(
+        node('code', c.uuid),
+        node('p', c.properties.join(' · ') + ' / no writes enabled'),
+      );
+      wrapper.append(characteristic);
+    }
+    target.append(wrapper);
+  }
+}
+function renderPackets() {
+  const target = $('packets');
+  target.replaceChildren();
+  target.classList.remove('empty');
+  const filter = $('packet-filter').value.toLowerCase();
+  const packets = (session?.packets || [])
+    .filter((p) =>
+      [p.text, p.hex, p.characteristic, p.kind].join(' ').toLowerCase().includes(filter),
+    )
+    .slice(-100)
+    .reverse();
+  if (!packets.length) {
+    target.append(node('p', 'No matching notifications.'));
+    return;
+  }
+  for (const p of packets) {
+    const row = node('article', '', 'packet');
+    row.append(
+      node(
+        'small',
+        (session.source === 'simulated' ? 'SYNTHETIC · ' : 'LIVE OBSERVATION · ') +
+          p.timestamp +
+          ' · ' +
+          p.length +
+          ' bytes',
+      ),
+    );
+    row.append(
+      node('span', p.text, 'payload'),
+      node('code', p.hex),
+      node('p', p.characteristic),
+      node('p', p.description),
+    );
+    if (p.truncated || p.malformed)
+      row.append(
+        node(
+          'p',
+          'Flag: ' +
+            (p.truncated ? 'payload truncated; ' : '') +
+            (p.malformed ? 'malformed / non-UTF-8' : ''),
+        ),
+      );
+    target.append(row);
+  }
+}
+$('packet-filter').addEventListener('input', renderPackets);
+function handleEvent(event) {
+  if (!session) return;
+  if (event.type === 'state') {
+    $('state').textContent = event.state[0].toUpperCase() + event.state.slice(1);
+    $('state-detail').textContent =
+      event.reason ||
+      (session.source === 'simulated'
+        ? 'Synthetic Bluetooth lifecycle'
+        : 'No application commands sent');
+    log(
+      'state',
+      (session.source === 'simulated' ? 'SIMULATED · ' : 'LIVE · ') +
+        event.state +
+        (event.reason ? ' / ' + event.reason : ''),
+    );
+    if (event.state === 'inspecting') saveSession(false).catch(problem);
+    if (event.state === 'disconnected') {
+      session.endedAt = new Date().toISOString();
+      session.outcome = event.reason || 'disconnected';
+      if (!session.stats.packets && event.reason === 'inspection-complete')
+        session.outcome = 'inconclusive-no-notifications';
+      lockConnection(false);
+      const next =
+        session.source === 'simulated'
+          ? 'Simulation finished. This does not verify real Bluetooth compatibility.'
+          : session.stats.packets
+            ? 'Inspection captured notifications. Review the observed service map and save notes; authentication is still unverified.'
+            : 'No notifications captured. Review the disconnect reason and profile; do not infer authentication success.';
+      $('next-step').textContent = next;
+      saveSession(false).catch(problem);
+    }
+  } else if (event.type === 'packet') {
+    session.packets.push(event.packet);
+    if (session.packets.length > 500) session.packets.shift();
+    session.stats.packets++;
+    session.stats.bytes += event.packet.length;
+    if (event.packet.malformed) session.stats.malformed++;
+    if (event.packet.truncated) session.stats.truncated++;
+    $('packet-count').textContent = session.stats.packets + ' RX';
+    $('packet-bytes').textContent = session.stats.bytes + ' bytes received';
+    log(
+      'rx',
+      event.packet.length +
+        ' bytes · ' +
+        event.packet.kind +
+        (event.packet.malformed ? ' · malformed' : ''),
+    );
+    renderPackets();
+    if (session.stats.packets % 10 === 0) saveSession(false).catch(problem);
+  } else if (event.type === 'services') {
+    session.services = event.services;
+    renderServices(event.services);
+    $('gatt-evidence').textContent =
+      session.source === 'simulated' ? 'SYNTHETIC' : 'OBSERVED THIS SESSION';
+    log('info', 'Service metadata captured; writable properties do not establish command safety.');
+  } else if (event.type === 'error') {
+    session.outcome = 'error';
+    notice(event.error.message + ' ' + event.error.nextStep);
+    log('error', event.error.message, event.error);
+  } else log(event.type, event.message || 'Transport event');
+}
+$('connect').addEventListener(
+  'click',
+  safe(() => {
+    if (!ready || running) return;
+    const simulated = $('simulation').checked;
+    if (!simulated) {
+      if (!$('consent').checked)
+        throw new Error('Confirm that you own or are authorized to inspect this device.');
+      normalizeUUID($('svc').value);
+      if ($('notify').value.trim()) normalizeUUID($('notify').value);
+    }
+    diagnostics = new Diagnostics();
+    session = createSession(simulated ? 'simulated' : 'live', $('profile').value);
+    $('session-title').value = session.title;
+    $('session-source').textContent = simulated ? 'SIMULATED SESSION' : 'LIVE INSPECTION';
+    $('include-payloads').checked = false;
+    $('packet-count').textContent = '0 RX';
+    $('packet-bytes').textContent = '0 bytes received';
+    $('notice').hidden = true;
+    $('gatt-evidence').textContent = 'NO CAPTURE';
+    renderServices([]);
+    renderPackets();
+    for (const id of ['save-session', 'export-json', 'export-text']) $(id).disabled = false;
+    lockConnection(true);
+    log(
+      'info',
+      simulated
+        ? 'Synthetic fixture started. No Bluetooth access.'
+        : 'Inspection only. No authentication, motor, audio, or firmware commands.',
+    );
+    transport = simulated
+      ? new SimulationTransport(handleEvent)
+      : new BluetoothTransport({ emit: handleEvent });
+    const result = simulated
+      ? transport.connect({ scenario: $('simulation-scenario').value })
+      : transport.connect({
+          service: $('svc').value,
+          notify: $('notify').value.trim(),
+          durationMs: 15000,
+          showAllDevices: $('show-all-devices').checked,
+        });
+    return Promise.resolve(result).catch((error) => {
+      lockConnection(false);
+      session.endedAt = new Date().toISOString();
+      session.outcome = 'setup-error';
+      problem(error);
+      return saveSession(false);
     });
-    if (currentSession !== session || session.finished) return;
-    session.device = device;
-    log('Device selected: ' + JSON.stringify(device.name || 'Unnamed BLE device'));
-    device.addEventListener('gattserverdisconnected', () => {
-      finish(session, session.stopReason || 'unexpected-link-loss');
-    }, { once: true });
-    renderState('Connecting');
-    session.server = await device.gatt.connect();
-    if (currentSession !== session || session.finished) {
-      if (session.server.connected) session.server.disconnect();
+  }),
+);
+for (const id of ['disconnect', 'global-stop'])
+  $(id).addEventListener('click', () => transport?.disconnect('user'));
+$('session-title').addEventListener('input', () => {
+  if (session) session.title = $('session-title').value || 'Untitled experiment';
+});
+async function saveSession(show = true) {
+  if (!session) return;
+  const snapshot = portableRecord(session, $('include-payloads').checked);
+  await store.save(snapshot);
+  $('autosave-status').textContent =
+    (store.persistent ? 'Saved on this browser · ' : 'Temporary memory only · ') +
+    snapshot.stats.packets +
+    ' notifications · ' +
+    (snapshot.payloadsIncluded
+      ? 'RAW PAYLOADS INCLUDED. Review before sharing.'
+      : 'Payload bytes omitted.');
+  if (show)
+    notice(
+      store.persistent
+        ? 'Session saved locally. It is not synchronized across devices.'
+        : store.warning,
+    );
+  await refreshRecords();
+}
+$('save-session').addEventListener(
+  'click',
+  safe(() => saveSession()),
+);
+function download(name, body, type) {
+  const url = URL.createObjectURL(new Blob([body], { type }));
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = name;
+  document.body.append(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 30000);
+}
+$('copy').addEventListener(
+  'click',
+  safe(async () => {
+    try {
+      await navigator.clipboard.writeText(diagnostics.text());
+      notice('Sanitized diagnostic log copied. Raw packet payloads are omitted.');
+    } catch {
+      const range = document.createRange();
+      range.selectNodeContents($('log'));
+      const selection = window.getSelection();
+      selection.removeAllRanges();
+      selection.addRange(range);
+      notice('Clipboard access unavailable. The log is selected; use Copy in the browser menu.');
+    }
+  }),
+);
+$('export-json').addEventListener(
+  'click',
+  safe(() => {
+    if (session)
+      download(
+        'sasori-session.json',
+        JSON.stringify(portableRecord(session, $('include-payloads').checked), null, 2),
+        'application/json',
+      );
+  }),
+);
+$('export-text').addEventListener(
+  'click',
+  safe(() => {
+    if (session) download('sasori-report.txt', sessionText(session), 'text/plain');
+  }),
+);
+async function refreshRecords() {
+  records = await store.list();
+  $('record-count').textContent = records.length;
+  $('storage-state').textContent = store.persistent
+    ? 'IndexedDB · ' + records.length + ' records'
+    : 'Temporary memory only';
+  $('storage-summary').textContent =
+    (store.persistent ? 'IndexedDB available. ' : 'TEMPORARY MEMORY. ') +
+    records.length +
+    ' / 50 records · 8 MB application budget.' +
+    (store.corrupt.length
+      ? ' ' +
+        store.corrupt.length +
+        ' corrupt records skipped. Export valid records before clearing browser storage.'
+      : '');
+  renderRecords();
+  updateComparisonOptions();
+}
+function renderRecords() {
+  $('records').replaceChildren();
+  const query = $('record-search').value.toLowerCase();
+  const filtered = records.filter((r) =>
+    [r.title, r.notes, r.outcome, r.source].join(' ').toLowerCase().includes(query),
+  );
+  if (!filtered.length)
+    $('records').append(
+      node(
+        'p',
+        records.length
+          ? 'No matching research records.'
+          : 'Your notebook is ready. Run a simulation or create your first note.',
+        'empty',
+      ),
+    );
+  for (const r of filtered) {
+    const button = node('button', '', 'record-row' + (r.id === selectedId ? ' selected' : ''));
+    button.append(
+      node(
+        'span',
+        (r.importedAt ? 'IMPORTED / ' : '') + r.source.toUpperCase(),
+        'badge ' + (r.source === 'simulated' ? 'warm' : 'subtle'),
+      ),
+      node('h3', r.title),
+      node('p', new Date(r.startedAt).toLocaleString()),
+      node('p', r.stats.packets + ' notifications · ' + r.outcome),
+    );
+    button.addEventListener('click', () => selectRecord(r.id));
+    $('records').append(button);
+  }
+}
+function selectRecord(id) {
+  const r = records.find((item) => item.id === id);
+  selectedId = r?.id || null;
+  deleteArmed = null;
+  $('delete-record').textContent = 'Delete record';
+  for (const key of [
+    'record-title',
+    'record-notes',
+    'update-record',
+    'export-record',
+    'delete-record',
+  ])
+    $(key).disabled = !r;
+  $('record-title').value = r?.title || '';
+  $('record-notes').value = r?.notes || '';
+  $('record-meta').textContent = r
+    ? (r.importedAt ? 'IMPORTED CLAIM / ' : '') +
+      r.source.toUpperCase() +
+      ' · ' +
+      r.outcome +
+      ' · ' +
+      r.stats.packets +
+      ' notifications · schema v' +
+      r.schemaVersion
+    : 'Select a record to inspect or edit its notes.';
+  renderRecords();
+}
+$('record-search').addEventListener('input', renderRecords);
+$('update-record').addEventListener(
+  'click',
+  safe(async () => {
+    const r = records.find((item) => item.id === selectedId);
+    if (!r) return;
+    r.title = $('record-title').value || 'Untitled experiment';
+    r.notes = $('record-notes').value;
+    await store.save(r);
+    if (session?.id === r.id) {
+      session.title = r.title;
+      session.notes = r.notes;
+      $('session-title').value = r.title;
+    }
+    await refreshRecords();
+    notice('Research notes saved on this browser.');
+  }),
+);
+$('delete-record').addEventListener(
+  'click',
+  safe(async () => {
+    if (!selectedId) return;
+    if (deleteArmed !== selectedId) {
+      deleteArmed = selectedId;
+      $('delete-record').textContent = 'Confirm deletion';
+      clearTimeout(deleteTimer);
+      deleteTimer = setTimeout(() => {
+        deleteArmed = null;
+        $('delete-record').textContent = 'Delete record';
+      }, 5000);
       return;
     }
-    log('GATT connected');
-    renderState('Discovering service');
-    const service = await session.server.getPrimaryService(serviceUUID);
-    if (currentSession !== session || session.finished) return;
-    log('Custom service found');
-    session.characteristic = await service.getCharacteristic(notifyUUID);
-    if (currentSession !== session || session.finished) return;
-    if (!session.characteristic.properties.notify) {
-      throw new Error('Selected characteristic does not support notifications.');
+    await store.remove(selectedId);
+    clearTimeout(deleteTimer);
+    await refreshRecords();
+    selectRecord(null);
+    notice('Record deleted locally.');
+  }),
+);
+$('export-record').addEventListener(
+  'click',
+  safe(() => {
+    const r = records.find((item) => item.id === selectedId);
+    if (r)
+      download(
+        'sasori-record.json',
+        JSON.stringify(portableRecord(r), null, 2),
+        'application/json',
+      );
+  }),
+);
+$('new-note').addEventListener(
+  'click',
+  safe(async () => {
+    const r = createSession('imported', $('profile').value, 'Research note');
+    r.endedAt = r.startedAt;
+    r.outcome = 'note';
+    await store.save(r);
+    await refreshRecords();
+    selectRecord(r.id);
+    $('record-notes').focus();
+  }),
+);
+$('backup').addEventListener(
+  'click',
+  safe(async () => {
+    const all = await store.list();
+    download('sasori-backup.json', JSON.stringify(backup(all), null, 2), 'application/json');
+  }),
+);
+$('import-file').addEventListener(
+  'change',
+  safe(async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+    try {
+      if (file.size > MAX_FILE_BYTES) throw new Error('Import limit is 2 MB.');
+      const imported = parseImport(await file.text(), file.name);
+      await store.importCopies(imported);
+      await refreshRecords();
+      notice(
+        imported.length +
+          ' research record(s) imported as new copies. Original provenance is preserved; imported claims are not independently verified.',
+      );
+    } finally {
+      event.target.value = '';
     }
-    session.listener = event => notificationHandler(session, event);
-    session.characteristic.addEventListener('characteristicvaluechanged', session.listener);
-    await session.characteristic.startNotifications();
-    if (currentSession !== session || session.finished) return;
-    log('Notification subscription active');
-    renderState('Connected · read-only');
-    disconnectButton.disabled = false;
-    session.timer = setTimeout(() => {
-      log('Inspection window ended after 15 seconds');
-      stopSession(session, 'timed-inspection');
-    }, 15000);
-  } catch (error) {
-    if (currentSession !== session || session.finished) return;
-    const reason = error.name === 'NotFoundError' ? 'selection-cancelled' : 'error';
-    log('ERROR ' + (error.name || 'Error') + ': ' + (error.message || String(error)));
-    stopSession(session, reason);
+  }),
+);
+function updateComparisonOptions() {
+  for (const id of ['compare-first', 'compare-second']) {
+    const previous = $(id).value;
+    $(id).replaceChildren();
+    for (const r of records) {
+      const option = node('option', r.source.toUpperCase() + ' / ' + r.title);
+      option.value = r.id;
+      $(id).append(option);
+    }
+    if (records.some((r) => r.id === previous)) $(id).value = previous;
   }
+  if (records.length > 1 && $('compare-first').value === $('compare-second').value)
+    $('compare-second').selectedIndex = 1;
 }
-function disconnect() { stopSession(currentSession, 'manual'); }
-function download(filename, body) {
-  const url = URL.createObjectURL(new Blob([body], { type: 'text/plain' }));
-  const anchor = document.createElement('a');
-  anchor.href = url;
-  anchor.download = filename;
-  anchor.click();
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
-}
-connectButton.addEventListener('click', connect);
-disconnectButton.addEventListener('click', disconnect);
-byId('copy').addEventListener('click', async () => {
-  try {
-    await navigator.clipboard.writeText(lines.join('\n'));
-    log('Diagnostic log copied; inspect before sharing');
-  } catch (error) {
-    log('Clipboard unavailable: ' + error.message + '. Use Export log instead.');
+$('compare').addEventListener('click', () => {
+  const a = records.find((r) => r.id === $('compare-first').value),
+    b = records.find((r) => r.id === $('compare-second').value);
+  $('comparison').replaceChildren();
+  if (!a || !b) {
+    $('comparison').textContent = 'Save at least two captures to compare them.';
+    return;
   }
+  if (a.id === b.id) {
+    $('comparison').textContent = 'Select two different sessions.';
+    return;
+  }
+  const table = node('table', '', 'comparison-table'),
+    head = node('tr', '');
+  for (const title of ['Notification kind', a.source + ' / ' + a.title, b.source + ' / ' + b.title])
+    head.append(node('th', title));
+  const thead = node('thead', ''),
+    body = node('tbody', '');
+  thead.append(head);
+  table.append(thead, body);
+  for (const row of compareSessions(a, b)) {
+    const tr = node('tr', '');
+    for (const value of [row.kind, row.first, row.second]) tr.append(node('td', String(value)));
+    body.append(tr);
+  }
+  if (!body.children.length) {
+    const tr = node('tr', '');
+    for (const value of ['No notification categories', '0', '0']) tr.append(node('td', value));
+    body.append(tr);
+  }
+  $('comparison').append(table);
 });
-byId('export').addEventListener('click', () => download('project-sasori-elmo-log.txt', lines.join('\n') + '\n'));
-byId('clear').addEventListener('click', () => { lines = []; byId('log').textContent = ''; log('Diagnostic log cleared'); });
-byId('support').textContent = navigator.bluetooth
-  ? 'Web Bluetooth API detected. Permissions are requested only after tapping Connect.'
-  : 'Web Bluetooth unavailable. Open the deployed site in Bluefy on iPhone.';
-log('Sasori BLE inspection lab loaded; no commands sent before Connect.');
+const auth = new AuthExperiment((event) => {
+  $('auth-state').textContent =
+    'SYNTHETIC · ' + event.state + ' · no Elmo handshake or Bluetooth traffic';
+  $('auth-run').disabled = event.state === 'awaiting';
+  $('auth-cancel').disabled = event.state !== 'awaiting';
+});
+$('auth-run').addEventListener(
+  'click',
+  safe(() => auth.start({ simulation: true, consent: true, scenario: $('auth-scenario').value })),
+);
+$('auth-cancel').addEventListener('click', () => auth.cancel());
+for (const entry of GATT_REGISTRY) {
+  const row = node('div', '');
+  row.append(
+    node('h3', entry.label),
+    node('code', entry.uuid),
+    node('p', entry.properties + ' · ' + entry.evidence),
+  );
+  $('registry').append(row);
+}
+for (const capability of CAPABILITIES) {
+  const row = node('div', '', 'capability');
+  row.append(node('h3', capability.label), node('span', 'LOCKED / UNVERIFIED'));
+  $('capabilities').append(row);
+}
+function setPose(value) {
+  value = virtualPosition(value);
+  $('pose').value = value;
+  $('pose-value').textContent = value.toFixed(2);
+  $('virtual-arm').style.transform = 'rotate(' + value * 65 + 'deg)';
+  $('virtual-status').textContent =
+    'SIMULATED position ' + value.toFixed(2) + ' · no hardware traffic.';
+}
+function stopSequence() {
+  clearInterval(sequenceTimer);
+  clearTimeout(sequenceDeadline);
+  sequenceTimer = null;
+  $('play-sequence').disabled = false;
+  setPose(0);
+}
+$('pose').addEventListener(
+  'input',
+  safe(() => {
+    const value = Number($('pose').value);
+    stopSequence();
+    validateCommand('actuator', { simulation: true, consent: true });
+    setPose(value);
+  }),
+);
+$('play-sequence').addEventListener(
+  'click',
+  safe(() => {
+    validateCommand('sequence', { simulation: true, consent: true });
+    stopSequence();
+    $('play-sequence').disabled = true;
+    let tick = 0;
+    sequenceTimer = setInterval(() => {
+      setPose(Math.sin(++tick / 3) * 0.8);
+    }, 160);
+    sequenceDeadline = setTimeout(stopSequence, 4000);
+  }),
+);
+$('stop-sequence').addEventListener('click', () => {
+  stopSequence();
+  window.speechSynthesis?.cancel();
+  if (audioContext) audioContext.close().catch(() => {});
+  audioContext = null;
+  $('virtual-status').textContent = 'Simulation stopped. No hardware power was changed.';
+});
+$('speak').addEventListener(
+  'click',
+  safe(() => {
+    if (!('speechSynthesis' in window))
+      throw new Error('Speech synthesis is unavailable in this browser.');
+    validateCommand('voice', { simulation: true, consent: true });
+    speechSynthesis.cancel();
+    speechSynthesis.speak(new SpeechSynthesisUtterance($('speech-text').value.slice(0, 120)));
+    $('audio-status').textContent =
+      'LOCAL AUDIO PREVIEW · speech requested on this device; not sent to Elmo.';
+  }),
+);
+$('tone').addEventListener(
+  'click',
+  safe(async () => {
+    validateCommand('sound', { simulation: true, consent: true });
+    if (!window.AudioContext) throw new Error('Web Audio is unavailable in this browser.');
+    if (audioContext) await audioContext.close();
+    audioContext = new AudioContext();
+    await audioContext.resume();
+    const context = audioContext,
+      oscillator = context.createOscillator(),
+      gain = context.createGain();
+    gain.gain.value = 0.05;
+    oscillator.frequency.value = 440;
+    oscillator.connect(gain);
+    gain.connect(context.destination);
+    oscillator.start();
+    oscillator.stop(context.currentTime + 0.3);
+    oscillator.onended = () => {
+      context.close().catch(() => {});
+      if (audioContext === context) audioContext = null;
+    };
+    $('audio-status').textContent = 'LOCAL AUDIO PREVIEW · 300 ms tone requested on this device.';
+  }),
+);
+const troubleshooting = {
+  support:
+    'Use the HTTPS site in Bluefy on iPhone. Normal Safari may not expose Web Bluetooth. Other platforms need a compatible browser; feature detection does not prove device compatibility.',
+  chooser:
+    'Power on your own Elmo, enable Bluetooth, bring it nearby, and close other apps connected to it. The chooser filters names beginning with Elmo. Retry by tapping Connect; this lab never reconnects automatically.',
+  service:
+    'The community profile may differ from your firmware. Inspect the service list with nRF Connect, record the actual UUIDs and properties, and update the custom settings. Do not subscribe to firmware services or guess commands.',
+  silent:
+    'A notification subscription does not guarantee messages. Check the notify UUID and source; export a metadata report and repeat once. Silence does not establish authentication success or failure.',
+  disconnect:
+    'Check the recorded reason: user, inspection-complete, page-hidden, packet-limit, and unexpected are distinct. Keep the page visible. Unexpected disconnects may be range, power, firmware sleep, or another app.',
+  storage:
+    'Records belong to this browser and this exact site origin. Private browsing, clearing data, iOS eviction, and using another browser can remove or separate records. Import a JSON backup; no automatic cross-device sync exists.',
+};
+function updateTrouble() {
+  $('trouble-answer').textContent = troubleshooting[$('trouble').value];
+}
+$('trouble').addEventListener('change', updateTrouble);
+updateTrouble();
+function stopAll(reason) {
+  transport?.disconnect(reason);
+  auth.cancel();
+  stopSequence();
+  if ('speechSynthesis' in window) speechSynthesis.cancel();
+  if (audioContext) audioContext.close().catch(() => {});
+  audioContext = null;
+}
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) stopAll('page-hidden');
+});
+window.addEventListener('pagehide', () => stopAll('page-hidden'));
+window.addEventListener('unhandledrejection', (event) => {
+  event.preventDefault();
+  problem(event.reason);
+});
+window.addEventListener('error', () => {
+  notice(
+    'The interface encountered an error. Stop the inspection, export your log if possible, and reload.',
+  );
+  transport?.disconnect('interface-error');
+});
+async function initialize() {
+  $('connect').disabled = true;
+  await store.open();
+  settings = await store.getSettings();
+  if (PROFILES.some((p) => p.id === settings.profile)) $('profile').value = settings.profile;
+  if (typeof settings.service === 'string') $('svc').value = settings.service.slice(0, 128);
+  if (typeof settings.notify === 'string') $('notify').value = settings.notify.slice(0, 128);
+  $('engineering').checked = settings.engineering === true;
+  ready = true;
+  updateMode();
+  await refreshRecords();
+  if (store.warning) notice(store.warning);
+  log('info', 'Project Sasori v0.2.0 ready. No connection starts without your action.');
+  navigate(location.hash.slice(1));
+}
+initialize().catch((error) => {
+  ready = true;
+  updateMode();
+  problem(error);
+});

@@ -1,6 +1,653 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#111c29"><title>Project Sasori · Elmo Lab</title><link rel="stylesheet" href="style.css"></head>
-<body><main><header><span class="eyebrow">PROJECT SASORI · EXPERIMENT 001</span><h1>Elmo Bluetooth Lab</h1><p>Mobile-first, safety-gated Bluetooth diagnostics. Live hardware tests are never simulated.</p></header>
-<section class="panel"><div class="meta"><span class="pill">v0.1 · inspection-only</span><span id="state" aria-live="polite">Idle</span></div><h2>Connection</h2><p id="support">Checking browser support…</p><label for="svc">Verified custom service UUID</label><input id="svc" spellcheck="false" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" autocomplete="off"><label for="notify">Verified notify characteristic UUID</label><input id="notify" spellcheck="false" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" autocomplete="off"><p class="hint">Enter UUIDs from the actual V4 source or nRF Connect. Screenshots did not establish them. Never guess UUIDs.</p><div class="actions"><button id="connect">Connect & inspect (read-only)</button><button id="disconnect" class="secondary" disabled>Disconnect</button></div><p class="hint">Notification subscription changes a BLE subscription descriptor. This page sends no application authentication, motor, voice, or firmware commands.</p></section>
-<section class="panel"><h2>Experiment status</h2><ul class="status"><li>BLE discovery / GATT / custom service / notifications: <b>Observed in V4</b></li><li>Authentication handshake: <b>Not verified</b></li><li>Motor and voice commands: <b>Not verified</b></li></ul><p>The original V4 authentication routine is <strong>not included</strong> until its actual source is reviewed. There is no generic command sender.</p></section>
-<section class="panel"><h2>Diagnostic log</h2><p class="hint">Log stays in this page session unless you export it. Review logs before sharing: they may contain sensitive device data.</p><pre id="log" role="log" aria-live="polite"></pre><div class="actions"><button id="copy" class="secondary">Copy log</button><button id="export" class="secondary">Export log</button><button id="clear" class="secondary">Clear log</button></div></section><section class="panel"><h2>Offline notification analysis</h2><p>Paste a notification's hex bytes from your own log. Decoding runs entirely on this device, without Bluetooth commands or uploads. Header bytes and textual meanings remain unverified.</p><label for="packet-hex">Received hex bytes</label><input id="packet-hex" spellcheck="false" placeholder="60 4e 65 77 ..." autocomplete="off"><div class="actions"><button id="packet-decode" class="secondary">Analyze bytes</button><button id="packet-sample" class="secondary">Load observed example</button></div><pre id="packet-result" aria-live="polite">No packet analyzed yet.</pre></section><footer>Independent research prototype · not affiliated with Hasbro or Naruto.</footer></main><script src="app.js" defer></script><script src="packet-lab.mjs" type="module"></script></body></html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+    <meta name="theme-color" content="#111918" />
+    <meta
+      name="description"
+      content="A mobile laboratory for safe Bluetooth inspection, saved experiments, and animatronics research."
+    />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"
+    />
+    <meta name="referrer" content="no-referrer" />
+    <title>Project Sasori · Animatronics Laboratory</title>
+    <link rel="icon" href="icon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="style.css" />
+    <script type="module" src="app.js"></script>
+  </head>
+  <body>
+    <a class="skip" href="#workspace">Skip to laboratory</a>
+    <aside class="rail">
+      <a class="brand" href="#overview" aria-label="Sasori laboratory home">
+        <svg viewBox="0 0 40 40" aria-hidden="true">
+          <path
+            d="M20 3 35 12v16L20 37 5 28V12Z"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          />
+          <path
+            d="m12 15 8-5 8 5-8 5Zm0 10 8 5 8-5M20 20v10"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          />
+        </svg>
+        <span>SASORI<small>ANIMATRONICS LAB</small></span>
+      </a>
+      <div class="rail-label">WORKSPACE</div>
+      <nav aria-label="Laboratory sections" id="navigation">
+        <button class="nav active" data-page="overview" aria-current="page">
+          <span aria-hidden="true">◫</span> Overview
+        </button>
+        <button class="nav" data-page="protocol">
+          <span aria-hidden="true">⌁</span> Protocol explorer
+        </button>
+        <button class="nav" data-page="sessions">
+          <span aria-hidden="true">▤</span> Research records
+          <span id="record-count" class="count">0</span>
+        </button>
+        <button class="nav" data-page="controls">
+          <span aria-hidden="true">◎</span> Control laboratory
+        </button>
+        <button class="nav" data-page="research">
+          <span aria-hidden="true">◇</span> Evidence & guides
+        </button>
+      </nav>
+      <div class="rail-bottom">
+        <span class="dot"></span> LOCAL WORKSPACE
+        <p id="storage-state">Opening local storage…</p>
+        <p>Saved on this browser.<br />No automatic device sync.</p>
+        <a
+          href="https://github.com/jimedusot-beep/Project-sasori"
+          target="_blank"
+          rel="noopener noreferrer"
+          >View repository ↗</a
+        ><small>v0.2.0 · Independent research</small>
+      </div>
+    </aside>
+    <div class="shell">
+      <header class="topbar">
+        <div class="breadcrumb">LABORATORY <span>/</span> <b id="breadcrumb">Overview</b></div>
+        <div class="top-actions">
+          <span class="badge" id="mode-badge">LIVE · INSPECTION ONLY</span
+          ><button id="global-stop" class="danger" disabled>Stop</button
+          ><label class="switch-label" for="engineering"
+            ><input type="checkbox" id="engineering" /> Engineering mode</label
+          >
+        </div>
+      </header>
+      <main id="workspace" tabindex="-1">
+        <div id="notice" class="notice" role="status" hidden></div>
+        <section id="page-overview" class="page" aria-labelledby="overview-title">
+          <div class="page-heading">
+            <div>
+              <p class="eyebrow">PROJECT SASORI / EXPERIMENT 001</p>
+              <h1 id="overview-title">A little curiosity.<br />A lot of possibility.</h1>
+              <p class="lead">
+                Your workbench for understanding animatronics.<br />Observe, capture, and build on
+                what you can prove.
+              </p>
+            </div>
+            <div class="heading-tag"><span class="dot"></span> OBSERVATION BEFORE CONTROL</div>
+          </div>
+          <div class="metrics">
+            <div>
+              <span>TRANSPORT</span><strong id="state" aria-live="polite">Idle</strong
+              ><small id="state-detail">Ready for a new experiment</small>
+            </div>
+            <div>
+              <span>NOTIFICATIONS</span><strong id="packet-count">0 <em>RX</em></strong
+              ><small id="packet-bytes">0 bytes received</small>
+            </div>
+            <div>
+              <span>HARDWARE COMMANDS</span><strong class="muted">Locked <em>↗</em></strong
+              ><small>Authentication & motion unverified</small>
+            </div>
+          </div>
+          <div class="workspace-grid">
+            <section class="panel connection" aria-labelledby="connection-title">
+              <div class="panel-head">
+                <h2 id="connection-title">
+                  <span class="section-number">01</span> Connection manager
+                </h2>
+                <span class="badge subtle">BLE / GATT</span>
+              </div>
+              <label for="profile">Experiment profile</label
+              ><select id="profile"></select>
+              <div class="device-card">
+                <div class="device-icon" aria-hidden="true">
+                  <svg viewBox="0 0 50 50">
+                    <path
+                      d="M25 5v40l14-12-28-17 14-11 14 12-28 17"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    />
+                  </svg>
+                </div>
+                <div>
+                  <h3 id="device-title">Love2Learn Elmo</h3>
+                  <p id="profile-status">B6572 · Elmo L2L</p>
+                </div>
+                <span class="badge warm">RESEARCH</span>
+              </div>
+              <p id="support" class="support">Checking Bluetooth support…</p>
+              <label class="checkline" for="simulation"
+                ><input type="checkbox" id="simulation" /> Use simulation
+                <span>No hardware connection</span></label
+              >
+              <div id="simulation-config" hidden>
+                <label for="simulation-scenario">Synthetic scenario</label
+                ><select id="simulation-scenario">
+                  <option value="normal">Normal inspection</option>
+                  <option value="malformed">Malformed / oversized notifications</option>
+                  <option value="disconnect">Unexpected disconnect</option>
+                </select>
+              </div>
+              <div id="live-config">
+                <label class="checkline" for="show-all-devices"
+                  ><input type="checkbox" id="show-all-devices" /> Show all Bluetooth devices
+                  <span>Fallback if Elmo does not appear</span></label
+                >
+                <div class="profile-action">
+                  <button id="load-profile" class="text-button" type="button">
+                    Use published Elmo UUIDs ↙</button
+                  ><a
+                    href="https://github.com/NonaSuomy/Love2LearnElmo"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >Source ↗</a
+                  >
+                </div>
+                <p class="hint">
+                  Community-reported profile. Confirmed on the researcher's unit; not yet verified
+                  on yours.
+                </p>
+                <details id="uuid-settings">
+                  <summary>Service & notification settings</summary>
+                  <label for="svc">Custom service UUID</label
+                  ><input
+                    id="svc"
+                    spellcheck="false"
+                    autocomplete="off"
+                    placeholder="128-bit service UUID"
+                  />
+                  <label for="notify">Notify characteristic UUID (optional)</label
+                  ><input
+                    id="notify"
+                    spellcheck="false"
+                    autocomplete="off"
+                    placeholder="Leave blank to inspect metadata only"
+                  />
+                  <p class="hint">
+                    Only this service is requested. Other services remain inaccessible unless
+                    separately granted. No firmware services.
+                  </p>
+                </details>
+                <label class="checkline" for="consent"
+                  ><input type="checkbox" id="consent" /> I own or am authorized to inspect this
+                  device.</label
+                >
+                <p class="hint">
+                  Connect inspects the service and subscribes to the configured notification
+                  characteristic. Subscription changes a BLE descriptor. No authentication, audio,
+                  or motor commands are sent.
+                </p>
+              </div>
+              <div class="actions">
+                <button id="connect" class="primary">
+                  Connect & inspect <span aria-hidden="true">↗</span></button
+                ><button id="disconnect" class="secondary" disabled>Stop inspection</button>
+              </div>
+              <div class="connection-foot">
+                <span class="dot"></span> 15-second inspection · manual reconnect only
+              </div>
+            </section>
+            <div class="right-stack">
+              <section class="panel specimen" aria-labelledby="specimen-title">
+                <div class="panel-head">
+                  <h2 id="specimen-title">The current specimen</h2>
+                  <span class="badge subtle">001</span>
+                </div>
+                <div class="specimen-art" aria-hidden="true">
+                  <svg viewBox="0 0 280 190">
+                    <g fill="none" stroke="#8eaaa0" stroke-width="1">
+                      <path d="M32 85h52m-52 5h35m126 40h54M140 15v25M140 150v25" />
+                      <circle cx="140" cy="96" r="68" stroke-dasharray="3 8" />
+                    </g>
+                    <g stroke="#97b9a8" stroke-width="2">
+                      <path d="m100 150 8-36h64l8 36" fill="#1c2e29" />
+                      <rect x="94" y="54" width="92" height="68" rx="28" fill="#243e32" />
+                      <circle cx="121" cy="68" r="18" fill="#bdcdb4" />
+                      <circle cx="159" cy="68" r="18" fill="#bdcdb4" />
+                      <circle cx="125" cy="70" r="5" fill="#14251e" />
+                      <circle cx="155" cy="70" r="5" fill="#14251e" />
+                      <ellipse cx="140" cy="91" rx="18" ry="14" fill="#bd8055" stroke="#c79b76" />
+                      <path d="M111 109q29 20 58 0" fill="#101b17" />
+                      <path
+                        d="m106 129-28 12m96-12 28 12M109 151h-12m74 0h12"
+                        stroke-linecap="round"
+                      />
+                    </g>
+                    <g fill="#e8a277">
+                      <circle cx="78" cy="141" r="4" />
+                      <circle cx="202" cy="141" r="4" />
+                      <circle cx="140" cy="172" r="3" />
+                    </g></svg
+                  ><span class="art-label">CONCEPT DIAGRAM / NOT A HARDWARE SCHEMATIC</span>
+                </div>
+                <div class="specimen-name">
+                  <h3>Love2Learn Elmo</h3>
+                  <span>HASBRO · B6572</span>
+                </div>
+                <p>One toy. A starting point for an expandable robotics laboratory.</p>
+                <div class="progress-track"><i></i></div>
+                <div class="progress-caption">
+                  <span>Inspection</span><span>Authentication</span><span>Control</span>
+                </div>
+              </section>
+              <section class="panel next-step">
+                <p class="eyebrow">NEXT MILESTONE</p>
+                <h2>Make observation repeatable.</h2>
+                <p id="next-step">
+                  On iPhone, open this site in Bluefy. Load the published profile, then run a short
+                  inspection.
+                </p>
+                <button class="text-button" data-go="research">Open the testing guide →</button>
+              </section>
+            </div>
+          </div>
+          <section class="panel diagnostics">
+            <div class="panel-head">
+              <h2><span class="section-number">02</span> Session diagnostics</h2>
+              <span id="session-source" class="badge subtle">NO ACTIVE SESSION</span>
+            </div>
+            <div class="session-tools">
+              <label for="session-title"
+                >Session name<input
+                  id="session-title"
+                  placeholder="Name your experiment"
+                  maxlength="180" /></label
+              ><button id="save-session" class="secondary" disabled>Save session</button
+              ><button id="copy" class="secondary">Copy log</button
+              ><button id="export-json" class="secondary" disabled>Export JSON</button
+              ><button id="export-text" class="secondary" disabled>Export TXT</button>
+            </div>
+            <p id="autosave-status" class="hint">
+              Finished sessions save automatically. Payload bytes stay in memory by default.
+            </p>
+            <label class="checkline advanced" for="include-payloads"
+              ><input type="checkbox" id="include-payloads" /> Include raw payloads when
+              saving/exporting this session
+              <span>May contain sensitive data; review before sharing.</span></label
+            >
+            <details open>
+              <summary>Human-readable log</summary>
+              <pre id="log" tabindex="0" aria-label="Diagnostic log"></pre>
+            </details>
+            <details class="advanced">
+              <summary>Technical event log</summary>
+              <pre id="raw-log" tabindex="0" aria-label="Technical event log"></pre>
+            </details>
+          </section>
+        </section>
+        <section id="page-protocol" class="page" hidden aria-labelledby="protocol-title">
+          <div class="page-heading">
+            <div>
+              <p class="eyebrow">INSPECT / DECODE / COMPARE</p>
+              <h1 id="protocol-title">Listen to the details.</h1>
+              <p class="lead">A notification is an observation, not proof of a protocol.</p>
+            </div>
+          </div>
+          <div class="two-columns">
+            <section class="panel">
+              <div class="panel-head">
+                <h2>Observed service map</h2>
+                <span id="gatt-evidence" class="badge subtle">NO CAPTURE</span>
+              </div>
+              <p class="hint">
+                Only services granted to this page can be inspected. This does not enumerate all
+                services on a device.
+              </p>
+              <div id="service-map" class="empty">
+                Start an inspection to see actual service metadata.
+              </div>
+            </section>
+            <section class="panel">
+              <div class="panel-head">
+                <h2>Notification stream</h2>
+                <span class="badge subtle">RX ONLY</span>
+              </div>
+              <label for="packet-filter">Filter packets</label
+              ><input
+                id="packet-filter"
+                type="search"
+                placeholder="Search text, hex, or characteristic"
+              />
+              <p class="hint">
+                Hex and text are transient unless raw payload storage is explicitly enabled. Unknown
+                fields remain unknown.
+              </p>
+              <div id="packets" class="packet-list empty">No notifications captured.</div>
+            </section>
+          </div>
+          <section class="panel">
+            <h2>Evidence-backed protocol registry</h2>
+            <p>
+              UUIDs below are reported by an independent researcher. Observed characteristic
+              properties will appear above after a real inspection. No transmit commands are
+              enabled.
+            </p>
+            <div id="registry" class="registry"></div>
+            <a
+              href="https://github.com/NonaSuomy/Love2LearnElmo"
+              target="_blank"
+              rel="noopener noreferrer"
+              >Read the source notebook ↗</a
+            >
+          </section>
+          <section class="panel">
+            <div class="panel-head">
+              <h2>Authentication experiment</h2>
+              <span class="badge warm">SYNTHETIC ONLY</span>
+            </div>
+            <p>
+              Live authentication is unavailable. No Elmo challenge-response protocol has been
+              independently validated here. These fixtures test application outcomes and budgets;
+              they implement no Elmo handshake.
+            </p>
+            <div class="form-row">
+              <label for="auth-scenario"
+                >Fixture outcome<select id="auth-scenario">
+                  <option value="success">Synthetic success</option>
+                  <option value="rejected">Synthetic rejection</option>
+                  <option value="timeout">Synthetic timeout</option>
+                  <option value="inconclusive">Synthetic inconclusive</option>
+                </select></label
+              ><button id="auth-run" class="secondary">Run synthetic fixture</button
+              ><button id="auth-cancel" class="secondary" disabled>Cancel fixture</button>
+            </div>
+            <p id="auth-state" role="status">Idle · no Bluetooth traffic</p>
+          </section>
+        </section>
+        <section id="page-sessions" class="page" hidden aria-labelledby="records-title">
+          <div class="page-heading">
+            <div>
+              <p class="eyebrow">YOUR LOCAL RESEARCH NOTEBOOK</p>
+              <h1 id="records-title">Keep what you learn.</h1>
+              <p class="lead">Saved experiments, captures, and the notes between them.</p>
+            </div>
+            <button id="backup" class="primary">Export backup ↗</button>
+          </div>
+          <div class="panel storage-banner">
+            <p id="storage-summary">Opening storage…</p>
+            <p class="hint">
+              Browser-local storage can be cleared by iOS or private browsing. Backups contain
+              metadata and sanitized notes; raw bytes are omitted. Nothing syncs across devices.
+            </p>
+            <div class="actions">
+              <label class="file-button secondary" for="import-file"
+                >Import research file<input
+                  id="import-file"
+                  type="file"
+                  accept=".json,.txt,.csv,application/json,text/plain,text/csv" /></label
+              ><button id="new-note" class="secondary">New research note</button>
+            </div>
+            <p class="hint">
+              JSON sessions/backups or TXT/CSV notes · 2 MB file limit · text notes up to 20,000
+              characters
+            </p>
+          </div>
+          <label for="record-search" class="sr-only">Search records</label
+          ><input
+            id="record-search"
+            type="search"
+            placeholder="Search sessions, outcomes, or notes…"
+          />
+          <div class="records-grid">
+            <div id="records" class="records"></div>
+            <section class="panel" id="record-editor" aria-labelledby="editor-title">
+              <h2 id="editor-title">Experiment notebook</h2>
+              <p id="record-meta" class="hint">Select a record to inspect or edit its notes.</p>
+              <label for="record-title">Record title</label
+              ><input id="record-title" maxlength="180" disabled /><label for="record-notes"
+                >Research notes</label
+              ><textarea
+                id="record-notes"
+                rows="8"
+                maxlength="20000"
+                disabled
+                placeholder="What did you observe? What is still unknown?"
+              ></textarea>
+              <div class="actions">
+                <button id="update-record" class="primary" disabled>Save notes</button
+                ><button id="export-record" class="secondary" disabled>Export record</button
+                ><button id="delete-record" class="danger" disabled>Delete record</button>
+              </div>
+              <p class="hint">
+                Deletion requires a second click. Export a backup first if this record matters.
+              </p>
+            </section>
+          </div>
+          <section class="panel">
+            <h2>Compare captures</h2>
+            <p class="hint">
+              Compare notification categories across saved sessions. Source labels remain visible;
+              synthetic results never establish hardware behavior.
+            </p>
+            <div class="form-row">
+              <label for="compare-first">First session<select id="compare-first"></select></label
+              ><label for="compare-second"
+                >Second session<select id="compare-second"></select></label
+              ><button id="compare" class="secondary">Compare</button>
+            </div>
+            <div id="comparison" role="status"></div>
+          </section>
+        </section>
+        <section id="page-controls" class="page" hidden aria-labelledby="controls-title">
+          <div class="page-heading">
+            <div>
+              <p class="eyebrow">BUILD THE BEHAVIOR BEFORE THE HARDWARE</p>
+              <h1 id="controls-title">Room to experiment.</h1>
+              <p class="lead">A virtual workbench. Every result here is simulated.</p>
+            </div>
+            <span class="badge warm">SIMULATION ONLY</span>
+          </div>
+          <div class="two-columns">
+            <section class="panel">
+              <h2>Virtual actuator</h2>
+              <p>
+                Normalized visual position, −1 to +1. These values are not motor angles, voltages,
+                or safe physical limits.
+              </p>
+              <div id="virtual-stage" class="virtual-stage">
+                <div id="virtual-arm" class="virtual-arm"><i></i></div>
+                <div class="virtual-base"></div>
+                <span>VIRTUAL / NO DEVICE TRAFFIC</span>
+              </div>
+              <label for="pose"
+                >Virtual position <output id="pose-value" for="pose">0.00</output></label
+              ><input type="range" id="pose" min="-1" max="1" step="0.01" value="0" />
+              <div class="actions">
+                <button id="play-sequence" class="primary">Simulate sequence</button
+                ><button id="stop-sequence" class="danger">Stop simulation</button>
+              </div>
+              <p id="virtual-status" role="status">Virtual actuator at rest.</p>
+            </section>
+            <section class="panel">
+              <h2>Behavior sandbox</h2>
+              <p>
+                Preview a browser-generated tone or spoken phrase. This uses your phone's audio and
+                never sends audio to Elmo.
+              </p>
+              <label for="speech-text">Preview phrase</label
+              ><input
+                id="speech-text"
+                maxlength="120"
+                value="Project Sasori. Observation before control."
+              />
+              <div class="actions">
+                <button id="speak" class="secondary">Speak on this device</button
+                ><button id="tone" class="secondary">Preview tone</button>
+              </div>
+              <p id="audio-status" role="status">
+                Audio previews require a tap. Device sound settings apply.
+              </p>
+              <h3>Future integration boundary</h3>
+              <p>
+                Python and H.E.R.B.I.E. controllers will exchange the versioned session format.
+                There are no remote command endpoints or public code execution interfaces.
+              </p>
+            </section>
+          </div>
+          <section class="panel">
+            <h2>Physical capability readiness</h2>
+            <div id="capabilities" class="capabilities"></div>
+            <p class="hint">
+              Unlocking hardware will require verified protocol evidence, separate operating limits,
+              guarded tests, and an accessible physical power stop. This release exposes no live
+              transmission path.
+            </p>
+          </section>
+        </section>
+        <section id="page-research" class="page" hidden aria-labelledby="research-title">
+          <div class="page-heading">
+            <div>
+              <p class="eyebrow">EVIDENCE BEFORE ASSUMPTIONS</p>
+              <h1 id="research-title">A record you can trust.</h1>
+              <p class="lead">What we know, where it came from, and what comes next.</p>
+            </div>
+          </div>
+          <div class="two-columns">
+            <section class="panel">
+              <span class="badge warm">HISTORICAL / USER-REPORTED</span>
+              <h2>October 20, 2026 · V4 probe</h2>
+              <ul class="evidence-list">
+                <li>Bluefy discovered <b>Elmo L2L</b> and connected to GATT.</li>
+                <li>A custom service, Write Without Response, and Notify were identified.</li>
+                <li>
+                  Notifications included <code>NewModeIdx:12</code> and
+                  <code>Start:LowPowerSleep</code>.
+                </li>
+                <li>Inspection ended after approximately 15 seconds.</li>
+              </ul>
+              <p>
+                These observations belong to the earlier V4 test. They have not been independently
+                reproduced by this release. Authentication, motor control, and audio control remain
+                unconfirmed.
+              </p>
+              <p class="hint">
+                V4 source recovery: original URL returned HTTP 403; no source was found in the
+                connected Sites account or prior context. The original authentication routine was
+                not recovered.
+              </p>
+            </section>
+            <section class="panel">
+              <span class="badge subtle">COMMUNITY-REPORTED / SOURCED</span>
+              <h2>A candidate Elmo profile</h2>
+              <p>
+                The NonaSuomy/Love2LearnElmo notebook contains a concrete GATT table. This lab
+                transcribes its UUID facts with attribution. They are not assumed to match every
+                device or firmware.
+              </p>
+              <p>
+                No upstream code, firmware, audio, credentials, or decompiled application code is
+                bundled. The notebook has no explicit repository license.
+              </p>
+              <a
+                href="https://github.com/NonaSuomy/Love2LearnElmo"
+                target="_blank"
+                rel="noopener noreferrer"
+                >Inspect the original research ↗</a
+              >
+            </section>
+          </div>
+          <section class="panel">
+            <h2>Your first iPhone inspection</h2>
+            <ol class="steps">
+              <li>
+                <b>Open this HTTPS page in Bluefy.</b> Enable Bluetooth, power on your own Elmo, and
+                keep it nearby. Close other apps connected to it.
+              </li>
+              <li>
+                <b>Load the published Elmo UUIDs.</b> Confirm the source notice and authorization
+                checkbox. Keep simulation off.
+              </li>
+              <li>
+                <b>Tap Connect & inspect.</b> Select Elmo L2L. Keep the page visible; the app stops
+                after 15 seconds from GATT connection.
+              </li>
+              <li>
+                <b>Review and save the result.</b> Look for observed characteristics, notification
+                counts, and the disconnect reason. No messages is an inconclusive result.
+              </li>
+            </ol>
+            <p class="hint">
+              Stop and switch off physical power if there is unexpected motion, heat, binding,
+              smoke, or exposed wiring. A browser disconnect cannot guarantee physical motion stops.
+            </p>
+          </section>
+          <section class="panel">
+            <h2>Guided troubleshooting</h2>
+            <label for="trouble">What happened?</label
+            ><select id="trouble">
+              <option value="support">Bluetooth API unavailable</option>
+              <option value="chooser">Elmo does not appear</option>
+              <option value="service">Service or characteristic not found</option>
+              <option value="silent">Connected, no notifications</option>
+              <option value="disconnect">Unexpected disconnect</option>
+              <option value="storage">My saved records are missing</option>
+            </select>
+            <p id="trouble-answer" role="status"></p>
+          </section>
+          <section class="panel">
+            <h2>Research & development references</h2>
+            <div class="reference-links">
+              <a
+                href="https://developer.chrome.com/docs/capabilities/bluetooth"
+                target="_blank"
+                rel="noopener noreferrer"
+                >Chrome · Web Bluetooth ↗</a
+              ><a
+                href="https://pnnsoft.com/portfolio/detail/bluefy-web-bluetooth-api-solution-for-ios-devices"
+                target="_blank"
+                rel="noopener noreferrer"
+                >PNN Soft · Bluefy ↗</a
+              ><a
+                href="https://www.nordicsemi.com/Products/Development-tools/nRF-Connect-for-mobile"
+                target="_blank"
+                rel="noopener noreferrer"
+                >Nordic · nRF Connect ↗</a
+              ><a href="https://github.com/hbldh/bleak" target="_blank" rel="noopener noreferrer"
+                >Bleak · future Python transport ↗</a
+              ><a
+                href="https://github.com/jimedusot-beep/Project-sasori/tree/main/docs"
+                target="_blank"
+                rel="noopener noreferrer"
+                >Architecture, safety & research register ↗</a
+              >
+            </div>
+          </section>
+        </section>
+        <footer>
+          PROJECT SASORI <span>Experimental · Built for evidence, designed to expand.</span
+          ><a
+            href="https://github.com/jimedusot-beep/Project-sasori/issues"
+            target="_blank"
+            rel="noopener noreferrer"
+            >Report an issue ↗</a
+          >
+        </footer>
+      </main>
+    </div>
+    <noscript
+      ><p class="notice">
+        JavaScript is required for this laboratory. No Bluetooth connection occurs without it.
+      </p></noscript
+    >
+  </body>
+</html>
