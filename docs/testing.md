@@ -35,7 +35,7 @@ Internal implementation QA also exercised the running UI through the browser: si
 
 - Verify laboratory runs on feature branches, pull requests, and reusable calls.
 - Deploy Pages runs the same verification first, then configures Pages, uploads site/, deploys, and fetches the published HTML and every imported module plus CSS/icon assets.
-- Release laboratory creates an experimental release and milestones after a successful Pages workflow, or a pushed version tag. It does not expose credentials in shipped JavaScript.
+- Release metadata and milestones publish after successful software checks even if Pages setup is blocked; version-tag releases also run their own verification. No credential is exposed in shipped JavaScript.
 - Direct action dependencies are pinned to inspected immutable SHAs. npm dependencies are lockfile-pinned.
 
 The credential-pattern scanner detects common token/private-key forms in current text files. It is not a complete secret-scanning service and cannot recognize every binary or custom secret. Raw payloads must be reviewed privately before sharing.

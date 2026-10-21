@@ -4,12 +4,12 @@ module.exports = async function publishMetadata({ github, context }) {
   const { owner, repo } = context.repo;
   const version = JSON.parse(fs.readFileSync('package.json', 'utf8')).version;
   const tag = context.ref.startsWith('refs/tags/') ? context.ref.slice(10) : 'v' + version;
-  const existing = await github.rest.repos.getReleaseByTag({ owner, repo, tag }).catch((error) => {
+  let release = await github.rest.repos.getReleaseByTag({ owner, repo, tag }).catch((error) => {
     if (error.status !== 404) throw error;
     return null;
   });
-  if (!existing)
-    await github.rest.repos.createRelease({
+  if (!release)
+    release = await github.rest.repos.createRelease({
       owner,
       repo,
       tag_name: tag,
@@ -23,6 +23,12 @@ module.exports = async function publishMetadata({ github, context }) {
     repo,
     state: 'all',
   });
+  const issues = await github.paginate(github.rest.issues.listForRepo, {
+    owner,
+    repo,
+    state: 'open',
+  });
+  const publishedMilestones = [];
   for (const item of [
     {
       title: 'M1 · Repeatable Elmo inspection',
@@ -34,7 +40,26 @@ module.exports = async function publishMetadata({ github, context }) {
       description:
         'After M1, obtain a documented handshake and authorized private observations. Define consent, local-only credential handling, finite traffic budgets, and independently testable outcomes before live authentication.',
     },
-  ])
-    if (!milestones.some((m) => m.title === item.title))
-      await github.rest.issues.createMilestone({ owner, repo, ...item });
+  ]) {
+    const milestone =
+      milestones.find((m) => m.title === item.title) ||
+      (await github.rest.issues.createMilestone({ owner, repo, ...item })).data;
+    publishedMilestones.push({
+      number: milestone.number,
+      title: milestone.title,
+      url: milestone.html_url,
+    });
+    const expectedTitle = item.title.startsWith('M1')
+      ? 'M1: Reproduce five safe Elmo inspections on iPhone and Bluefy'
+      : 'M2: Establish an authorized authentication specification after repeatable inspection';
+    const issue = issues.find((i) => !i.pull_request && i.title === expectedTitle);
+    if (issue && !issue.milestone)
+      await github.rest.issues.update({
+        owner,
+        repo,
+        issue_number: issue.number,
+        milestone: milestone.number,
+      });
+  }
+  return { release: release.data.html_url, milestones: publishedMilestones };
 };

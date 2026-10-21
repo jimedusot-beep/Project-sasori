@@ -24,7 +24,7 @@ async function scan(directory) {
     const file = path.join(directory, entry.name);
     if (entry.isDirectory()) await scan(file);
     else if (
-      /\.(?:js|mjs|json|html|md|ya?ml|txt)$/.test(entry.name) &&
+      /\.(?:js|mjs|cjs|json|html|md|ya?ml|txt)$/.test(entry.name) &&
       entry.name !== 'package-lock.json' &&
       !file.includes('tests/')
     ) {

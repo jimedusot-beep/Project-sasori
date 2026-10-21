@@ -51,4 +51,4 @@ jobs:
         with:
           script: |
             const publishMetadata = require('./scripts/release.cjs');
-            await publishMetadata({ github, context });
+            console.log(JSON.stringify(await publishMetadata({ github, context })));
