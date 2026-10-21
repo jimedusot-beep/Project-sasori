@@ -43,6 +43,16 @@ export class BluetoothTransport {
     this.packetCount = 0;
     this.onDisconnect = null;
     this.busy = false;
+    this.startedAt = 0;
+    this.currentStage = null;
+  }
+  markStage(stage) {
+    this.currentStage = stage;
+    this.emit({
+      type: 'stage',
+      stage,
+      elapsedMs: Math.max(0, Date.now() - this.startedAt),
+    });
   }
   setState(next, details = {}) {
     if (!transitions[this.state]?.includes(next))
@@ -73,7 +83,9 @@ export class BluetoothTransport {
     this.services = [];
     this.packetCount = 0;
     const run = ++this.generation;
+    this.startedAt = Date.now();
     this.setState('selecting');
+    this.markStage('device-chooser');
     // Invoke the chooser synchronously in the user's click call stack (no preceding await).
     try {
       const chooser = Promise.resolve(
@@ -102,6 +114,7 @@ export class BluetoothTransport {
       };
       selected.addEventListener('gattserverdisconnected', this.onDisconnect);
       this.setState('connecting');
+      this.markStage('gatt-connection');
       const attempt = Promise.resolve(selected.gatt.connect());
       // Web Bluetooth promises cannot be aborted. Close a late connection after cancellation/timeout.
       attempt.then(
@@ -114,12 +127,14 @@ export class BluetoothTransport {
       this.check(run);
       this.timer = setTimeout(() => this.disconnect('inspection-complete'), durationMs);
       this.setState('discovering');
+      this.markStage('service-discovery');
       const primary = await withTimeout(
         this.server.getPrimaryService(service),
         this.operationMs,
         'Service discovery',
       );
       this.check(run);
+      this.markStage('characteristic-discovery');
       const chars = await withTimeout(
         primary.getCharacteristics(),
         this.operationMs,
@@ -152,6 +167,7 @@ export class BluetoothTransport {
             'Configured characteristic cannot notify or indicate',
             'NotSupportedError',
           );
+        this.markStage('notification-subscription');
         const handler = (event) => {
           if (run !== this.generation) return;
           if (++this.packetCount > 500) {
@@ -178,10 +194,18 @@ export class BluetoothTransport {
           message: 'Notification subscription enabled. No application commands sent.',
         });
       }
+      this.markStage('inspection-ready');
       this.setState('inspecting');
     } catch (error) {
       if (run !== this.generation) return;
-      this.emit({ type: 'error', error: explainError(error) });
+      this.emit({
+        type: 'error',
+        error: {
+          ...explainError(error),
+          stage: this.currentStage,
+          elapsedMs: Math.max(0, Date.now() - this.startedAt),
+        },
+      });
       this.setState('error');
       this.disconnect(
         error?.name === 'NotFoundError' && !this.device ? 'selection-cancelled' : 'operation-error',
@@ -195,6 +219,7 @@ export class BluetoothTransport {
     ++this.generation;
     clearTimeout(this.timer);
     this.timer = null;
+    this.markStage('teardown');
     this.setState('disconnecting', { reason });
     for (const { characteristic, handler } of this.subscriptions)
       characteristic.removeEventListener('characteristicvaluechanged', handler);

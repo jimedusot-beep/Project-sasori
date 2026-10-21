@@ -167,6 +167,13 @@
                   Community-reported profile. Confirmed on the researcher's unit; not yet verified
                   on yours.
                 </p>
+                <label for="notify-preset">Elmo notification probe</label
+                ><select id="notify-preset" aria-describedby="probe-hint"></select>
+                <p id="probe-hint" class="hint">
+                  Choose one community-reported notification channel per manual inspection.
+                  Metadata-only avoids notification subscription. The selected endpoint is a
+                  hypothesis, not a verified command. No motor, voice, or authentication writes.
+                </p>
                 <details id="uuid-settings">
                   <summary>Service & notification settings</summary>
                   <label for="svc">Custom service UUID</label
@@ -206,6 +213,9 @@
               <div class="connection-foot">
                 <span class="dot"></span> 15-second inspection · manual reconnect only
               </div>
+              <p id="inspection-stage" class="hint" role="status" aria-live="polite">
+                No inspection started. Stage details will appear here and in session logs.
+              </p>
             </section>
             <div class="right-stack">
               <section class="panel specimen" aria-labelledby="specimen-title">
