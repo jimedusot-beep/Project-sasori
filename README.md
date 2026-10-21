@@ -27,3 +27,15 @@ Only test hardware you own or are authorized to investigate. Keep fingers and ca
 ## Development
 
 Run `node --check site/app.js` and `node --test tests/*.test.mjs` in repository root with Node 22+. Development status: experimental / hardware validation pending.
+
+## Research and verification package (proposed branch)
+
+- [Seven-area engineering dossier](docs/research/seven-area-engineering-dossier.md) — primary manufacturer sources, reusable code references, community methods, hardware observations, software audit, experiment procedures and expansion architecture.
+- [Experiment 001 evidence register](experiments/001-elmo-l2l/evidence-register.md) — demonstrated vs unknown capabilities.
+- [Recorded notification examples](experiments/001-elmo-l2l/protocol-notifications.md) — historic inbound bytes, **not commands**.
+- [Offline packet analyzer](site/index.html) — parses existing log samples locally without connecting or sending Bluetooth application packets.
+
+The original V4 hosted probe is not accessible to the repository; its original JavaScript code and UUIDs have not been independently recovered. This branch does not create new authentication functionality. Do not interpret the offline decoder as proving an Elmo command protocol.
+
+### Before opening a pull request
+Review changes, run \`node --check site/app.js\`, \`node --check site/elmo-packets.mjs\`, and \`node --test tests/*.test.mjs\`. Run real BLE verification only in Bluefy with verified UUIDs. Classify results as SIMULATED, SOURCE-VERIFIED, or HARDWARE-OBSERVED.
