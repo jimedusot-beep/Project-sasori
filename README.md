@@ -32,6 +32,8 @@ Run `node --check site/app.js` and `node --test tests/*.test.mjs` in repository 
 
 - [Seven-area engineering dossier](docs/research/seven-area-engineering-dossier.md) — primary manufacturer sources, reusable code references, community methods, hardware observations, software audit, experiment procedures and expansion architecture.
 - [Experiment 001 evidence register](experiments/001-elmo-l2l/evidence-register.md) — demonstrated vs unknown capabilities.
+- [Read-only iPhone UUID capture guide](experiments/001-elmo-l2l/iphone-uuid-capture-guide.md) — recover the two UUIDs required by the site, without application commands.
+- [Technology reuse matrix](docs/research/reuse-matrix.md) — what to reuse, what NOT to copy, and license/compatibility gates.
 - [Recorded notification examples](experiments/001-elmo-l2l/protocol-notifications.md) — historic inbound bytes, **not commands**.
 - [Offline packet analyzer](site/index.html) — parses existing log samples locally without connecting or sending Bluetooth application packets.
 
