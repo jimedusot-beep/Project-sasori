@@ -2,6 +2,25 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { decodePacket, summarizePackets, MAX_PACKET_BYTES } from '../site/lib/protocol.js';
 const encode = (text) => new TextEncoder().encode(text);
+test('historical raw V4 notifications recognize text with unknown prefix', () => {
+  const fromHex = (hex) => new Uint8Array(hex.match(/../g).map((h) => parseInt(h, 16)));
+  assert.equal(decodePacket(fromHex('604e65774d6f64654964783a313200')).kind, 'mode-observation');
+  assert.equal(
+    decodePacket(fromHex('6153746172743a4c6f77506f776572536c656570')).kind,
+    'sleep-observation',
+  );
+  assert.equal(decodePacket(fromHex('6100')).kind, 'unknown');
+});
+test('historical prefix matches keep full bytes and do not assign opcode meaning', () => {
+  const bytes = Uint8Array.from('604e65774d6f64654964783a313200'.match(/../g), (h) =>
+    parseInt(h, 16),
+  );
+  const packet = decodePacket(bytes);
+  assert.equal(packet.kind, 'mode-observation');
+  assert.match(packet.description, /prefix meaning is unknown/);
+  assert.ok(packet.hex.startsWith('60 '));
+  assert.ok(packet.text.startsWith('\u0060'));
+});
 test('known historical strings are descriptions, not authentication proof', () => {
   const mode = decodePacket(encode('NewModeIdx:12')),
     sleep = decodePacket(encode('Start:LowPowerSleep'));
@@ -43,14 +62,4 @@ test('packet summary counts observed bytes and recognized patterns', () => {
     summarizePackets([decodePacket(encode('NewModeIdx:12')), decodePacket(new Uint8Array([255]))]),
     { packets: 2, bytes: 14, known: 1 },
   );
-});
-
-test('historical raw V4 notifications recognize text with unknown prefix', () => {
-  const fromHex = (hex) => new Uint8Array(hex.match(/../g).map((h) => parseInt(h, 16)));
-  assert.equal(decodePacket(fromHex('604e65774d6f64654964783a313200')).kind, 'mode-observation');
-  assert.equal(
-    decodePacket(fromHex('6153746172743a4c6f77506f776572536c656570')).kind,
-    'sleep-observation',
-  );
-  assert.equal(decodePacket(fromHex('6100')).kind, 'unknown');
 });

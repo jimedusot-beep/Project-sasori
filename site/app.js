@@ -1,6 +1,7 @@
 import { BluetoothTransport } from './lib/bluetooth.js';
 import { SimulationTransport } from './lib/simulation.js';
 import { AuthExperiment } from './lib/auth.js';
+import { analyzeElmoNotification } from './elmo-packets.mjs';
 import {
   PROFILES,
   ELMO_SERVICE,
@@ -35,6 +36,22 @@ const labels = {
   controls: 'Control laboratory',
   research: 'Evidence & guides',
 };
+function analyzeOfflinePacket() {
+  try {
+    $('packet-result').textContent = JSON.stringify(
+      analyzeElmoNotification($('packet-hex').value),
+      null,
+      2,
+    );
+  } catch (error) {
+    $('packet-result').textContent = 'Cannot decode: ' + error.message;
+  }
+}
+$('packet-decode').addEventListener('click', analyzeOfflinePacket);
+$('packet-sample').addEventListener('click', () => {
+  $('packet-hex').value = '604e65774d6f64654964783a313200';
+  analyzeOfflinePacket();
+});
 const store = new ResearchStore();
 let diagnostics = new Diagnostics(),
   session = null,
@@ -438,6 +455,7 @@ async function refreshRecords() {
         store.corrupt.length +
         ' corrupt records skipped. Export valid records before clearing browser storage.'
       : '');
+  $('recover-corrupt').hidden = !store.corrupt.length;
   renderRecords();
   updateComparisonOptions();
 }
@@ -561,6 +579,34 @@ $('new-note').addEventListener(
     await refreshRecords();
     selectRecord(r.id);
     $('record-notes').focus();
+  }),
+);
+let recoveryArmed = false,
+  recoveryTimer;
+$('recover-corrupt').addEventListener(
+  'click',
+  safe(async () => {
+    if (!store.corrupt.length) return;
+    if (!recoveryArmed) {
+      recoveryArmed = true;
+      $('recover-corrupt').textContent =
+        'Confirm removal of ' + store.corrupt.length + ' invalid records';
+      notice(
+        'Export a backup of valid records first. Confirming removes only records that failed validation; their contents cannot be recovered by this app.',
+      );
+      clearTimeout(recoveryTimer);
+      recoveryTimer = setTimeout(() => {
+        recoveryArmed = false;
+        $('recover-corrupt').textContent = 'Remove invalid records';
+      }, 5000);
+      return;
+    }
+    for (const invalid of [...store.corrupt]) await store.remove(invalid.id);
+    recoveryArmed = false;
+    clearTimeout(recoveryTimer);
+    $('recover-corrupt').textContent = 'Remove invalid records';
+    await refreshRecords();
+    notice('Invalid records removed. Valid experiments were preserved.');
   }),
 );
 $('backup').addEventListener(

@@ -7,6 +7,8 @@ const ignored = new Set([
   'playwright-report',
   'coverage',
   '.openai',
+  'secrets',
+  'private-logs',
 ]);
 const rules = [
   /-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----/,
@@ -22,7 +24,7 @@ async function scan(directory) {
     const file = path.join(directory, entry.name);
     if (entry.isDirectory()) await scan(file);
     else if (
-      /\.(?:js|mjs|json|html|md|ya?ml|txt)$/.test(entry.name) &&
+      /\.(?:js|mjs|cjs|json|html|md|ya?ml|txt)$/.test(entry.name) &&
       entry.name !== 'package-lock.json' &&
       !file.includes('tests/')
     ) {

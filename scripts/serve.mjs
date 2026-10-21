@@ -5,6 +5,7 @@ const root = path.resolve('site');
 const types = {
   '.html': 'text/html',
   '.js': 'text/javascript',
+  '.mjs': 'text/javascript',
   '.css': 'text/css',
   '.json': 'application/json',
   '.svg': 'image/svg+xml',

@@ -14,9 +14,15 @@ Characterize the toy's Bluetooth Low Energy interface on a user-owned unit and e
 - Read-only inspection ended after roughly 15 seconds.
 - A subsequent screenshot still showed `MODE inspect`, not an authenticated run.
 
+## Current v0.2 update
+
+A source-linked community GATT table has now been identified in [NonaSuomy/Love2LearnElmo](https://github.com/NonaSuomy/Love2LearnElmo/blob/82fa312e06af1d8e549cec588856ebce227b5f77/README.md). The app offers deliberate loading of its candidate service and notification UUIDs. This is not V4 source recovery and is not independent reproduction on this unit.
+
+The historical raw examples and offline analyzer from the earlier research merge are preserved. Live and simulated sessions now save locally, with imported provenance labeled separately. See [current protocol assessment](../../docs/protocol.md).
+
 ## Unknowns
 
-- Exact GATT UUIDs (retrieve from actual V4 probe source or nRF Connect).
+- Whether the community-reported GATT UUIDs and properties match this unit (verify with real inspection or nRF Connect).
 - Authentication algorithm, whether user-selected password is accepted, and full protocol framing.
 - Meaning of mode index 12, lifetime of the BLE link, movement and audio control protocol.
 

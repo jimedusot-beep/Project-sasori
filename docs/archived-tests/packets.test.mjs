@@ -1,7 +1,8 @@
-import {test} from 'node:test';
+import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import {parseHex, hexOf, analyzeElmoNotification} from '../site/elmo-packets.mjs';
-test('hex parser accepts spaced case-insensitive bytes', () => assert.equal(hexOf(parseHex('0x60 0x4E 00')), '604e00'));
+import { parseHex, hexOf, analyzeElmoNotification } from '../site/elmo-packets.mjs';
+test('hex parser accepts spaced case-insensitive bytes', () =>
+  assert.equal(hexOf(parseHex('0x60 0x4E 00')), '604e00'));
 test('rejects malformed, odd-length and empty values', () => {
   for (const s of ['', 'a', 'zz', '0x', '12 3']) assert.throws(() => parseHex(s));
 });

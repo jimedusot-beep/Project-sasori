@@ -15,19 +15,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: ${{ github.sha }}
       - uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
         with:
           script: |
-            const fs = require('fs');
-            const { owner, repo } = context.repo;
-            const tag = context.ref.replace('refs/tags/', '');
-            const existing = await github.rest.repos.getReleaseByTag({ owner, repo, tag }).catch(e => { if (e.status !== 404) throw e; return null; });
-            if (!existing) await github.rest.repos.createRelease({
-              owner, repo, tag_name: tag, name: 'Project Sasori ' + tag,
-              body: fs.readFileSync('docs/release-notes.md', 'utf8'), prerelease: true,
-            });
-            const milestones = await github.paginate(github.rest.issues.listMilestones, { owner, repo, state: 'all' });
-            for (const item of [
-              { title: 'M1 · Repeatable Elmo inspection', description: 'Repeat three authorized 15-second inspections on the real iPhone/Bluefy/Elmo combination. Record UUIDs, properties, notifications, and disconnect reasons. No authentication or motor writes.' },
-              { title: 'M2 · Evidence-backed authentication', description: 'After M1, obtain a documented handshake and authorized hardware captures. Review consent, local-only credentials, finite retry/packet budgets, and success criteria before implementing any live authentication traffic.' },
-            ]) if (!milestones.some(m => m.title === item.title)) await github.rest.issues.createMilestone({ owner, repo, ...item });
+            const publishMetadata = require('./scripts/release.cjs');
+            console.log(JSON.stringify(await publishMetadata({ github, context })));

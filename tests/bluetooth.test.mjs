@@ -19,6 +19,15 @@ test('no connection is requested at construction', () => {
   const { bluetooth } = setup();
   assert.equal(bluetooth.requests.length, 0);
 });
+test('show-all fallback is explicit and still grants only the selected service', async () => {
+  const f = setup();
+  await f.transport.connect({ service, notify, showAllDevices: true });
+  assert.deepEqual(f.bluetooth.requests[0], {
+    acceptAllDevices: true,
+    optionalServices: [service],
+  });
+  f.transport.disconnect();
+});
 test('chooser is called synchronously and requests only the chosen service', async () => {
   const f = setup();
   const connection = f.transport.connect({ service, notify });

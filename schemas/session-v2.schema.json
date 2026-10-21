@@ -1,0 +1,111 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/jimedusot-beep/Project-sasori/blob/main/schemas/session-v2.schema.json",
+  "title": "Project Sasori session v2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "format",
+    "schemaVersion",
+    "id",
+    "source",
+    "profileId",
+    "title",
+    "startedAt",
+    "endedAt",
+    "outcome",
+    "notes",
+    "packets",
+    "events",
+    "services",
+    "stats",
+    "payloadsIncluded"
+  ],
+  "properties": {
+    "format": { "const": "sasori.session" },
+    "schemaVersion": { "const": 2 },
+    "id": { "type": "string", "pattern": "^[a-zA-Z0-9_-]{1,100}$" },
+    "source": { "enum": ["live", "simulated", "imported"] },
+    "profileId": { "type": "string", "maxLength": 40 },
+    "title": { "type": "string", "maxLength": 180 },
+    "startedAt": { "type": "string", "format": "date-time" },
+    "endedAt": { "type": ["string", "null"], "format": "date-time" },
+    "importedAt": { "type": ["string", "null"], "format": "date-time" },
+    "outcome": { "type": "string", "maxLength": 100 },
+    "notes": { "type": "string", "maxLength": 20000 },
+    "payloadsIncluded": { "type": "boolean" },
+    "packets": {
+      "type": "array",
+      "maxItems": 500,
+      "items": {
+        "type": "object",
+        "required": ["timestamp", "characteristic", "length", "kind"],
+        "properties": {
+          "timestamp": { "type": "string", "format": "date-time" },
+          "characteristic": { "type": "string", "maxLength": 128 },
+          "length": { "type": "integer", "minimum": 0 },
+          "kind": { "type": "string", "maxLength": 100 },
+          "hex": { "type": "string", "maxLength": 3072, "pattern": "^(?:[a-fA-F0-9]{2}(?: |$))*$" },
+          "text": { "type": "string", "maxLength": 4096 },
+          "description": { "type": "string" },
+          "truncated": { "type": "boolean" },
+          "malformed": { "type": "boolean" }
+        }
+      }
+    },
+    "events": {
+      "type": "array",
+      "maxItems": 400,
+      "items": {
+        "type": "object",
+        "required": ["timestamp", "level", "message"],
+        "properties": {
+          "timestamp": { "type": "string", "format": "date-time" },
+          "level": { "type": "string", "maxLength": 30 },
+          "message": { "type": "string", "maxLength": 4000 },
+          "details": { "type": "object" }
+        }
+      }
+    },
+    "services": {
+      "type": "array",
+      "maxItems": 16,
+      "items": {
+        "type": "object",
+        "required": ["uuid", "characteristics"],
+        "properties": {
+          "uuid": { "type": "string", "maxLength": 128 },
+          "evidence": { "enum": ["observed-this-session", "synthetic", "community-reported"] },
+          "characteristics": {
+            "type": "array",
+            "maxItems": 128,
+            "items": {
+              "type": "object",
+              "required": ["uuid", "properties"],
+              "properties": {
+                "uuid": { "type": "string", "maxLength": 128 },
+                "properties": {
+                  "type": "array",
+                  "items": {
+                    "enum": ["read", "write", "writeWithoutResponse", "notify", "indicate"]
+                  }
+                },
+                "evidence": { "type": "string" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "stats": {
+      "type": "object",
+      "required": ["packets", "bytes", "malformed", "truncated"],
+      "properties": {
+        "packets": { "type": "integer", "minimum": 0 },
+        "bytes": { "type": "integer", "minimum": 0 },
+        "malformed": { "type": "integer", "minimum": 0 },
+        "truncated": { "type": "integer", "minimum": 0 }
+      }
+    }
+  }
+}
