@@ -2,7 +2,7 @@
 
 Published experimental release: [v0.2.0](https://github.com/jimedusot-beep/Project-sasori/releases/tag/v0.2.0). Status rechecked October 21, 2026 (UTC).
 
-Release commit: 636c60ed64362b9c370c729640e20b7d0865ec0c. The release was published at 10:29:44 UTC; website deployment remains incomplete.
+Release commit: 636c60ed64362b9c370c729640e20b7d0865ec0c. The release was published at 10:29:44 UTC. The website was subsequently deployed from main commit 12d3964bcd4de71befa516d678582284bf3cc0f5.
 
 ## Confirmed software results
 
@@ -25,8 +25,12 @@ No new physical Elmo observations have been made by this implementation. V4 obse
 
 ## Deployment
 
-GitHub repository metadata still reports has_pages: false. The latest completed deployment, [39584798655](https://github.com/jimedusot-beep/Project-sasori/actions/runs/39584798655), passed its verification job, then failed to create the initial Pages site with **Resource not accessible by integration**. The Actions token has Pages write permission but cannot perform that initial owner setup. ChatGPT plugin approval settings do not grant that Actions token additional repository administration permissions.
+Live URL: https://jimedusot-beep.github.io/Project-sasori/
 
-Owner action: repository Settings → Pages → Build and deployment → Source: GitHub Actions. Then rerun the failed Deploy Pages job. No live website is claimed until the workflow's HTTPS HTML/module/CSS/icon verification succeeds.
+After the owner enabled Pages, repository metadata reported has_pages: true. [Deploy Pages run 39587740888, attempt 2](https://github.com/jimedusot-beep/Project-sasori/actions/runs/39587740888/attempts/2) passed all three jobs: software verification, deployment, and release metadata. At 10:54:55 UTC, the deployment verifier confirmed the HTTPS page and all 15 module/CSS/icon assets. Earlier initial-setup failures remain historical evidence rather than the current status.
+
+The deployed overview rendered successfully in the browser, including the connection manager, profile selection, IndexedDB status, unsupported-Bluetooth guidance, and locked hardware controls. [Live overview screenshot](images/sasori-live-20261021.jpg). This cloud-browser check does not validate Bluefy or real Elmo hardware.
+
+A production-origin synthetic inspection completed with 3 notifications / 54 bytes, labeled SIMULATED, and saved a metadata-only record. After reloading the page, Research records still showed that simulated session with 3 notifications and the simulation-complete reason. No Bluetooth connection or physical command was attempted.
 
 Code releases and milestones publish after successful software verification independently of Pages configuration. The experimental release is not a claim that the website or hardware controls are live.
