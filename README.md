@@ -6,7 +6,7 @@ A mobile workbench for observing Bluetooth devices, preserving research, and dev
 
 ## Try the laboratory
 
-The intended GitHub Pages address is https://jimedusot-beep.github.io/Project-sasori/ . See [verification results](docs/verification.md) for the actual deployment outcome; this address alone is not proof of deployment.
+Open the [live laboratory](https://jimedusot-beep.github.io/Project-sasori/). HTTPS deployment and all 15 assets were verified on October 21, 2026. See [verification results](docs/verification.md) for the evidence and remaining hardware limits.
 
 1. Open the site and turn on **Use simulation** to explore without hardware.
 2. Tap **Run simulated inspection**. Three synthetic notifications appear; the finished session saves locally.
