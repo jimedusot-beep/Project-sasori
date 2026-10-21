@@ -1,7 +1,7 @@
 'use strict';
 // Experiment 001 is intentionally read-only. No app-level BLE writes in this file.
 const byId = id => document.getElementById(id);
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const stateText = byId('state');
 const connectButton = byId('connect');
 const disconnectButton = byId('disconnect');
