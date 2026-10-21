@@ -1,6 +1,8 @@
 # Verification record
 
-Software release candidate: v0.2.0. Reviewed October 21, 2026 (America/New_York).
+Published experimental release: [v0.2.0](https://github.com/jimedusot-beep/Project-sasori/releases/tag/v0.2.0). Status rechecked October 21, 2026 (UTC).
+
+Release commit: 636c60ed64362b9c370c729640e20b7d0865ec0c. The release was published at 10:29:44 UTC; website deployment remains incomplete.
 
 ## Confirmed software results
 
@@ -15,13 +17,15 @@ The combined suite passes all 74 Node tests, including the preserved historical-
 
 That run reports zero npm vulnerabilities, successful lint/format/type checks, 74 passing Node tests, and 12 passing browser tests. Browser screenshots and reports are retained as Actions artifacts. Later metadata/documentation-only changes do not claim additional hardware results.
 
+The merged release's [Deploy Pages run 39584798655](https://github.com/jimedusot-beep/Project-sasori/actions/runs/39584798655) also passed its `verify / checks` job and `release-metadata` job. Its separate `deploy` job failed during initial Pages setup. A failed deployment therefore does not indicate a failing software test suite.
+
 ## Hardware boundary
 
 No new physical Elmo observations have been made by this implementation. V4 observations remain historical user-reported evidence; the published GATT table remains community-reported. Synthetic auth outcomes and virtual control/audio previews do not establish Elmo functionality.
 
 ## Deployment
 
-GitHub repository metadata reports has_pages: false. The latest completed deployment at audit time, [39534715267](https://github.com/jimedusot-beep/Project-sasori/actions/runs/39534715267), passed its verification job, then failed to create the initial Pages site with **Resource not accessible by integration**. The Actions token has Pages write permission but cannot perform that initial owner setup.
+GitHub repository metadata still reports has_pages: false. The latest completed deployment, [39584798655](https://github.com/jimedusot-beep/Project-sasori/actions/runs/39584798655), passed its verification job, then failed to create the initial Pages site with **Resource not accessible by integration**. The Actions token has Pages write permission but cannot perform that initial owner setup. ChatGPT plugin approval settings do not grant that Actions token additional repository administration permissions.
 
 Owner action: repository Settings → Pages → Build and deployment → Source: GitHub Actions. Then rerun the failed Deploy Pages job. No live website is claimed until the workflow's HTTPS HTML/module/CSS/icon verification succeeds.
 
