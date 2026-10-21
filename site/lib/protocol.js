@@ -36,10 +36,11 @@ export function decodePacket(
   text = text.replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/g, '·');
   let kind = 'unknown';
   let description = 'Unknown payload; framing and semantics are not established.';
-  if (!malformed && !truncated && /^NewModeIdx:\d{1,5}\s*$/.test(text)) {
+  const observedText = text.replace(/^[\u0060\u0061](?=(?:NewModeIdx:|Start:))/, '');
+  if (!malformed && !truncated && /^NewModeIdx:\d{1,5}\s*$/.test(observedText)) {
     kind = 'mode-observation';
     description = 'Mode index text seen in historical V4 evidence; index meaning unverified.';
-  } else if (!malformed && !truncated && /^Start:LowPowerSleep\s*$/.test(text)) {
+  } else if (!malformed && !truncated && /^Start:LowPowerSleep\s*$/.test(observedText)) {
     kind = 'sleep-observation';
     description =
       'Sleep-related text seen in historical V4 evidence; no authentication implication.';
