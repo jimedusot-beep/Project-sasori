@@ -158,7 +158,7 @@ export function validateRecord(input) {
   );
 }
 export function portableRecord(record, includePayloads = false) {
-  const clean = sanitize(structuredClone(record));
+  const clean = structuredClone(record);
   clean.packets = clean.packets.map((p) => {
     const metadata = {
       timestamp: p.timestamp,
@@ -170,8 +170,31 @@ export function portableRecord(record, includePayloads = false) {
     };
     return includePayloads ? { ...metadata, hex: p.hex || '', text: p.text || '' } : metadata;
   });
+  // Imports may carry extra nested fields. Export known metadata only; generic diagnostic
+  // details can contain unrecognized payloads that a credential-pattern filter cannot detect.
+  clean.events = clean.events.map(({ timestamp, level, message }) => ({
+    timestamp,
+    level,
+    message,
+  }));
+  const evidence = (value) =>
+    ['observed-this-session', 'synthetic', 'community-reported'].includes(value)
+      ? { evidence: value }
+      : {};
+  clean.services = clean.services.map((service) => ({
+    uuid: service.uuid,
+    ...evidence(service.evidence),
+    characteristics: service.characteristics.map((characteristic) => ({
+      uuid: characteristic.uuid,
+      properties: characteristic.properties,
+      ...evidence(characteristic.evidence),
+    })),
+  }));
+  clean.stats = Object.fromEntries(
+    ['packets', 'bytes', 'malformed', 'truncated'].map((key) => [key, clean.stats[key]]),
+  );
   clean.payloadsIncluded = !!includePayloads;
-  return validateRecord(clean);
+  return validateRecord(sanitize(clean));
 }
 export function backup(records) {
   return {

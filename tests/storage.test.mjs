@@ -52,6 +52,19 @@ test('concurrent saves preserve both experiments', async () => {
   assert.equal((await store.list()).length, 2);
   store.db.close();
 });
+test('deletion waits for pending saves so a deleted record cannot reappear', async () => {
+  for (const indexedDB of [null, new IDBFactory()]) {
+    const store = await new ResearchStore({ indexedDB, name: 'delete-race' }).open();
+    const record = createSession('simulated');
+    await store.save(record);
+    record.notes = 'A queued edit';
+    const save = store.save(record);
+    const remove = store.remove(record.id);
+    await Promise.all([save, remove]);
+    assert.equal((await store.list()).length, 0);
+    store.db?.close();
+  }
+});
 test('two browser tabs cannot race past the storage capacity', async () => {
   const store = await open();
   const other = await new ResearchStore({ indexedDB: store.factory, name: 'test' }).open();
