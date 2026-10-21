@@ -1,0 +1,28 @@
+name: Temporary formatting repair
+on:
+  push:
+    branches: [feat/mobile-laboratory]
+    paths: [.github/workflows/format-repair.yml]
+permissions:
+  contents: write
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feat/mobile-laboratory
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - run: npm ci
+      - run: npx prettier --write site/app.js site/index.html site/lib/bluetooth.js site/lib/protocol.js tests/protocol.test.mjs
+      - name: Commit formatting fixes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add site/app.js site/index.html site/lib/bluetooth.js site/lib/protocol.js tests/protocol.test.mjs
+          if ! git diff --cached --quiet; then
+            git commit -m "Apply Prettier formatting to audited BLE changes"
+            git push origin HEAD:feat/mobile-laboratory
+          fi
