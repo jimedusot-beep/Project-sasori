@@ -54,7 +54,13 @@ export class BluetoothTransport {
     if (run !== this.generation || !ACTIVE.has(this.state))
       throw new DOMException('Cancelled inspection', 'AbortError');
   }
-  async connect({ service, notify = '', namePrefix = 'Elmo', showAllDevices = false, durationMs = 15000 }) {
+  async connect({
+    service,
+    notify = '',
+    namePrefix = 'Elmo',
+    showAllDevices = false,
+    durationMs = 15000,
+  }) {
     if (this.busy || ACTIVE.has(this.state) || this.state === 'disconnecting')
       throw new Error('An inspection is already active.');
     service = normalizeUUID(service);
@@ -72,7 +78,9 @@ export class BluetoothTransport {
     try {
       const chooser = Promise.resolve(
         this.bluetooth.requestDevice({
-          ...(showAllDevices ? { acceptAllDevices: true } : { filters: [{ namePrefix: namePrefix || 'Elmo' }] }),
+          ...(showAllDevices
+            ? { acceptAllDevices: true }
+            : { filters: [{ namePrefix: namePrefix || 'Elmo' }] }),
           optionalServices: [service],
         }),
       );
