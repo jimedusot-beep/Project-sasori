@@ -159,7 +159,7 @@ $('load-profile').addEventListener('click', () => {
 });
 function lockConnection(locked) {
   running = locked;
-  for (const id of ['profile', 'simulation', 'svc', 'notify', 'consent', 'simulation-scenario'])
+  for (const id of ['profile', 'simulation', 'svc', 'notify', 'consent', 'simulation-scenario', 'show-all-devices'])
     $(id).disabled = locked;
   $('disconnect').disabled = !locked;
   $('global-stop').disabled = !locked;
@@ -333,6 +333,7 @@ $('connect').addEventListener(
           service: $('svc').value,
           notify: $('notify').value.trim(),
           durationMs: 15000,
+           showAllDevices: $('show-all-devices').checked,
         });
     return Promise.resolve(result).catch((error) => {
       lockConnection(false);
