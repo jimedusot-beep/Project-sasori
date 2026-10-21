@@ -12,6 +12,42 @@ Notification subscription does not authenticate Elmo. No movement or voice comma
 
 Bluefy version, iOS version, firmware, and radio conditions affect behavior. A WebKit emulation test does not reproduce Bluefy's native Bluetooth bridge. Physical validation is an outstanding milestone.
 
+## First two live captures
+
+Start with these two sessions. The current app already supports both; no additional equipment or software changes are required. Use the existing power switch and original power arrangement, with the mechanism secured. Do not open, reset, or reflash the toy for this experiment.
+
+1. In Bluefy, open [the live laboratory](https://jimedusot-beep.github.io/Project-sasori/). Turn **Use simulation** off and tap **Use published Elmo UUIDs**.
+2. Select **Metadata only (no subscription)** after loading the profile. Loading the profile again selects the data channel, so check the probe selection before connecting.
+3. Confirm ownership, tap **Connect & inspect**, and select your Elmo. Keep Bluefy visible for the 15-second inspection. Zero received packets are expected in this metadata-only session.
+4. When the session ends, change **Session name** to `E001-01-metadata`, tap **Save session**, and use **Export JSON**. In **Protocol explorer**, check the observed service map for the data endpoint `dab91382-b5a1-e29c-b041-bcd562613bdf` and a `notify` or `indicate` property. A write property by itself is insufficient.
+5. If the metadata session confirms that endpoint and property, return to **Overview**, choose **Data notifications (candidate)**, and make a separate manual inspection. Name the finished session `E001-02-data`, save, and export it. A quiet capture remains inconclusive; do not start guessed writes to make it respond.
+
+Use **Copy log** and capture the observed service map if an export is inconvenient. The site cannot connect to your toy from someone else's browser or computer; the live connection must run on your nearby phone.
+
+### What to retain
+
+For each saved session, use **Research records** to add the following to its notes. The title and notes matter: ordinary exports intentionally drop generic event details and omit raw packet contents, so they cannot be relied on to preserve the selected probe or decode its bytes later.
+
+```text
+Session: E001-01-metadata OR E001-02-data
+Date/time and time zone:
+iOS version:
+Bluefy version:
+Toy model/firmware: known value OR unknown; do not reset to identify it
+Sasori page refreshed on:
+Service UUID: dab91435-b5a1-e29c-b041-bcd562613bdf
+Notify UUID: none OR dab91382-b5a1-e29c-b041-bcd562613bdf
+Observed endpoint properties:
+Final stage, disconnect reason, and any failed stage:
+Received packet count and byte count:
+Toy activity and any ordinary touch/power actions during the session:
+Conclusion: metadata observed / notifications received / silent / failed at [stage]
+```
+
+An inspection may end with the `teardown` stage even after success; retain the preceding `inspection-ready` stage or the error's failed stage as well. For the first review, share the two metadata exports or copied logs and observed service properties. Leave unknown fields explicitly unknown.
+
+If byte-level analysis is needed, enable engineering mode **after the live capture**, then deliberately select **Include raw payloads when saving/exporting this session** and use **Export JSON** before leaving or reloading the page. Review that file privately before sharing: raw bytes can contain secrets that a text redactor will miss. Ordinary **Export backup** remains metadata-only even when a session has raw bytes. There is no need to share a password for the first review.
+
 ## Guided Elmo probe sequence (experimental)
 
 Do not change several variables in a single experiment. Each session requires a fresh manual tap
