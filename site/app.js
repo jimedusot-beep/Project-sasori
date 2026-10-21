@@ -130,7 +130,9 @@ const customProbe = node('option', 'Custom UUID (manual research)');
 customProbe.value = 'custom';
 $('notify-preset').append(customProbe);
 function syncProbeSelection() {
-  const matching = ELMO_NOTIFY_PROBES.find((probe) => probe.uuid === $('notify').value.trim().toLowerCase());
+  const matching = ELMO_NOTIFY_PROBES.find(
+    (probe) => probe.uuid === $('notify').value.trim().toLowerCase(),
+  );
   $('notify-preset').value = matching?.id || 'custom';
 }
 $('notify-preset').addEventListener('change', () => {
