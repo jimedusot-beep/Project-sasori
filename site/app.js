@@ -130,9 +130,8 @@ const customProbe = node('option', 'Custom UUID (manual research)');
 customProbe.value = 'custom';
 $('notify-preset').append(customProbe);
 function syncProbeSelection() {
-  const matching = ELMO_NOTIFY_PROBES.find(
-    (probe) => probe.uuid === $('notify').value.trim().toLowerCase(),
-  );
+  const uuid = $('notify').value.trim().toLowerCase();
+  const matching = ELMO_NOTIFY_PROBES.find((probe) => probe.uuid === uuid);
   $('notify-preset').value = matching?.id || 'custom';
 }
 $('notify-preset').addEventListener('change', () => {
@@ -144,11 +143,13 @@ $('notify-preset').addEventListener('change', () => {
   }
   $('notify').value = probe.uuid;
   saveSettings();
-  notice(
-    probe.id === 'metadata'
-      ? 'Metadata-only inspection selected. No characteristic subscription will occur.'
-      : 'Candidate ' + probe.id + ' notification probe selected. The next manual inspection will subscribe only to this characteristic; no application commands will be sent.',
-  );
+  if (probe.id === 'metadata') {
+    notice('Metadata-only inspection selected. No characteristic subscription will occur.');
+  } else {
+    notice(
+      `Candidate ${probe.id} notification probe selected. The next manual inspection will subscribe only to this characteristic; no application commands will be sent.`,
+    );
+  }
 });
 function updateMode() {
   const simulated = $('simulation').checked;
