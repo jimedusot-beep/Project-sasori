@@ -1,42 +1,146 @@
 'use strict';
-// Project Sasori 001: read-only BLE feasibility lab. Never implement protocol writes here.
-const $ = id => document.getElementById(id);
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-let device=null,server=null,notifyCharacteristic=null,busy=false, timer=null;
-let lines=[];
-function state(s){$('state').textContent=s;}
-function log(s){const timestamp=new Date().toISOString();lines.push(`${timestamp} ${s}`);if(lines.length>500)lines=lines.slice(-500);$('log').textContent=lines.join('\n');$('log').scrollTop=$('log').scrollHeight;}
-function hex(bytes){return [...bytes].map(v=>v.toString(16).padStart(2,'0')).join('');}
-function onNotification(event){const value=event.target.value;const bytes=new Uint8Array(value.buffer,value.byteOffset,value.byteLength);log(`RX ${hex(bytes)} | TEXT ${JSON.stringify(new TextDecoder().decode(bytes))}`);}
-function disconnected(){clearTimeout(timer);state('Disconnected');$('disconnect').disabled=true;$('connect').disabled=false;notifyCharacteristic=null;server=null;busy=false;log('STATE disconnected');}
-function validUUID(t){return UUID.test(t.trim());}
-async function connect(){
- if(busy)return;
- const service=$('svc').value.trim(),characteristic=$('notify').value.trim();
- if(!validUUID(service)||!validUUID(characteristic)){log('ERROR Enter both verified 128-bit service and notification UUIDs.');return;}
- if(!navigator.bluetooth){log('ERROR Web Bluetooth unavailable here. Use Bluefy on iOS.');return;}
- busy=true;$('connect').disabled=true;state('Selecting device');
- try{
-  log('MODE inspect-only; no application command writes');
-  device=await navigator.bluetooth.requestDevice({acceptAllDevices:true,optionalServices:[service]});
-  log(`Selected ${JSON.stringify(device.name||'Unnamed device')}`);
-  device.addEventListener('gattserverdisconnected',disconnected,{once:true});
-  state('Connecting');server=await device.gatt.connect();log('GATT connected');
-  const svc=await server.getPrimaryService(service);log('Verified custom service present');
-  notifyCharacteristic=await svc.getCharacteristic(characteristic);
-  if(!notifyCharacteristic.properties.notify){throw Error('Characteristic does not support notifications');}
-  notifyCharacteristic.addEventListener('characteristicvaluechanged',onNotification);
-  await notifyCharacteristic.startNotifications();log('Notifications subscribed; inspection active');
-  state('Connected · inspection');$('disconnect').disabled=false;
-  timer=setTimeout(()=>{if(server?.connected){log('Timed inspection complete; disconnecting');disconnect();}},15000);
- }catch(e){log(`ERROR ${e?.name||'Error'}: ${e?.message||String(e)}`);state('Error');if(device?.gatt?.connected)device.gatt.disconnect();$('connect').disabled=false;}
- finally{busy=false;}
+// Experiment 001 is intentionally read-only. No app-level BLE writes in this file.
+const byId = id => document.getElementById(id);
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const stateText = byId('state');
+const connectButton = byId('connect');
+const disconnectButton = byId('disconnect');
+let currentSession = null;
+let nextSessionId = 0;
+let lines = [];
+
+function renderState(label) { stateText.textContent = label; }
+function log(message) {
+  lines.push(new Date().toISOString() + ' ' + message);
+  if (lines.length > 500) lines = lines.slice(-500);
+  byId('log').textContent = lines.join('\n');
+  byId('log').scrollTop = byId('log').scrollHeight;
 }
-function disconnect(){clearTimeout(timer);if(server?.connected)server.disconnect();else disconnected();}
-function download(name,body,type){const url=URL.createObjectURL(new Blob([body],{type}));const a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
-$('connect').addEventListener('click',connect);$('disconnect').addEventListener('click',disconnect);
-$('copy').addEventListener('click',()=>{navigator.clipboard.writeText(lines.join('\n')).then(()=>log('Log copied'),e=>log(`Copy unavailable: ${e.message}`));});
-$('export').addEventListener('click',()=>download('sasori-elmo-log.txt',lines.join('\n')+'\n','text/plain'));
-$('clear').addEventListener('click',()=>{lines=[];$('log').textContent='';log('Log cleared locally');});
-$('support').textContent=navigator.bluetooth?'Web Bluetooth API available. Discovery still requires user permission.':'Web Bluetooth API unavailable here. On iPhone, open this page in Bluefy.';
-log('Project Sasori 001 loaded; read-only; no Bluetooth commands before Connect.');
+function hex(bytes) { return Array.from(bytes, byte => byte.toString(16).padStart(2, '0')).join(''); }
+function notificationHandler(session, event) {
+  if (currentSession !== session || session.finished) return;
+  const value = event.target.value;
+  const bytes = new Uint8Array(value.buffer, value.byteOffset, value.byteLength);
+  log('RX ' + hex(bytes) + ' | TEXT ' + JSON.stringify(new TextDecoder().decode(bytes)));
+}
+function finish(session, reason) {
+  if (session.finished) return;
+  session.finished = true;
+  if (session.timer !== null) clearTimeout(session.timer);
+  if (session.characteristic && session.listener) {
+    try { session.characteristic.removeEventListener('characteristicvaluechanged', session.listener); } catch (_) {}
+  }
+  if (currentSession !== session) return; // Old device events must not disrupt a new connection.
+  currentSession = null;
+  connectButton.disabled = false;
+  disconnectButton.disabled = true;
+  renderState('Disconnected · ' + reason);
+  log('STATE disconnected; reason=' + reason + '; session=' + session.id);
+}
+function stopSession(session, reason) {
+  if (!session || session.finished) return;
+  session.stopReason = reason;
+  // This is subscription cleanup, not a device command.
+  if (session.characteristic) {
+    try {
+      const promise = session.characteristic.stopNotifications();
+      if (promise && typeof promise.catch === 'function') promise.catch(() => {});
+    } catch (_) {}
+  }
+  try {
+    if (session.server && session.server.connected) session.server.disconnect();
+  } catch (error) {
+    log('DISCONNECT error: ' + (error.message || String(error)));
+  }
+  finish(session, reason);
+}
+async function connect() {
+  if (currentSession) return;
+  const serviceUUID = byId('svc').value.trim();
+  const notifyUUID = byId('notify').value.trim();
+  if (!UUID.test(serviceUUID) || !UUID.test(notifyUUID)) {
+    log('ERROR Enter two verified 128-bit UUIDs from original V4 source or nRF Connect.');
+    return;
+  }
+  if (!navigator.bluetooth) {
+    log('ERROR Web Bluetooth is unavailable in this browser. Try Bluefy.');
+    return;
+  }
+  const session = {
+    id: ++nextSessionId, device: null, server: null, characteristic: null,
+    listener: null, timer: null, stopReason: null, finished: false
+  };
+  currentSession = session;
+  connectButton.disabled = true;
+  disconnectButton.disabled = true;
+  renderState('Selecting device');
+  log('MODE inspect-only; session=' + session.id + '; no application commands sent');
+  try {
+    const device = await navigator.bluetooth.requestDevice({
+      acceptAllDevices: true, optionalServices: [serviceUUID]
+    });
+    if (currentSession !== session || session.finished) return;
+    session.device = device;
+    log('Device selected: ' + JSON.stringify(device.name || 'Unnamed BLE device'));
+    device.addEventListener('gattserverdisconnected', () => {
+      finish(session, session.stopReason || 'unexpected-link-loss');
+    }, { once: true });
+    renderState('Connecting');
+    session.server = await device.gatt.connect();
+    if (currentSession !== session || session.finished) {
+      if (session.server.connected) session.server.disconnect();
+      return;
+    }
+    log('GATT connected');
+    renderState('Discovering service');
+    const service = await session.server.getPrimaryService(serviceUUID);
+    if (currentSession !== session || session.finished) return;
+    log('Custom service found');
+    session.characteristic = await service.getCharacteristic(notifyUUID);
+    if (currentSession !== session || session.finished) return;
+    if (!session.characteristic.properties.notify) {
+      throw new Error('Selected characteristic does not support notifications.');
+    }
+    session.listener = event => notificationHandler(session, event);
+    session.characteristic.addEventListener('characteristicvaluechanged', session.listener);
+    await session.characteristic.startNotifications();
+    if (currentSession !== session || session.finished) return;
+    log('Notification subscription active');
+    renderState('Connected · read-only');
+    disconnectButton.disabled = false;
+    session.timer = setTimeout(() => {
+      log('Inspection window ended after 15 seconds');
+      stopSession(session, 'timed-inspection');
+    }, 15000);
+  } catch (error) {
+    if (currentSession !== session || session.finished) return;
+    const reason = error.name === 'NotFoundError' ? 'selection-cancelled' : 'error';
+    log('ERROR ' + (error.name || 'Error') + ': ' + (error.message || String(error)));
+    stopSession(session, reason);
+  }
+}
+function disconnect() { stopSession(currentSession, 'manual'); }
+function download(filename, body) {
+  const url = URL.createObjectURL(new Blob([body], { type: 'text/plain' }));
+  const anchor = document.createElement('a');
+  anchor.href = url;
+  anchor.download = filename;
+  anchor.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+connectButton.addEventListener('click', connect);
+disconnectButton.addEventListener('click', disconnect);
+byId('copy').addEventListener('click', async () => {
+  try {
+    await navigator.clipboard.writeText(lines.join('\n'));
+    log('Diagnostic log copied; inspect before sharing');
+  } catch (error) {
+    log('Clipboard unavailable: ' + error.message + '. Use Export log instead.');
+  }
+});
+byId('export').addEventListener('click', () => download('project-sasori-elmo-log.txt', lines.join('\n') + '\n'));
+byId('clear').addEventListener('click', () => { lines = []; byId('log').textContent = ''; log('Diagnostic log cleared'); });
+byId('support').textContent = navigator.bluetooth
+  ? 'Web Bluetooth API detected. Permissions are requested only after tapping Connect.'
+  : 'Web Bluetooth unavailable. Open the deployed site in Bluefy on iPhone.';
+log('Sasori BLE inspection lab loaded; no commands sent before Connect.');
