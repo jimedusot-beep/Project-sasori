@@ -44,3 +44,10 @@ test('packet summary counts observed bytes and recognized patterns', () => {
     { packets: 2, bytes: 14, known: 1 },
   );
 });
+
+test('historical raw V4 notifications recognize text with unknown prefix', () => {
+  const fromHex = hex => new Uint8Array(hex.match(/../g).map(h => parseInt(h,16)));
+  assert.equal(decodePacket(fromHex('604e65774d6f64654964783a313200')).kind, 'mode-observation');
+  assert.equal(decodePacket(fromHex('6153746172743a4c6f77506f776572536c656570')).kind, 'sleep-observation');
+  assert.equal(decodePacket(fromHex('6100')).kind, 'unknown');
+});
