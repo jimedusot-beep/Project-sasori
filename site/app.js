@@ -6,6 +6,7 @@ import {
   PROFILES,
   ELMO_SERVICE,
   ELMO_NOTIFY,
+  ELMO_NOTIFY_PROBES,
   GATT_REGISTRY,
   normalizeUUID,
 } from './lib/profiles.js';
@@ -120,6 +121,33 @@ for (const profile of PROFILES) {
   option.value = profile.id;
   $('profile').append(option);
 }
+for (const probe of ELMO_NOTIFY_PROBES) {
+  const option = node('option', probe.label);
+  option.value = probe.id;
+  $('notify-preset').append(option);
+}
+const customProbe = node('option', 'Custom UUID (manual research)');
+customProbe.value = 'custom';
+$('notify-preset').append(customProbe);
+function syncProbeSelection() {
+  const matching = ELMO_NOTIFY_PROBES.find((probe) => probe.uuid === $('notify').value.trim().toLowerCase());
+  $('notify-preset').value = matching?.id || 'custom';
+}
+$('notify-preset').addEventListener('change', () => {
+  const probe = ELMO_NOTIFY_PROBES.find((entry) => entry.id === $('notify-preset').value);
+  if (!probe) {
+    $('uuid-settings').open = true;
+    notice('Enter a sourced characteristic UUID manually; no inspection starts automatically.');
+    return;
+  }
+  $('notify').value = probe.uuid;
+  saveSettings();
+  notice(
+    probe.id === 'metadata'
+      ? 'Metadata-only inspection selected. No characteristic subscription will occur.'
+      : 'Candidate ' + probe.id + ' notification probe selected. The next manual inspection will subscribe only to this characteristic; no application commands will be sent.',
+  );
+});
 function updateMode() {
   const simulated = $('simulation').checked;
   $('mode-badge').textContent = simulated ? 'SIMULATION · NO HARDWARE' : 'LIVE · INSPECTION ONLY';
@@ -165,10 +193,15 @@ for (const id of ['simulation', 'profile', 'engineering'])
     updateMode();
     saveSettings();
   });
-for (const id of ['svc', 'notify']) $(id).addEventListener('input', saveSettings);
+$('svc').addEventListener('input', saveSettings);
+$('notify').addEventListener('input', () => {
+  syncProbeSelection();
+  saveSettings();
+});
 $('load-profile').addEventListener('click', () => {
   $('svc').value = ELMO_SERVICE;
   $('notify').value = ELMO_NOTIFY;
+  syncProbeSelection();
   saveSettings();
   notice(
     'Published Elmo profile loaded from NonaSuomy/Love2LearnElmo. Its UUIDs are community-reported; a live inspection will establish whether they exist on your unit. No connection has been started.',
@@ -181,6 +214,7 @@ function lockConnection(locked) {
     'simulation',
     'svc',
     'notify',
+    'notify-preset',
     'consent',
     'simulation-scenario',
     'show-all-devices',
@@ -260,7 +294,11 @@ function renderPackets() {
 $('packet-filter').addEventListener('input', renderPackets);
 function handleEvent(event) {
   if (!session) return;
-  if (event.type === 'state') {
+  if (event.type === 'stage') {
+    $('inspection-stage').textContent =
+      'Stage: ' + event.stage + ' · ' + event.elapsedMs + ' ms elapsed';
+    log('stage', event.stage + ' at ' + event.elapsedMs + ' ms');
+  } else if (event.type === 'state') {
     $('state').textContent = event.state[0].toUpperCase() + event.state.slice(1);
     $('state-detail').textContent =
       event.reason ||
@@ -316,7 +354,11 @@ function handleEvent(event) {
   } else if (event.type === 'error') {
     session.outcome = 'error';
     notice(event.error.message + ' ' + event.error.nextStep);
-    log('error', event.error.message, event.error);
+    log(
+      'error',
+      (event.error.stage ? event.error.stage + ': ' : '') + event.error.message,
+      event.error,
+    );
   } else log(event.type, event.message || 'Transport event');
 }
 $('connect').addEventListener(
@@ -335,6 +377,9 @@ $('connect').addEventListener(
     $('session-title').value = session.title;
     $('session-source').textContent = simulated ? 'SIMULATED SESSION' : 'LIVE INSPECTION';
     $('include-payloads').checked = false;
+    $('inspection-stage').textContent = simulated
+      ? 'Simulation active; no Bluetooth connection'
+      : 'Stage: preparing manual Elmo inspection';
     $('packet-count').textContent = '0 RX';
     $('packet-bytes').textContent = '0 bytes received';
     $('notice').hidden = true;
@@ -349,6 +394,12 @@ $('connect').addEventListener(
         ? 'Synthetic fixture started. No Bluetooth access.'
         : 'Inspection only. No authentication, motor, audio, or firmware commands.',
     );
+    if (!simulated)
+      log('info', 'Configured community candidate probe', {
+        service: $('svc').value.trim().toLowerCase(),
+        notify: $('notify').value.trim().toLowerCase() || 'none',
+        preset: $('notify-preset').value,
+      });
     transport = simulated
       ? new SimulationTransport(handleEvent)
       : new BluetoothTransport({ emit: handleEvent });
@@ -834,6 +885,7 @@ async function initialize() {
   if (PROFILES.some((p) => p.id === settings.profile)) $('profile').value = settings.profile;
   if (typeof settings.service === 'string') $('svc').value = settings.service.slice(0, 128);
   if (typeof settings.notify === 'string') $('notify').value = settings.notify.slice(0, 128);
+  syncProbeSelection();
   $('engineering').checked = settings.engineering === true;
   ready = true;
   updateMode();
