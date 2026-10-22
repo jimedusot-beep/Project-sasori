@@ -32,6 +32,8 @@ Open the Project Sasori GitHub Pages site in Bluefy, enter documented UUIDs, and
 
 ## Evidence handling
 
+For the independent original-controller research track, read the [source verification and gap register](source-verification.md), [offline review instructions](offline-review.md), and [gated live experiment draft](live-experiment.md). These supersede any implication that reported command definitions or an inspection-page title demonstrate authentication. Replacement-controller work does not wait for this track.
+
 Retain only sanitized logs. Never commit passwords, challenge-response tokens, or unique device IDs.
 
 ## Status

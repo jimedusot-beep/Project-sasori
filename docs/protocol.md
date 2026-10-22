@@ -41,3 +41,9 @@ Before live authentication: finish repeatable inspection, identify exact charact
 | Verified application commands        | None established                                           | Unavailable                       |
 | Physical voice/motor/sensor commands | No verified protocol or safety envelope                    | Unavailable                       |
 | Simulation                           | Synthetic lifecycle, outcomes, movement, phone-local audio | No Bluetooth traffic              |
+
+## Independent source-verification track
+
+The October 21 [source review](../experiments/001-elmo-l2l/source-verification.md) separately records directly inspected project/community source, prior-report app-message claims, historical user observations and unresolved hypotheses. It reviews open PR #11 at its exact head revision and rereads the original teardown report. The reported APK could not be obtained here (HTTP 403); password/challenge construction, acceptance framing and status-message vectors remain unverified. No application-message constructors or transmitter have been added.
+
+The [offline capture reviewer](../experiments/001-elmo-l2l/offline-review.md) handles the existing session envelope and historical byte examples only. Its protocol verdict is always inconclusive. The [live experiment draft](../experiments/001-elmo-l2l/live-experiment.md) defines prerequisites, bounded budgets and accepted/rejected/inconclusive results; it is not ready to run. This track supplies no dependency or gate for replacement-controller development.

@@ -47,3 +47,9 @@ Repeat five 15-second foreground inspections on the actual iPhone/Bluefy/Elmo co
 Then test one deliberate manual stop and one page-background stop. Do not induce hardware power faults or mechanical binding. Keep credentials and private data out of public logs.
 
 Passing Node, Chromium, or emulated WebKit does **not** prove the native Bluefy Bluetooth bridge, real radio reliability, Elmo authentication, or any physical command.
+
+## Original-BLE offline evidence checks
+
+The [capture reviewer](../experiments/001-elmo-l2l/offline-review.md) runs locally with `npm run review:elmo -- /absolute/path/to/private-session.json`. Its count-only report does not echo private filenames, free text, arbitrary identifiers or payloads. Tests check metadata-only and deliberately raw exports, partial/contradictory retention, forged outcome/kind claims, unrelated service inventories, invalid envelopes, private error handling and CLI behavior. Synthetic session envelopes stay synthetic even when they contain historical example bytes.
+
+The provenance-linked historical corpus has three RX vectors. Tests check byte lengths, SHA-256 integrity, exact text views and DataView offsets against the existing conservative decoder. No password/challenge construction tests exist because independent app-method evidence and exact expected vectors are missing. These checks require no hardware, source archive or credentials and do not gate replacement-controller hardware development.
