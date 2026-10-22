@@ -28,6 +28,15 @@ test('show-all fallback is explicit and still grants only the selected service',
   });
   f.transport.disconnect();
 });
+test('custom toys use their own name filter and unknown names need explicit show-all', async () => {
+  const f = setup();
+  await assert.rejects(f.transport.connect({ service, notify: '', namePrefix: '' }), /name prefix/);
+  assert.equal(f.bluetooth.requests.length, 0);
+  await f.transport.connect({ service, notify: '', namePrefix: 'Robo' });
+  assert.deepEqual(f.bluetooth.requests[0].filters, [{ namePrefix: 'Robo' }]);
+  assert.equal(f.characteristic.subscribed, 0);
+  f.transport.disconnect();
+});
 test('chooser is called synchronously and requests only the chosen service', async () => {
   const f = setup();
   const connection = f.transport.connect({ service, notify });

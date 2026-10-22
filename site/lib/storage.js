@@ -1,4 +1,5 @@
 import { validateRecord, recordId, MAX_RECORDS, MAX_TOTAL_BYTES } from './records.js';
+import { validateToy, MAX_TOYS } from './toys.js';
 const request = (req) =>
   new Promise((resolve, reject) => {
     req.onsuccess = () => resolve(req.result);
@@ -15,6 +16,7 @@ export class ResearchStore {
     this.name = name;
     this.db = null;
     this.memory = new Map();
+    this.toys = new Map();
     this.settings = {};
     this.persistent = false;
     this.warning = '';
@@ -29,19 +31,21 @@ export class ResearchStore {
     }
     try {
       this.db = await new Promise((resolve, reject) => {
-        const req = this.factory.open(this.name, 2);
+        const req = this.factory.open(this.name, 3);
         let expired = false;
         const timer = setTimeout(() => {
           expired = true;
           reject(new Error('Storage is blocked by another tab.'));
         }, 4000);
-        req.onupgradeneeded = () => {
+        req.onupgradeneeded = (event) => {
           const db = req.result;
           if (!db.objectStoreNames.contains('records'))
             db.createObjectStore('records', { keyPath: 'id' });
           if (!db.objectStoreNames.contains('settings')) db.createObjectStore('settings');
+          if (!db.objectStoreNames.contains('toys'))
+            db.createObjectStore('toys', { keyPath: 'id' });
           // v1 used a sessions store. Copy through the versioned session validator.
-          if (db.objectStoreNames.contains('sessions')) {
+          if (event.oldVersion < 2 && db.objectStoreNames.contains('sessions')) {
             const cursor = req.transaction.objectStore('sessions').openCursor();
             cursor.onsuccess = () => {
               const item = cursor.result;
@@ -193,5 +197,65 @@ export class ResearchStore {
     const done = completed(tx);
     tx.objectStore('settings').put(value, 'preferences');
     await done;
+  }
+  async listToys() {
+    if (this.closed) throw new Error(this.warning);
+    const rows = this.persistent
+      ? await request(this.db.transaction('toys', 'readonly').objectStore('toys').getAll())
+      : [...this.toys.values()];
+    return rows.flatMap((row) => {
+      try {
+        return [validateToy(row)];
+      } catch {
+        return [];
+      }
+    });
+  }
+  saveToys(toys) {
+    const clean = toys.map(validateToy);
+    this.writeQueue = this.writeQueue
+      .catch(() => {})
+      .then(async () => {
+        if (this.closed) throw new Error(this.warning);
+        const merge = (rows) => {
+          const merged = new Map(rows.map((row) => [row.id, row]));
+          for (const row of clean) merged.set(row.id, row);
+          if (merged.size > MAX_TOYS)
+            throw new Error('20-toy limit reached. Export profiles before removing old ones.');
+          return merged;
+        };
+        if (!this.persistent) {
+          this.toys = merge([...this.toys.values()]);
+          return;
+        }
+        const tx = this.db.transaction('toys', 'readwrite');
+        const done = completed(tx);
+        try {
+          merge(await request(tx.objectStore('toys').getAll()));
+          for (const toy of clean) tx.objectStore('toys').put(toy);
+        } catch (error) {
+          tx.abort();
+          await done.catch(() => {});
+          throw error;
+        }
+        await done;
+      });
+    return this.writeQueue;
+  }
+  removeToy(id) {
+    this.writeQueue = this.writeQueue
+      .catch(() => {})
+      .then(async () => {
+        if (this.closed) throw new Error(this.warning);
+        if (!this.persistent) {
+          this.toys.delete(id);
+          return;
+        }
+        const tx = this.db.transaction('toys', 'readwrite');
+        const done = completed(tx);
+        tx.objectStore('toys').delete(id);
+        await done;
+      });
+    return this.writeQueue;
   }
 }

@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Add My toys: persistent inspection profiles, source notes, individual name filters, editing, separate JSON profile backups/imports, and metadata-only first inspections. Select observed Notify/Indicate endpoints for a subsequent manual inspection; synthetic endpoints cannot be promoted.
+- Upgrade IndexedDB to version 3 without replaying stale v1 sessions over edited records. Keep custom profiles bounded to 20 and validate entire profile imports before writing.
 - Reject non-boolean optional packet flags before importing or reviewing captures, matching the existing session schema. Preserve valid booleans and legacy records without flags; reject a mixed backup as a whole when one packet is invalid.
 - Add an independent original-Elmo BLE source review of PR #11, the earlier teardown report, the community notebook and recovered V5 inspection source. Record the blocked APK acquisition, exact verification gaps and license restrictions; keep authentication construction unavailable.
 - Add a local, count-only capture reviewer and provenance-linked historical RX corpus tests. Imported claims, omitted/truncated payloads and auth-like bytes cannot establish authentication. Prepare a gated known-credential/status-query experiment draft with explicit outcomes and budgets.

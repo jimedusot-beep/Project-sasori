@@ -75,6 +75,14 @@ export class BluetoothTransport {
       throw new Error('An inspection is already active.');
     service = normalizeUUID(service);
     if (notify) notify = normalizeUUID(notify);
+    if (
+      typeof namePrefix !== 'string' ||
+      namePrefix.length > 60 ||
+      (!showAllDevices && !namePrefix.trim())
+    )
+      throw new Error(
+        'Enter a Bluetooth name prefix or explicitly choose Show all Bluetooth devices.',
+      );
     if (!this.bluetooth?.requestDevice)
       throw new DOMException('Web Bluetooth unavailable', 'NotSupportedError');
     if (!Number.isFinite(durationMs) || durationMs < 100 || durationMs > 30000)
@@ -92,7 +100,7 @@ export class BluetoothTransport {
         this.bluetooth.requestDevice({
           ...(showAllDevices
             ? { acceptAllDevices: true }
-            : { filters: [{ namePrefix: namePrefix || 'Elmo' }] }),
+            : { filters: [{ namePrefix: namePrefix.trim() }] }),
           optionalServices: [service],
         }),
       );
