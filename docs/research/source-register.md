@@ -27,6 +27,12 @@ Repository commit: 82fa312e06af1d8e549cec588856ebce227b5f77, README blob 5cbdcf5
 
 The earlier V4 URL returned HTTP 403; the connected Sites account returned no sites and prior-context retrieval contained only the mission's observations. No original source was recovered. Do not relabel the published candidate profile as V4 source.
 
+## Earlier project report: additional app-protocol leads
+
+The owner's **Elmo_B6572_Teardown_Research_and_Disassembly_Guide.pdf**, October 18, 2026 revision, pages 17–20 and 32, was read on October 21. It reports static analysis of an archived Android 1.5.1 package, including message definitions and password/challenge handling. These claims were missing from the current protocol assessment. They are preserved in the [app-protocol lead register](../../experiments/001-elmo-l2l/app-protocol-leads.md), with the report's archive reference, reported SHA-256, evidence class, and unresolved verification work.
+
+This review did not independently acquire or analyze the APK, verify its publisher, or reproduce a live exchange. The PDF is a prior project report, not a manufacturer protocol document or a second verified implementation. No recovered source, binary, credential, or audio was imported. Published community UUID evidence remains separate from the report's additional app-side claims.
+
 ## Reuse decisions
 
 Runtime code uses standard browser APIs and original modular implementation. Dev-only tools include ESLint, Prettier, TypeScript, Playwright, axe-core integration, and fake-indexeddb, with exact versions/licenses in package-lock.json and installed package metadata. Runtime bundling of those tools is unnecessary.

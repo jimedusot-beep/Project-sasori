@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Connect earlier Elmo app-protocol research to the current evidence assessment, label its unreproduced provenance, and document the first two labeled iPhone captures and their export requirements.
 - Export only recognized metadata fields from nested diagnostic, service, characteristic, and statistics objects. Generic diagnostic details are omitted from session exports and backups; explicit raw export still includes packet hex/text.
 - Serialize record deletions with pending saves so an earlier queued write cannot restore a deleted record in the same browser tab.
 - Add regressions for nested backup payloads, large in-memory captures exported as metadata, and pending-save/deletion ordering in IndexedDB and temporary storage.
