@@ -30,17 +30,21 @@ Hasbro's historical app terms describe a user-selected password. This establishe
 
 Accordingly there are no live handshake operations, credential inputs, or guessed passwords in Sasori. The authentication UI tests synthetic success, rejection, timeout, cancellation, and inconclusive outcomes only. Its fixture events do not implement or model an Elmo cryptographic algorithm.
 
+### Earlier app-side research found during the October 21 review
+
+The owner's October 18 teardown report, pages 17–20, reports static analysis of Android app 1.5.1: password and challenge messages, MD5/Fletcher32 involvement, status queries, and playback definitions. See the [app-protocol lead register](../experiments/001-elmo-l2l/app-protocol-leads.md) for reported provenance, candidate bytes, unresolved construction details, and validation order. This review read the report but did not independently inspect its APK or reproduce its method analysis. These are prior-report leads, not a validated authentication algorithm or verified application commands. The community notebook alone does not establish those additional findings.
+
 Before live authentication: finish repeatable inspection, identify exact characteristics and message boundaries, acquire authorized traces from legitimately held app/device observations, establish a testable success/rejection criterion, and document a finite traffic budget. Keep legitimate credentials in private local memory; never public source or diagnostics.
 
 ## Command registry
 
-| Category                             | Current entries                                            | Transmission                      |
-| ------------------------------------ | ---------------------------------------------------------- | --------------------------------- |
-| Passive inspection                   | Service metadata and configured notifications              | Explicit connection only; bounded |
-| Experimental application commands    | None established                                           | Disabled                          |
-| Verified application commands        | None established                                           | Unavailable                       |
-| Physical voice/motor/sensor commands | No verified protocol or safety envelope                    | Unavailable                       |
-| Simulation                           | Synthetic lifecycle, outcomes, movement, phone-local audio | No Bluetooth traffic              |
+| Category                             | Current entries                                              | Transmission                      |
+| ------------------------------------ | ------------------------------------------------------------ | --------------------------------- |
+| Passive inspection                   | Service metadata and configured notifications                | Explicit connection only; bounded |
+| Experimental application commands    | Prior-report candidates; no complete validated specification | Disabled                          |
+| Verified application commands        | None established                                             | Unavailable                       |
+| Physical voice/motor/sensor commands | No verified protocol or safety envelope                      | Unavailable                       |
+| Simulation                           | Synthetic lifecycle, outcomes, movement, phone-local audio   | No Bluetooth traffic              |
 
 ## Independent source-verification track
 

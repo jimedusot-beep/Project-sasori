@@ -20,15 +20,17 @@ A source-linked community GATT table has now been identified in [NonaSuomy/Love2
 
 The historical raw examples and offline analyzer from the earlier research merge are preserved. Live and simulated sessions now save locally, with imported provenance labeled separately. See [current protocol assessment](../../docs/protocol.md).
 
+The [app-protocol lead register](app-protocol-leads.md) now preserves additional claims from the owner's October 18 teardown report. Its reported password/challenge handling and command definitions require independent source verification; no live transmitter has been implemented from them.
+
 ## Unknowns
 
 - Whether the community-reported GATT UUIDs and properties match this unit (verify with real inspection or nRF Connect).
-- Authentication algorithm, whether user-selected password is accepted, and full protocol framing.
+- Complete authentication algorithm and packet construction: the earlier report provides MD5/Fletcher32 leads, but source reproduction, password acceptance, and full protocol framing remain outstanding.
 - Meaning of mode index 12, lifetime of the BLE link, movement and audio control protocol.
 
 ## Next experiment
 
-Open the Project Sasori GitHub Pages site in Bluefy, enter documented UUIDs, and repeat the **read-only** connection. Compare timestamps, status, notifications, and disconnect behavior to V4. Do not extrapolate from a completed inspection to authentication success.
+Follow the [first two live captures](../../docs/iphone-setup.md#first-two-live-captures) on the Project Sasori GitHub Pages site in Bluefy: metadata first, then the candidate data-notification channel if present. Compare timestamps, status, notifications, and disconnect behavior to V4. Do not extrapolate from a completed inspection to authentication success.
 
 ## Evidence handling
 
