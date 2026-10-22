@@ -661,7 +661,10 @@ $('toy-form').addEventListener(
     await store.saveToys([toy]);
     toys = await store.listToys();
     renderProfileOptions();
-    if ($('profile').value === toy.id) applyProfile();
+    if ($('profile').value === toy.id) {
+      applyProfile();
+      saveSettings();
+    }
     editToy(toy);
     renderToys();
     notice(
@@ -1168,10 +1171,13 @@ async function initialize() {
   renderProfileOptions(settings.profile);
   renderToys();
   applyProfile();
-  if (typeof settings.service === 'string') $('svc').value = settings.service.slice(0, 128);
-  if (typeof settings.notify === 'string') $('notify').value = settings.notify.slice(0, 128);
-  if (typeof settings.namePrefix === 'string')
-    $('name-prefix').value = settings.namePrefix.slice(0, 60);
+  // A saved custom profile is authoritative; old per-window preferences must not undo edits.
+  if (!currentProfile().custom) {
+    if (typeof settings.service === 'string') $('svc').value = settings.service.slice(0, 128);
+    if (typeof settings.notify === 'string') $('notify').value = settings.notify.slice(0, 128);
+    if (typeof settings.namePrefix === 'string')
+      $('name-prefix').value = settings.namePrefix.slice(0, 60);
+  }
   syncProbeSelection();
   $('engineering').checked = settings.engineering === true;
   ready = true;

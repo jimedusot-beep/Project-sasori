@@ -30,11 +30,16 @@ test('toy profiles persist, load, export, import as copies, and keep sessions af
     'Synthetic dancing robot · simulated inspection',
   );
   await page.getByRole('button', { name: 'My toys', exact: true }).click();
+  await page.locator('.toy-profile').getByRole('button', { name: 'Edit', exact: true }).click();
+  await page.locator('#toy-prefix').fill('RoboNew');
+  await page.locator('#toy-save').click();
+  await expect(page.locator('#name-prefix')).toHaveValue('RoboNew');
   const downloading = page.waitForEvent('download');
   await page.locator('#toy-export').click();
   const text = await readFile(await (await downloading).path(), 'utf8');
   await page.reload();
   await expect(page.locator('.toy-profile')).toHaveCount(1);
+  await expect(page.locator('#name-prefix')).toHaveValue('RoboNew');
   await page
     .locator('#toy-import')
     .setInputFiles({ name: 'toys.json', mimeType: 'application/json', buffer: Buffer.from(text) });
