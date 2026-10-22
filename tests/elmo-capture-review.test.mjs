@@ -155,6 +155,19 @@ test('invalid JSON, unsupported envelopes, invalid metadata and oversized inputs
   assert.throws(() => review(input));
 });
 
+for (const flag of ['truncated', 'malformed']) {
+  test(`offline reviewer refuses non-boolean ${flag} before deriving raw or metadata counts`, () => {
+    for (const payloadsIncluded of [true, false]) {
+      for (const value of ['false', 'true', 0, 1, null, [], {}]) {
+        const input = session();
+        input.payloadsIncluded = payloadsIncluded;
+        input.packets[0][flag] = value;
+        assert.throws(() => review(input), /Invalid packet flags/);
+      }
+    }
+  });
+}
+
 test('CLI reads a local export and emits only the allowlisted report', () => {
   const directory = mkdtempSync(join(tmpdir(), 'sasori-offline-'));
   try {

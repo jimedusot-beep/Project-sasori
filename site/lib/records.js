@@ -98,6 +98,12 @@ export function validateRecord(input) {
       !bounded(p.kind, 100)
     )
       throw new Error('Invalid packet metadata.');
+    if (
+      ['truncated', 'malformed'].some(
+        (flag) => p[flag] !== undefined && typeof p[flag] !== 'boolean',
+      )
+    )
+      throw new Error('Invalid packet flags.');
     if (p.hex !== undefined && (!bounded(p.hex, 3072) || !/^(?:[a-f0-9]{2}(?: |$))*$/i.test(p.hex)))
       throw new Error('Invalid packet hex.');
     if (p.text !== undefined && !bounded(p.text, 4096)) throw new Error('Invalid packet text.');

@@ -36,4 +36,4 @@ Run the offline regression suite with:
 node --test tests/elmo-capture-review.test.mjs tests/elmo-historical-corpus.test.mjs
 ```
 
-Only the corpus's three public RX examples are historical. Test session envelopes, fragments, joined packets and auth-like bytes are synthetic edge cases, not an Elmo exchange or packet-construction vectors. No production website assets or transport APIs change.
+Only the corpus's three public RX examples are historical. Test session envelopes, fragments, joined packets and auth-like bytes are synthetic edge cases, not an Elmo exchange or packet-construction vectors. The shared session validator requires optional `truncated` and `malformed` fields to be booleans when present, matching the existing schema; text such as `"false"` is rejected before it can distort counts. Legacy records that omit these fields remain supported. This validation applies to browser imports and offline review. Transport APIs and the Elmo application protocol remain unchanged.

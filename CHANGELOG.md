@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Reject non-boolean optional packet flags before importing or reviewing captures, matching the existing session schema. Preserve valid booleans and legacy records without flags; reject a mixed backup as a whole when one packet is invalid.
 - Add an independent original-Elmo BLE source review of PR #11, the earlier teardown report, the community notebook and recovered V5 inspection source. Record the blocked APK acquisition, exact verification gaps and license restrictions; keep authentication construction unavailable.
 - Add a local, count-only capture reviewer and provenance-linked historical RX corpus tests. Imported claims, omitted/truncated payloads and auth-like bytes cannot establish authentication. Prepare a gated known-credential/status-query experiment draft with explicit outcomes and budgets.
 - Export only recognized metadata fields from nested diagnostic, service, characteristic, and statistics objects. Generic diagnostic details are omitted from session exports and backups; explicit raw export still includes packet hex/text.
