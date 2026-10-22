@@ -10,28 +10,43 @@ const VALID_HEX = /^(?:[0-9a-fA-F]{2}(?: |$))*$/;
 function sessionsFrom(text) {
   if (Buffer.byteLength(text, 'utf8') > LIMIT) throw new Error('Input too large');
   const input = JSON.parse(text);
-  const records = input?.format === 'sasori.backup' && input.schemaVersion === 2
-    ? input.records : [input];
+  const records =
+    input?.format === 'sasori.backup' && input.schemaVersion === 2 ? input.records : [input];
   if (!Array.isArray(records) || records.length < 1 || records.length > 50) {
     throw new Error('Unsupported backup envelope');
   }
   for (const r of records) {
-    if (!r || r.format !== 'sasori.session' || r.schemaVersion !== 2 ||
-        !['live', 'simulated', 'imported'].includes(r.source) ||
-        typeof r.payloadsIncluded !== 'boolean' ||
-        !Array.isArray(r.packets) || r.packets.length > 500 ||
-        !r.stats || ['packets','bytes','malformed','truncated'].some(
-          (key) => !Number.isSafeInteger(r.stats[key]) || r.stats[key] < 0)) {
+    if (
+      !r ||
+      r.format !== 'sasori.session' ||
+      r.schemaVersion !== 2 ||
+      !['live', 'simulated', 'imported'].includes(r.source) ||
+      typeof r.payloadsIncluded !== 'boolean' ||
+      !Array.isArray(r.packets) ||
+      r.packets.length > 500 ||
+      !r.stats ||
+      ['packets', 'bytes', 'malformed', 'truncated'].some(
+        (key) => !Number.isSafeInteger(r.stats[key]) || r.stats[key] < 0,
+      )
+    ) {
       throw new Error('Unsupported session envelope');
     }
     for (const packet of r.packets) {
-      if (!packet || !Number.isSafeInteger(packet.length) || packet.length < 0 ||
-          packet.length > 4096 || typeof packet.kind !== 'string' ||
-          typeof packet.timestamp !== 'string' || !Number.isFinite(Date.parse(packet.timestamp)) ||
-          (packet.truncated !== undefined && typeof packet.truncated !== 'boolean') ||
-          (packet.malformed !== undefined && typeof packet.malformed !== 'boolean') ||
-          (packet.hex !== undefined &&
-            (typeof packet.hex !== 'string' || packet.hex.length > 3072 || !VALID_HEX.test(packet.hex)))) {
+      if (
+        !packet ||
+        !Number.isSafeInteger(packet.length) ||
+        packet.length < 0 ||
+        packet.length > 4096 ||
+        typeof packet.kind !== 'string' ||
+        typeof packet.timestamp !== 'string' ||
+        !Number.isFinite(Date.parse(packet.timestamp)) ||
+        (packet.truncated !== undefined && typeof packet.truncated !== 'boolean') ||
+        (packet.malformed !== undefined && typeof packet.malformed !== 'boolean') ||
+        (packet.hex !== undefined &&
+          (typeof packet.hex !== 'string' ||
+            packet.hex.length > 3072 ||
+            !VALID_HEX.test(packet.hex)))
+      ) {
         throw new Error('Invalid packet envelope');
       }
     }
@@ -42,20 +57,32 @@ function sessionsFrom(text) {
 /** Count-only summary: no byte contents, UUIDs, free text, IDs, or URLs. */
 export function reviewForRea(text) {
   return {
-    format: 'rea.sasori-handoff-review', schemaVersion: 1, offlineOnly: true,
+    format: 'rea.sasori-handoff-review',
+    schemaVersion: 1,
+    offlineOnly: true,
     independentlyVerified: false,
     sessions: sessionsFrom(text).map((r) => {
-      const complete = r.packets.filter((p) =>
-        r.payloadsIncluded && !p.truncated && !p.malformed &&
-        typeof p.hex === 'string' &&
-        p.hex.replaceAll(' ', '').length === p.length * 2);
+      const complete = r.packets.filter(
+        (p) =>
+          r.payloadsIncluded &&
+          !p.truncated &&
+          !p.malformed &&
+          typeof p.hex === 'string' &&
+          p.hex.replaceAll(' ', '').length === p.length * 2,
+      );
       return {
-        sourceClaim: r.source, previouslyImported: r.importedAt != null,
-        packetRecords: r.packets.length, completeRawPackets: complete.length,
+        sourceClaim: r.source,
+        previouslyImported: r.importedAt != null,
+        packetRecords: r.packets.length,
+        completeRawPackets: complete.length,
         missingOrIncomplete: r.packets.length - complete.length,
         statsConsistent: r.stats.packets === r.packets.length,
-        eligibleForExplicitPrivateTrace: r.source === 'live' && r.importedAt == null &&
-          r.payloadsIncluded && r.packets.length > 0 && complete.length === r.packets.length &&
+        eligibleForExplicitPrivateTrace:
+          r.source === 'live' &&
+          r.importedAt == null &&
+          r.payloadsIncluded &&
+          r.packets.length > 0 &&
+          complete.length === r.packets.length &&
           r.stats.packets === r.packets.length &&
           r.stats.bytes === r.packets.reduce((total, p) => total + p.length, 0) &&
           r.stats.malformed === r.packets.filter((p) => p.malformed).length &&
@@ -73,9 +100,19 @@ export function privateTraceForRea(text) {
   if (review.sessions.some((s) => !s.eligibleForExplicitPrivateTrace)) {
     throw new Error('A complete non-imported live session with explicit raw payloads is required');
   }
-  return records.flatMap((r) => r.packets.map((p) =>
-    JSON.stringify({ transport: 'ble', direction: 'rx', hex: p.hex.replaceAll(' ', '').toLowerCase() })
-  )).join('\n') + '\n';
+  return (
+    records
+      .flatMap((r) =>
+        r.packets.map((p) =>
+          JSON.stringify({
+            transport: 'ble',
+            direction: 'rx',
+            hex: p.hex.replaceAll(' ', '').toLowerCase(),
+          }),
+        ),
+      )
+      .join('\n') + '\n'
+  );
 }
 
 function main(args) {
@@ -99,15 +136,23 @@ function main(args) {
   }
   const trace = privateTraceForRea(text); // validate before opening output
   const handle = openSync(output, 'wx', 0o600);
-  try { writeFileSync(handle, trace, 'utf8'); }
-  finally { closeSync(handle); }
-  process.stdout.write('Private trace written outside repository. Treat it as sensitive; do not commit or share.\n');
+  try {
+    writeFileSync(handle, trace, 'utf8');
+  } finally {
+    closeSync(handle);
+  }
+  process.stdout.write(
+    'Private trace written outside repository. Treat it as sensitive; do not commit or share.\n',
+  );
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
-  try { main(process.argv.slice(2)); }
-  catch {
-    console.error('Handoff failed: check local session, flags, export completeness, and private output path.');
+  try {
+    main(process.argv.slice(2));
+  } catch {
+    console.error(
+      'Handoff failed: check local session, flags, export completeness, and private output path.',
+    );
     process.exitCode = 1;
   }
 }
