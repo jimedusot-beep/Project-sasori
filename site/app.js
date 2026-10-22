@@ -14,6 +14,14 @@ import { CAPABILITIES, validateCommand, virtualPosition } from './lib/safety.js'
 import { Diagnostics, explainError } from './lib/diagnostics.js';
 import { ResearchStore } from './lib/storage.js';
 import {
+  createToy,
+  validateToy,
+  exportToys,
+  parseToys,
+  asDeviceProfile,
+  MAX_TOY_FILE_BYTES,
+} from './lib/toys.js';
+import {
   createSession,
   portableRecord,
   parseImport,
@@ -33,6 +41,7 @@ const node = (tag, text, className = '') => {
 const labels = {
   overview: 'Overview',
   protocol: 'Protocol explorer',
+  toys: 'My toys',
   sessions: 'Research records',
   controls: 'Control laboratory',
   research: 'Evidence & guides',
@@ -68,6 +77,10 @@ let records = [],
   sequenceDeadline,
   audioContext;
 let settings = {};
+let toys = [],
+  editingToyId = null;
+const allProfiles = () => [...PROFILES, ...toys.map(asDeviceProfile)];
+const currentProfile = () => allProfiles().find((p) => p.id === $('profile').value) || PROFILES[0];
 function notice(message) {
   $('notice').textContent = message;
   $('notice').hidden = false;
@@ -116,10 +129,25 @@ document
   .forEach((el) => el.addEventListener('click', () => navigate(el.dataset.page || el.dataset.go)));
 window.addEventListener('hashchange', () => navigate(location.hash.slice(1)));
 
-for (const profile of PROFILES) {
-  const option = node('option', profile.id + ' / ' + profile.label);
-  option.value = profile.id;
-  $('profile').append(option);
+function renderProfileOptions(selected = $('profile').value) {
+  $('profile').replaceChildren();
+  for (const profile of allProfiles()) {
+    const option = node('option', (profile.custom ? 'My toy' : profile.id) + ' / ' + profile.label);
+    option.value = profile.id;
+    $('profile').append(option);
+  }
+  $('profile').value = allProfiles().some((p) => p.id === selected) ? selected : '001';
+}
+renderProfileOptions();
+function applyProfile() {
+  const profile = currentProfile();
+  $('svc').value = profile.service || '';
+  $('notify').value = profile.notify || '';
+  $('name-prefix').value = profile.custom ? profile.namePrefix : profile.id === '001' ? 'Elmo' : '';
+  $('consent').checked = false;
+  $('show-all-devices').checked = false;
+  syncProbeSelection();
+  updateMode();
 }
 for (const probe of ELMO_NOTIFY_PROBES) {
   const option = node('option', probe.label);
@@ -165,15 +193,36 @@ function updateMode() {
       : navigator.bluetooth?.requestDevice
         ? 'Web Bluetooth detected. Device compatibility still requires physical testing.'
         : 'Web Bluetooth unavailable. On iPhone, open this HTTPS page in Bluefy. Simulation works here.';
-  const profile = PROFILES.find((p) => p.id === $('profile').value);
+  const profile = currentProfile();
   $('device-title').textContent = profile.label;
   $('profile-status').textContent = profile.status;
   $('connect').disabled =
     !ready ||
     running ||
     (!simulated &&
-      (!navigator.bluetooth?.requestDevice || !window.isSecureContext || profile.id !== '001'));
+      (!navigator.bluetooth?.requestDevice ||
+        !window.isSecureContext ||
+        (profile.id !== '001' && !profile.custom)));
   $('load-profile').disabled = profile.id !== '001' || running;
+  $('keep-setup').disabled = !ready || running;
+  $('elmo-probe-settings').hidden = profile.id !== '001';
+  $('toy-source').hidden = !profile.custom;
+  $('toy-source').textContent = profile.custom
+    ? 'UUID source (user supplied): ' + profile.sourceNote
+    : '';
+  $('specimen-name').textContent = profile.label;
+  $('specimen-model').textContent = profile.id === '001' ? 'HASBRO · B6572' : 'INSPECTION PROFILE';
+  $('specimen-number').textContent = profile.custom ? 'MY TOY' : profile.id;
+  $('active-experiment').textContent =
+    'PROJECT SASORI / ' + (profile.custom ? profile.label : 'EXPERIMENT ' + profile.id);
+  document.querySelector('.specimen-art').hidden = profile.id !== '001';
+  $('toy-save').disabled = !ready || running;
+  $('toy-import').disabled = !ready || running;
+  $('toy-list')
+    .querySelectorAll('button')
+    .forEach((button) => {
+      button.disabled = running;
+    });
   document.body.classList.toggle('engineering', $('engineering').checked);
   if (!$('engineering').checked) $('include-payloads').checked = false;
 }
@@ -185,6 +234,7 @@ function saveSettings() {
       profile: $('profile').value,
       service: $('svc').value,
       notify: $('notify').value,
+      namePrefix: $('name-prefix').value,
       engineering: $('engineering').checked,
     };
     store.setSettings(settings).catch(problem);
@@ -193,10 +243,12 @@ function saveSettings() {
 for (const id of ['simulation', 'profile', 'engineering'])
   $(id).addEventListener('change', () => {
     if (id !== 'engineering') $('consent').checked = false;
+    if (id === 'profile') applyProfile();
     updateMode();
     saveSettings();
   });
 $('svc').addEventListener('input', saveSettings);
+$('name-prefix').addEventListener('input', saveSettings);
 $('notify').addEventListener('input', () => {
   syncProbeSelection();
   saveSettings();
@@ -204,6 +256,7 @@ $('notify').addEventListener('input', () => {
 $('load-profile').addEventListener('click', () => {
   $('svc').value = ELMO_SERVICE;
   $('notify').value = ELMO_NOTIFY;
+  $('name-prefix').value = 'Elmo';
   syncProbeSelection();
   saveSettings();
   notice(
@@ -221,11 +274,13 @@ function lockConnection(locked) {
     'consent',
     'simulation-scenario',
     'show-all-devices',
+    'name-prefix',
   ])
     $(id).disabled = locked;
   $('disconnect').disabled = !locked;
   $('global-stop').disabled = !locked;
   updateMode();
+  if (session) renderServices(session.services);
 }
 function renderServices(services) {
   const target = $('service-map');
@@ -244,6 +299,26 @@ function renderServices(services) {
         node('code', c.uuid),
         node('p', c.properties.join(' · ') + ' / no writes enabled'),
       );
+      if (
+        s.evidence === 'observed-this-session' &&
+        c.evidence === 'observed-this-session' &&
+        c.properties.some((p) => ['notify', 'indicate'].includes(p))
+      ) {
+        const choose = node('button', 'Use for next inspection', 'text-button');
+        choose.disabled = running;
+        choose.addEventListener('click', () => {
+          if (running) return;
+          $('svc').value = s.uuid;
+          $('notify').value = c.uuid;
+          $('consent').checked = false;
+          syncProbeSelection();
+          saveSettings();
+          notice(
+            'Observed notification endpoint selected for the next manual inspection. No subscription or connection started. Save this setup to My toys to keep it in a profile.',
+          );
+        });
+        characteristic.append(choose);
+      }
       wrapper.append(characteristic);
     }
     target.append(wrapper);
@@ -369,6 +444,7 @@ $('connect').addEventListener(
   safe(() => {
     if (!ready || running) return;
     const simulated = $('simulation').checked;
+    const profile = currentProfile();
     if (!simulated) {
       if (!$('consent').checked)
         throw new Error('Confirm that you own or are authorized to inspect this device.');
@@ -377,12 +453,15 @@ $('connect').addEventListener(
     }
     diagnostics = new Diagnostics();
     session = createSession(simulated ? 'simulated' : 'live', $('profile').value);
+    session.title = (
+      profile.label + (simulated ? ' · simulated inspection' : ' · inspection')
+    ).slice(0, 180);
     $('session-title').value = session.title;
     $('session-source').textContent = simulated ? 'SIMULATED SESSION' : 'LIVE INSPECTION';
     $('include-payloads').checked = false;
     $('inspection-stage').textContent = simulated
       ? 'Simulation active; no Bluetooth connection'
-      : 'Stage: preparing manual Elmo inspection';
+      : 'Stage: preparing manual inspection of ' + profile.label;
     $('packet-count').textContent = '0 RX';
     $('packet-bytes').textContent = '0 bytes received';
     $('notice').hidden = true;
@@ -398,7 +477,7 @@ $('connect').addEventListener(
         : 'Inspection only. No authentication, motor, audio, or firmware commands.',
     );
     if (!simulated)
-      log('info', 'Configured community candidate probe', {
+      log('info', 'Configured inspection profile: ' + profile.label, {
         service: $('svc').value.trim().toLowerCase(),
         notify: $('notify').value.trim().toLowerCase() || 'none',
         preset: $('notify-preset').value,
@@ -413,6 +492,7 @@ $('connect').addEventListener(
           notify: $('notify').value.trim(),
           durationMs: 15000,
           showAllDevices: $('show-all-devices').checked,
+          namePrefix: $('name-prefix').value,
         });
     return Promise.resolve(result).catch((error) => {
       lockConnection(false);
@@ -461,6 +541,205 @@ function download(name, body, type) {
   a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 30000);
 }
+function requireToyEditing() {
+  if (!ready || running)
+    throw new Error('Wait for storage and stop the inspection before changing toy profiles.');
+}
+function editToy(toy = null) {
+  editingToyId = toy?.id || null;
+  $('toy-name').value = toy?.label || '';
+  $('toy-prefix').value = toy?.namePrefix || '';
+  $('toy-service').value = toy?.service || '';
+  $('toy-notify').value = toy?.notify || '';
+  $('toy-source-note').value = toy?.sourceNote || '';
+  $('toy-form-title').textContent = toy ? 'Edit toy profile' : 'Add a toy';
+}
+function renderToys() {
+  $('toy-list').replaceChildren();
+  $('toy-export').disabled = toys.length === 0;
+  $('toy-storage-summary').textContent =
+    (store.persistent ? 'Saved on this browser' : 'Temporary memory only; export before closing') +
+    ' · ' +
+    toys.length +
+    ' / 20 toy profiles';
+  if (!toys.length)
+    $('toy-list').append(
+      node(
+        'p',
+        'Your saved toy profiles will appear here. The built-in Elmo profile remains in the connection manager.',
+      ),
+    );
+  for (const toy of toys) {
+    const card = node('article', '', 'toy-profile');
+    card.append(
+      node('h3', toy.label),
+      node(
+        'p',
+        toy.namePrefix
+          ? 'Bluetooth name starts with: ' + toy.namePrefix
+          : 'Name unknown · Show all devices required',
+      ),
+      node('code', toy.service),
+      node(
+        'p',
+        toy.notify ? 'Notification endpoint configured' : 'Metadata only · no subscription',
+      ),
+      node('p', 'User-supplied source: ' + toy.sourceNote, 'hint'),
+    );
+    const actions = node('div', '', 'actions');
+    const load = node('button', 'Load for inspection', 'secondary');
+    load.addEventListener(
+      'click',
+      safe(() => {
+        requireToyEditing();
+        $('profile').value = toy.id;
+        applyProfile();
+        $('uuid-settings').open = true;
+        saveSettings();
+        navigate('overview');
+        notice(
+          'Toy profile loaded. Review the UUIDs and confirm ownership before starting a manual inspection.',
+        );
+      }),
+    );
+    const edit = node('button', 'Edit', 'text-button');
+    edit.addEventListener(
+      'click',
+      safe(() => {
+        requireToyEditing();
+        editToy(toy);
+      }),
+    );
+    const remove = node('button', 'Delete profile', 'text-button');
+    let armed = false;
+    remove.addEventListener(
+      'click',
+      safe(async () => {
+        requireToyEditing();
+        if (!armed) {
+          armed = true;
+          remove.textContent = 'Confirm profile deletion';
+          setTimeout(() => {
+            armed = false;
+            remove.textContent = 'Delete profile';
+          }, 5000);
+          return;
+        }
+        const selected = $('profile').value === toy.id;
+        await store.removeToy(toy.id);
+        toys = await store.listToys();
+        renderProfileOptions();
+        if (selected) applyProfile();
+        if (editingToyId === toy.id) editToy();
+        renderToys();
+        saveSettings();
+        notice('Toy profile deleted. Its saved inspection sessions were preserved.');
+      }),
+    );
+    for (const button of [load, edit, remove]) button.disabled = running;
+    actions.append(load, edit, remove);
+    card.append(actions);
+    $('toy-list').append(card);
+  }
+}
+$('toy-new').addEventListener('click', () => editToy());
+$('toy-form').addEventListener(
+  'submit',
+  safe(async (event) => {
+    event.preventDefault();
+    requireToyEditing();
+    const fields = {
+      label: $('toy-name').value,
+      namePrefix: $('toy-prefix').value,
+      service: $('toy-service').value,
+      notify: $('toy-notify').value.trim(),
+      sourceNote: $('toy-source-note').value,
+    };
+    const toy = editingToyId
+      ? validateToy({ ...fields, format: 'sasori.toy', schemaVersion: 1, id: editingToyId })
+      : createToy(fields);
+    await store.saveToys([toy]);
+    toys = await store.listToys();
+    renderProfileOptions();
+    if ($('profile').value === toy.id) applyProfile();
+    editToy(toy);
+    renderToys();
+    notice(
+      store.persistent
+        ? 'Toy profile saved on this browser. Choose Load for inspection when ready.'
+        : store.warning,
+    );
+  }),
+);
+$('keep-setup').addEventListener(
+  'click',
+  safe(() => {
+    requireToyEditing();
+    const profile = currentProfile();
+    editToy(profile.custom ? profile : null);
+    $('toy-name').value = profile.label;
+    $('toy-prefix').value = $('name-prefix').value;
+    $('toy-service').value = $('svc').value;
+    $('toy-notify').value = $('notify').value;
+    const unchanged =
+      $('svc').value.trim().toLowerCase() === profile.service &&
+      $('notify').value.trim().toLowerCase() === (profile.notify || '');
+    const observed =
+      session?.source === 'live' &&
+      session.services.some(
+        (service) =>
+          service.evidence === 'observed-this-session' &&
+          service.uuid === $('svc').value.trim().toLowerCase() &&
+          service.characteristics.some(
+            (characteristic) =>
+              characteristic.evidence === 'observed-this-session' &&
+              characteristic.uuid === $('notify').value.trim().toLowerCase(),
+          ),
+      );
+    $('toy-source-note').value = observed
+      ? 'Observed in Sasori session ' +
+        session.id +
+        ' at ' +
+        session.startedAt +
+        '; repeat independently before protocol claims.'
+      : unchanged
+        ? profile.custom
+          ? profile.sourceNote
+          : profile.source || ''
+        : '';
+    navigate('toys');
+  }),
+);
+$('toy-export').addEventListener(
+  'click',
+  safe(() =>
+    download('sasori-toys.json', JSON.stringify(exportToys(toys), null, 2), 'application/json'),
+  ),
+);
+$('toy-import').addEventListener(
+  'change',
+  safe(async () => {
+    const input = $('toy-import');
+    try {
+      requireToyEditing();
+      const file = input.files?.[0];
+      if (!file) return;
+      if (file.size > MAX_TOY_FILE_BYTES) throw new Error('Toy profile import limit is 128 KB.');
+      const copies = parseToys(await file.text()).map(createToy);
+      await store.saveToys(copies);
+      toys = await store.listToys();
+      renderProfileOptions();
+      renderToys();
+      notice(
+        'Imported ' +
+          copies.length +
+          ' toy profiles as new copies. Review their source notes before inspection.',
+      );
+    } finally {
+      input.value = '';
+    }
+  }),
+);
 $('copy').addEventListener(
   'click',
   safe(async () => {
@@ -885,9 +1164,14 @@ async function initialize() {
   $('connect').disabled = true;
   await store.open();
   settings = await store.getSettings();
-  if (PROFILES.some((p) => p.id === settings.profile)) $('profile').value = settings.profile;
+  toys = await store.listToys();
+  renderProfileOptions(settings.profile);
+  renderToys();
+  applyProfile();
   if (typeof settings.service === 'string') $('svc').value = settings.service.slice(0, 128);
   if (typeof settings.notify === 'string') $('notify').value = settings.notify.slice(0, 128);
+  if (typeof settings.namePrefix === 'string')
+    $('name-prefix').value = settings.namePrefix.slice(0, 60);
   syncProbeSelection();
   $('engineering').checked = settings.engineering === true;
   ready = true;

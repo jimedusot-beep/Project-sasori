@@ -12,12 +12,14 @@ Open the [live laboratory](https://jimedusot-beep.github.io/Project-sasori/). HT
 2. Tap **Run simulated inspection**. Three synthetic notifications appear; the finished session saves locally.
 3. Open **Research records** to edit notes, search, compare captures, import JSON/TXT/CSV, or export a metadata backup.
 4. For real inspection, open the HTTPS site in **Bluefy on iPhone**, turn simulation off, load the published Elmo profile, review its source, confirm authorization, and tap **Connect & inspect**.
+5. For another BLE toy you own, open **My toys** to save a sourced service UUID and that toy's Bluetooth name prefix. Leave Notify blank for metadata-only inspection, then select an observed notification endpoint in Protocol explorer for the next manual session. See the [multi-toy guide](docs/my-toys.md).
 
 The published UUID profile is transcribed from [NonaSuomy's GATT table](https://github.com/NonaSuomy/Love2LearnElmo/blob/82fa312e06af1d8e549cec588856ebce227b5f77/README.md). It is community-reported evidence, not a recovery of the old V4 source or proof of compatibility with your firmware. If service discovery fails, follow the [iPhone UUID capture guide](experiments/001-elmo-l2l/iphone-uuid-capture-guide.md).
 
 ## What works in software
 
 - User-initiated, name-filtered discovery; service/characteristic metadata inspection; optional notification subscription.
+- Persistent user-defined toy profiles with source notes, isolated name/UUID settings, profile backups/imports, and observed notification endpoint selection. Other built-in experiment slots remain scaffolds.
 - State tracking, duplicate-attempt prevention, 45-second chooser budget, 6-second operation budgets, 15-second inspection deadline, 500-notification cap, manual reconnect, late-connection cleanup, and foreground-only inspection.
 - Packet timestamps, byte counts, hex/text views, malformed/oversized flags, historical-pattern descriptions, and the preserved offline hex analyzer.
 - IndexedDB records and settings, explicit memory fallback, notes, search, comparisons, JSON/TXT/CSV imports, metadata backups, v1 migration, corruption detection, and bounded storage.

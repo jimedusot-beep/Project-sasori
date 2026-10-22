@@ -46,6 +46,7 @@
         <button class="nav" data-page="protocol">
           <span aria-hidden="true">⌁</span> Protocol explorer
         </button>
+        <button class="nav" data-page="toys"><span aria-hidden="true">▧</span> My toys</button>
         <button class="nav" data-page="sessions">
           <span aria-hidden="true">▤</span> Research records
           <span id="record-count" class="count">0</span>
@@ -85,7 +86,7 @@
         <section id="page-overview" class="page" aria-labelledby="overview-title">
           <div class="page-heading">
             <div>
-              <p class="eyebrow">PROJECT SASORI / EXPERIMENT 001</p>
+              <p class="eyebrow" id="active-experiment">PROJECT SASORI / EXPERIMENT 001</p>
               <h1 id="overview-title">A little curiosity.<br />A lot of possibility.</h1>
               <p class="lead">
                 Your workbench for understanding animatronics.<br />Observe, capture, and build on
@@ -151,31 +152,42 @@
               <div id="live-config">
                 <label class="checkline" for="show-all-devices"
                   ><input type="checkbox" id="show-all-devices" /> Show all Bluetooth devices
-                  <span>Fallback if Elmo does not appear</span></label
+                  <span>Fallback if your toy does not appear</span></label
                 >
-                <div class="profile-action">
-                  <button id="load-profile" class="text-button" type="button">
-                    Use published Elmo UUIDs ↙</button
-                  ><a
-                    href="https://github.com/NonaSuomy/Love2LearnElmo"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    >Source ↗</a
-                  >
+                <div id="elmo-probe-settings">
+                  <div class="profile-action">
+                    <button id="load-profile" class="text-button" type="button">
+                      Use published Elmo UUIDs ↙</button
+                    ><a
+                      href="https://github.com/NonaSuomy/Love2LearnElmo"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      >Source ↗</a
+                    >
+                  </div>
+                  <p class="hint">
+                    Community-reported profile. Confirmed on the researcher's unit; not yet verified
+                    on yours.
+                  </p>
+                  <label for="notify-preset">Elmo notification probe</label
+                  ><select id="notify-preset" aria-describedby="probe-hint"></select>
+                  <p id="probe-hint" class="hint">
+                    Choose one community-reported notification channel per manual inspection.
+                    Metadata-only avoids notification subscription. The selected endpoint is a
+                    hypothesis, not a verified command. No motor, voice, or authentication writes.
+                  </p>
                 </div>
-                <p class="hint">
-                  Community-reported profile. Confirmed on the researcher's unit; not yet verified
-                  on yours.
-                </p>
-                <label for="notify-preset">Elmo notification probe</label
-                ><select id="notify-preset" aria-describedby="probe-hint"></select>
-                <p id="probe-hint" class="hint">
-                  Choose one community-reported notification channel per manual inspection.
-                  Metadata-only avoids notification subscription. The selected endpoint is a
-                  hypothesis, not a verified command. No motor, voice, or authentication writes.
-                </p>
+                <p id="toy-source" class="hint" hidden></p>
                 <details id="uuid-settings">
                   <summary>Service & notification settings</summary>
+                  <label for="name-prefix">Bluetooth name starts with</label>
+                  <input
+                    id="name-prefix"
+                    maxlength="60"
+                    value="Elmo"
+                    autocomplete="off"
+                    placeholder="e.g. Elmo"
+                  />
                   <label for="svc">Custom service UUID</label
                   ><input
                     id="svc"
@@ -195,6 +207,9 @@
                     separately granted. No firmware services.
                   </p>
                 </details>
+                <button id="keep-setup" class="text-button" type="button">
+                  Save this setup to My toys →
+                </button>
                 <label class="checkline" for="consent"
                   ><input type="checkbox" id="consent" /> I own or am authorized to inspect this
                   device.</label
@@ -221,7 +236,7 @@
               <section class="panel specimen" aria-labelledby="specimen-title">
                 <div class="panel-head">
                   <h2 id="specimen-title">The current specimen</h2>
-                  <span class="badge subtle">001</span>
+                  <span class="badge subtle" id="specimen-number">001</span>
                 </div>
                 <div class="specimen-art" aria-hidden="true">
                   <svg viewBox="0 0 280 190">
@@ -251,8 +266,8 @@
                   ><span class="art-label">CONCEPT DIAGRAM / NOT A HARDWARE SCHEMATIC</span>
                 </div>
                 <div class="specimen-name">
-                  <h3>Love2Learn Elmo</h3>
-                  <span>HASBRO · B6572</span>
+                  <h3 id="specimen-name">Love2Learn Elmo</h3>
+                  <span id="specimen-model">HASBRO · B6572</span>
                 </div>
                 <p>One toy. A starting point for an expandable robotics laboratory.</p>
                 <div class="progress-track"><i></i></div>
@@ -303,6 +318,99 @@
               <summary>Technical event log</summary>
               <pre id="raw-log" tabindex="0" aria-label="Technical event log"></pre>
             </details>
+          </section>
+        </section>
+        <section id="page-toys" class="page" hidden aria-labelledby="toys-title">
+          <div class="page-heading">
+            <div>
+              <p class="eyebrow">YOUR ANIMATRONICS WORKBENCH</p>
+              <h1 id="toys-title">Every toy has a story.</h1>
+              <p class="lead">Keep a separate inspection profile for each toy you own.</p>
+            </div>
+          </div>
+          <div class="workspace-grid">
+            <section class="panel" aria-labelledby="toy-form-title">
+              <h2 id="toy-form-title">Add or edit a toy</h2>
+              <p>
+                Start with the service UUID from a manufacturer, source-backed research, or your own
+                authorized GATT inspection. Leave notifications blank for the first metadata-only
+                session.
+              </p>
+              <form id="toy-form">
+                <label for="toy-name">Toy name</label
+                ><input id="toy-name" maxlength="80" required placeholder="e.g. My dancing robot" />
+                <label for="toy-prefix">Bluetooth name starts with</label
+                ><input id="toy-prefix" maxlength="60" placeholder="Leave blank if unknown" />
+                <label for="toy-service">Service UUID</label
+                ><input
+                  id="toy-service"
+                  maxlength="128"
+                  required
+                  autocomplete="off"
+                  spellcheck="false"
+                  placeholder="128-bit UUID from your source"
+                />
+                <label for="toy-notify">Notify UUID (optional)</label
+                ><input
+                  id="toy-notify"
+                  maxlength="128"
+                  autocomplete="off"
+                  spellcheck="false"
+                  placeholder="Blank = metadata only"
+                />
+                <label for="toy-source-note">Where did these UUIDs come from?</label
+                ><textarea
+                  id="toy-source-note"
+                  maxlength="1000"
+                  required
+                  placeholder="Source URL, document, or your own dated observation"
+                ></textarea>
+                <p class="hint">
+                  Source notes are research claims, not automatic verification. Keep passwords and
+                  device identifiers out of profiles.
+                </p>
+                <div class="actions">
+                  <button id="toy-save" class="primary" type="submit" disabled>
+                    Save toy profile</button
+                  ><button id="toy-new" type="button" class="secondary">Clear form</button>
+                </div>
+              </form>
+            </section>
+            <section class="panel" aria-labelledby="saved-toys-title">
+              <h2 id="saved-toys-title">My saved toys</h2>
+              <p id="toy-storage-summary" class="hint"></p>
+              <div class="actions">
+                <button id="toy-export" class="secondary">Export toy profiles</button>
+              </div>
+              <label for="toy-import">Import toy profiles (JSON)</label
+              ><input id="toy-import" type="file" accept=".json,application/json" />
+              <p class="hint">
+                Up to 20 profiles · 128 KB import limit. Imported copies receive new IDs. Profiles
+                include toy names and source notes; review before sharing. Sessions and toy profiles
+                have separate backups.
+              </p>
+              <div id="toy-list" class="toy-list"></div>
+            </section>
+          </div>
+          <section class="panel">
+            <h2>Your first inspection</h2>
+            <ol>
+              <li>Save a toy profile and choose <strong>Load for inspection</strong>.</li>
+              <li>
+                Confirm ownership, then inspect the sourced service with notifications left blank.
+                If the name is unknown, explicitly enable Show all Bluetooth devices.
+              </li>
+              <li>
+                In Protocol explorer, choose an observed Notify or Indicate characteristic for your
+                next manual inspection.
+              </li>
+              <li>Repeat, save notes, and compare captures before drawing protocol conclusions.</li>
+            </ol>
+            <p>
+              Web Bluetooth exposes only services granted to the site. This is not an unrestricted
+              service scanner. Bluetooth Classic, USB-only, infrared, and proprietary radio toys
+              require different transports. Physical commands remain locked.
+            </p>
           </section>
         </section>
         <section id="page-protocol" class="page" hidden aria-labelledby="protocol-title">

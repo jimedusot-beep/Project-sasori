@@ -1325,6 +1325,39 @@ footer a {
     font-size: 10px;
   }
 }
+.toy-list {
+  display: grid;
+  gap: 16px;
+  margin-top: 20px;
+}
+.toy-profile {
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 16px;
+  overflow-wrap: anywhere;
+}
+.toy-profile code {
+  display: block;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.toy-profile .actions {
+  flex-wrap: wrap;
+}
+#toy-form input,
+#toy-form textarea {
+  width: 100%;
+}
+#toy-form textarea {
+  min-height: 100px;
+}
+#toy-form .actions {
+  flex-wrap: wrap;
+}
+#page-toys > .panel {
+  margin-top: 24px;
+}
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
