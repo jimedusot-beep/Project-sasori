@@ -2,6 +2,7 @@ name: Temporary formatting verification
 on:
   push:
     branches: [feat/rea-private-capture-handoff]
+  pull_request:
 permissions:
   contents: read
 jobs:
