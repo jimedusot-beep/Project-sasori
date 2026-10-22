@@ -8,7 +8,7 @@ This is an optional **offline, owner-run analysis path**. It does not add live B
 2. Export a **metadata-only** session or backup to review counts safely. A backup does not contain the original notification bytes.
 3. On your own computer with Node 22+, clone or open your Sasori repository. To inspect an export without revealing payloads, run:
 
-    node scripts/rea-handoff.mjs /private/path/sasori-session.json
+   node scripts/rea-handoff.mjs /private/path/sasori-session.json
 
 The result has only claimed source labels and counts, complete/missing-packet totals, import status and consistency checks. It excludes record IDs, names, service UUIDs, free text, full hex and byte sequences. Neither this script nor the file's source label confirms physical hardware observation.
 
