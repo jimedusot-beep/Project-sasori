@@ -126,6 +126,42 @@ test('bad packet hex, date, text and negative length are rejected', () => {
     assert.throws(() => validateRecord(r));
   }
 });
+for (const flag of ['truncated', 'malformed']) {
+  test(`packet ${flag} flag rejects non-boolean values during validation and JSON import`, () => {
+    for (const value of ['false', 'true', 0, 1, null, [], {}]) {
+      const r = capture();
+      r.packets[0][flag] = value;
+      assert.throws(() => validateRecord(r), /Invalid packet flags/);
+      assert.throws(() => parseImport(JSON.stringify(r), 'capture.json'), /Invalid packet flags/);
+    }
+  });
+}
+test('optional packet flags preserve booleans and remain optional in v1 and v2 imports', () => {
+  for (const schemaVersion of [1, 2]) {
+    for (const value of [true, false, undefined]) {
+      const r = capture();
+      r.schemaVersion = schemaVersion;
+      for (const flag of ['truncated', 'malformed']) {
+        if (value === undefined) delete r.packets[0][flag];
+        else r.packets[0][flag] = value;
+      }
+      const [imported] = parseImport(JSON.stringify(r), 'capture.json');
+      assert.equal(imported.schemaVersion, 2);
+      assert.equal(imported.packets[0].truncated, value);
+      assert.equal(imported.packets[0].malformed, value);
+    }
+  }
+});
+test('one invalid packet flag rejects a mixed backup before records can be imported', () => {
+  const invalid = capture();
+  invalid.packets[0].malformed = 'false';
+  const envelope = {
+    format: 'sasori.backup',
+    schemaVersion: 2,
+    records: [capture(), invalid],
+  };
+  assert.throws(() => parseImport(JSON.stringify(envelope), 'backup.json'), /Invalid packet flags/);
+});
 test('unknown top-level imported keys are dropped', () => {
   const r = validateRecord({
     ...createSession('imported'),

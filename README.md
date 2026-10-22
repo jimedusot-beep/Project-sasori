@@ -68,6 +68,7 @@ The site serves on port 4173. Live Web Bluetooth requires HTTPS or an eligible l
 - [Architecture and module APIs](docs/architecture.md)
 - [Protocol specification and unknowns](docs/protocol.md)
 - [Experiment 001](experiments/001-elmo-l2l/README.md), [evidence register](experiments/001-elmo-l2l/evidence-register.md), and [historical inbound bytes](experiments/001-elmo-l2l/protocol-notifications.md)
+- Independent original-BLE track: [source verification and exact gaps](experiments/001-elmo-l2l/source-verification.md), [offline capture review](experiments/001-elmo-l2l/offline-review.md), and [gated live experiment draft](experiments/001-elmo-l2l/live-experiment.md). Authentication construction remains unverified; replacement-controller work can proceed independently.
 - [iPhone setup](docs/iphone-setup.md), [troubleshooting](docs/troubleshooting.md), and [safety](docs/safety.md)
 - [Current research/source/license register](docs/research/source-register.md)
 - [Preserved seven-area engineering dossier](docs/research/seven-area-engineering-dossier.md) and [technology reuse matrix](docs/research/reuse-matrix.md)

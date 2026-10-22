@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "evidenceClass": "historical-user-reported",
+  "reportedCaptureDate": "2026-10-20",
+  "direction": "RX",
+  "source": "https://github.com/jimedusot-beep/Project-sasori/blob/c0b4f74a6f10549cf09ec6062f9626cb570c9666/experiments/001-elmo-l2l/protocol-notifications.md",
+  "sourceBlob": "6a313fcf1843ff3aa471d6917b63a59050a5c07b",
+  "limits": "Transcribed public examples, not an original timestamped capture. Characteristic, firmware, framing, authentication and prefix meanings are unverified. Hashes detect corpus changes; they do not authenticate the original observation.",
+  "samples": [
+    {
+      "id": "v4-mode-text",
+      "hex": "604e65774d6f64654964783a313200",
+      "byteLength": 15,
+      "sha256": "dbbf67da8fc90aea3f9e5a76508682568293ab17401638b3ed5d3aa9c426a74c",
+      "candidateBodyText": "NewModeIdx:12",
+      "expectedKind": "mode-observation"
+    },
+    {
+      "id": "v4-sleep-text",
+      "hex": "6153746172743a4c6f77506f776572536c656570",
+      "byteLength": 20,
+      "sha256": "83a5877b1edc136bd99400fba459bf1e4d9c74d6d5487ff67222bc007e027a5d",
+      "candidateBodyText": "Start:LowPowerSleep",
+      "expectedKind": "sleep-observation"
+    },
+    {
+      "id": "v4-empty-text",
+      "hex": "6100",
+      "byteLength": 2,
+      "sha256": "ffe9aaeaa2a2d5048174df0b80599ef0197ec024c4b051bc9860cff58ef7f9f3",
+      "candidateBodyText": "",
+      "expectedKind": "unknown"
+    }
+  ]
+}

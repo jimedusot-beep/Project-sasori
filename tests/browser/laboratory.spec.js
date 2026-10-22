@@ -101,6 +101,40 @@ test('synthetic authentication and virtual controls cannot start Bluetooth', asy
   await expect(page.locator('#virtual-status')).toContainText('stopped');
   await expect(page.locator('#state')).toHaveText('Idle');
 });
+test('invalid packet flags reject a whole backup without saving partial records', async ({
+  page,
+}) => {
+  const valid = createSession('simulated');
+  const invalid = createSession('simulated');
+  invalid.packets = [
+    {
+      timestamp: invalid.startedAt,
+      characteristic: 'unknown',
+      length: 2,
+      kind: 'unknown',
+      truncated: 'false',
+      malformed: false,
+    },
+  ];
+  await page.goto('/#sessions');
+  await expect(page.locator('#storage-summary')).toContainText('IndexedDB', { visible: false });
+  await page.locator('#import-file').setInputFiles({
+    name: 'synthetic-invalid-flags.json',
+    mimeType: 'application/json',
+    buffer: Buffer.from(
+      JSON.stringify({
+        format: 'sasori.backup',
+        schemaVersion: 2,
+        records: [valid, invalid],
+      }),
+    ),
+  });
+  await expect(page.locator('#notice')).toContainText('Invalid packet flags');
+  await expect(page.locator('.record-row')).toHaveCount(0);
+  await page.reload();
+  await expect(page.locator('#storage-summary')).toContainText('IndexedDB', { visible: false });
+  await expect(page.locator('.record-row')).toHaveCount(0);
+});
 test('all primary screens meet axe accessibility checks and fit the viewport', async ({ page }) => {
   for (const section of ['overview', 'protocol', 'sessions', 'controls', 'research']) {
     await page.goto('/#' + section);

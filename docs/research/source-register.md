@@ -38,3 +38,7 @@ This review did not independently acquire or analyze the APK, verify its publish
 Runtime code uses standard browser APIs and original modular implementation. Dev-only tools include ESLint, Prettier, TypeScript, Playwright, axe-core integration, and fake-indexeddb, with exact versions/licenses in package-lock.json and installed package metadata. Runtime bundling of those tools is unnecessary.
 
 The preserved [reuse matrix](reuse-matrix.md) includes related toy/robotics projects. Those are methodology references, not evidence that their command bytes apply to Elmo. Recheck an exact revision and file-level license before future source reuse.
+
+## October 21 independent original-BLE review
+
+See the [source-verification register](../../experiments/001-elmo-l2l/source-verification.md) for fresh direct inspection of the pinned community README and V5 project source, the original teardown report's bibliographic provenance, PR #11's exact revision, the reported APK's failed retrieval, and explicit Hasbro/community licensing restrictions. Reading a prior report does not reproduce its static-analysis claims. No unlicensed implementation or private authentication material was imported. The new local capture-review script is original code and is not shipped with the website.
