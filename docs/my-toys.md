@@ -24,6 +24,7 @@ Bluetooth Classic, USB-only, infrared, and proprietary radio toys need separate 
 - Up to 20 custom profiles are saved in this browser's IndexedDB, separately from research sessions. Temporary fallback is labeled if storage cannot open.
 - **Export toy profiles** produces a separate versioned JSON file. The import limit is 128 KB. Profile import validates the entire batch, creates fresh IDs, and cannot overwrite an existing toy or session. Unknown command/credential fields are not retained.
 - Export profiles as well as session backups. Profiles include Bluetooth name prefixes and source notes; review them before sharing. Nothing synchronizes automatically across devices.
+- Saved custom profiles are authoritative on reload. To retain manual UUID/name changes made in the connection manager, choose **Save this setup to My toys** and save the profile. This prevents older connection preferences from undoing a profile edit.
 - Deleting a profile requires a second click and preserves its capture sessions. Session titles retain the toy name even if the profile is later renamed or removed.
 - The storage upgrade preserves existing records/settings and does not replay old migration data. Older open Sasori tabs may need reloading after the upgrade. Browser storage can still be evicted; keep backups.
 
