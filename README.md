@@ -13,6 +13,7 @@ Open the [live laboratory](https://jimedusot-beep.github.io/Project-sasori/). HT
 3. Open **Research records** to edit notes, search, compare captures, import JSON/TXT/CSV, or export a metadata backup.
 4. For real inspection, open the HTTPS site in **Bluefy on iPhone**, turn simulation off, load the published Elmo profile, review its source, confirm authorization, and tap **Connect & inspect**.
 5. For another BLE toy you own, open **My toys** to save a sourced service UUID and that toy's Bluetooth name prefix. Leave Notify blank for metadata-only inspection, then select an observed notification endpoint in Protocol explorer for the next manual session. See the [multi-toy guide](docs/my-toys.md).
+6. Open **Discovery workbench** to label and compare offline hex or infrared timing captures, inspect local PCM16 WAV files, and save discovery metadata. See the [Discovery guide](docs/discovery-workbench.md) for retention and evidence limits.
 
 The published UUID profile is transcribed from [NonaSuomy's GATT table](https://github.com/NonaSuomy/Love2LearnElmo/blob/82fa312e06af1d8e549cec588856ebce227b5f77/README.md). It is community-reported evidence, not a recovery of the old V4 source or proof of compatibility with your firmware. If service discovery fails, follow the [iPhone UUID capture guide](experiments/001-elmo-l2l/iphone-uuid-capture-guide.md).
 
@@ -20,6 +21,7 @@ The published UUID profile is transcribed from [NonaSuomy's GATT table](https://
 
 - User-initiated, name-filtered discovery; service/characteristic metadata inspection; optional notification subscription.
 - Persistent user-defined toy profiles with source notes, isolated name/UUID settings, profile backups/imports, and observed notification endpoint selection. Other built-in experiment slots remain scaffolds.
+- Offline Discovery workbench: nine independent interface research plans, labeled byte/pulse comparisons, first-channel WAV waveform/spectrum inspection, bounded local capture storage, and metadata-only backups with imported-claim provenance.
 - State tracking, duplicate-attempt prevention, 45-second chooser budget, 6-second operation budgets, 15-second inspection deadline, 500-notification cap, manual reconnect, late-connection cleanup, and foreground-only inspection.
 - Packet timestamps, byte counts, hex/text views, malformed/oversized flags, historical-pattern descriptions, and the preserved offline hex analyzer.
 - IndexedDB records and settings, explicit memory fallback, notes, search, comparisons, JSON/TXT/CSV imports, metadata backups, v1 migration, corruption detection, and bounded storage.
@@ -68,6 +70,7 @@ The site serves on port 4173. Live Web Bluetooth requires HTTPS or an eligible l
 ## Documentation
 
 - [Architecture and module APIs](docs/architecture.md)
+- [Discovery workbench: captures, comparisons, sound analysis, and backups](docs/discovery-workbench.md)
 - [Protocol specification and unknowns](docs/protocol.md)
 - [Experiment 001](experiments/001-elmo-l2l/README.md), [evidence register](experiments/001-elmo-l2l/evidence-register.md), and [historical inbound bytes](experiments/001-elmo-l2l/protocol-notifications.md)
 - Independent original-BLE track: [source verification and exact gaps](experiments/001-elmo-l2l/source-verification.md), [offline capture review](experiments/001-elmo-l2l/offline-review.md), and [gated live experiment draft](experiments/001-elmo-l2l/live-experiment.md). Authentication construction remains unverified; replacement-controller work can proceed independently.

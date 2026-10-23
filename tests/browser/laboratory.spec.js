@@ -136,7 +136,15 @@ test('invalid packet flags reject a whole backup without saving partial records'
   await expect(page.locator('.record-row')).toHaveCount(0);
 });
 test('all primary screens meet axe accessibility checks and fit the viewport', async ({ page }) => {
-  for (const section of ['overview', 'protocol', 'toys', 'sessions', 'controls', 'research']) {
+  for (const section of [
+    'overview',
+    'protocol',
+    'toys',
+    'discovery',
+    'sessions',
+    'controls',
+    'research',
+  ]) {
     await page.goto('/#' + section);
     await expect(page.locator('#storage-summary')).toContainText('IndexedDB', { visible: false });
     const result = await new AxeBuilder({ page })

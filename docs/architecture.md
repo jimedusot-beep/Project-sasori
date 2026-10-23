@@ -27,7 +27,9 @@ flowchart TD
 | site/lib/safety.js      | All physical capabilities are unverified and blocked. Simulated actions require explicit consent.                                               |
 | site/lib/diagnostics.js | Ring-buffer logs, recognized secret-pattern redaction, and actionable error interpretation.                                                     |
 | site/lib/records.js     | Versioned envelope, migrations, validation, limits, metadata-only portable records, imports, comparisons.                                       |
-| site/lib/storage.js     | IndexedDB v2, atomic capacity checks and writes, corruption detection, temporary memory fallback.                                               |
+| site/lib/storage.js     | IndexedDB v4, atomic capacity checks and writes, corruption detection, temporary memory fallback.                                               |
+| site/lib/discovery.js   | Versioned discovery captures, bounded parsers, model/method-separated comparisons, metadata backups, and offline PCM16 WAV/FFT analysis.        |
+| site/discovery-ui.js    | Discovery form, saved captures, same-index diff table, and accessible audio plots. No transport or hardware API.                                |
 | site/lib/simulation.js  | Finite synthetic fixture playback with synthetic service UUIDs. Never references navigator.bluetooth.                                           |
 | site/lib/types.d.ts     | Public packet, evidence, profile, capability, and transport type declarations. Core protocol/profile/guard modules are checked with TypeScript. |
 
@@ -66,6 +68,6 @@ A future adapter should emit the same transport events, pass lifecycle/cancellat
 
 ## Storage lifecycle
 
-IndexedDB uses records and settings stores. A v1 sessions store is copied through migration without deleting the original store. A blocked/open failure produces a visible temporary-memory warning. A version change closes the old connection and requires reload instead of silently losing saved records. Invalid records are skipped and counted; valid records remain available.
+IndexedDB uses records, settings, toys, and discoveries stores. Version 4 adds discoveries without rewriting existing data. A v1 sessions store is copied through migration without deleting the original store. A blocked/open failure produces a visible temporary-memory warning. A version change closes the old connection and requires reload instead of silently losing saved records. Invalid session records are skipped and counted; valid sessions remain available. Invalid discovery records surface a validation error rather than being silently deleted.
 
 Writes enforce capacity and record size without evicting experiments. Import validates the whole batch, creates fresh IDs, and marks imported provenance. The UI never automatically sends or replays imported bytes.
