@@ -18,6 +18,14 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run check
+      - name: Install and verify desktop BLE helper
+        run: |
+          python3 -m venv /tmp/sasori-desktop-env
+          /tmp/sasori-desktop-env/bin/python -m pip install -r desktop/requirements.txt
+          /tmp/sasori-desktop-env/bin/python -c "from bleak import BleakClient, BleakScanner"
+          /tmp/sasori-desktop-env/bin/python -m unittest discover -s desktop/tests -v
+          /tmp/sasori-desktop-env/bin/python desktop/sasori_ble.py --simulate --output /tmp/sasori-desktop-ci.json
+          node scripts/verify-desktop-export.mjs /tmp/sasori-desktop-ci.json
       - run: npm audit --audit-level=high
       - run: npx playwright install --with-deps chromium webkit
       - run: npm run test:browser

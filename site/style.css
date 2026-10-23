@@ -1,4 +1,44 @@
 @import url('tokens.css');
+.hub-workflow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 0 0 24px;
+}
+.hub-current,
+.hub-browser-help,
+#record-history {
+  overflow-wrap: anywhere;
+}
+.hub-browser-help {
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  margin: 12px 0;
+}
+.hub-browser-help .file-button {
+  display: inline-block;
+}
+.hub-history-row {
+  display: block;
+  width: 100%;
+  text-align: left;
+  color: var(--text);
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  min-height: 44px;
+  padding: 12px 0;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+#hub-evidence {
+  padding-left: 20px;
+  color: var(--muted);
+}
+#hub-evidence-count {
+  margin-top: 18px;
+}
 #page-discovery {
   overflow-wrap: anywhere;
 }
@@ -67,6 +107,8 @@
 }
 body {
   margin: 0;
+  padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px)
+    env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
   background: var(--bg);
   color: var(--text);
   font-family:
@@ -152,7 +194,8 @@ small,
 .rail {
   width: 232px;
   position: fixed;
-  inset: 0 auto 0 0;
+  inset: env(safe-area-inset-top, 0px) auto env(safe-area-inset-bottom, 0px)
+    env(safe-area-inset-left, 0px);
   background: var(--rail);
   border-right: 1px solid var(--line);
   padding: 35px 20px 24px;

@@ -14,6 +14,9 @@ import { CAPABILITIES, validateCommand, virtualPosition } from './lib/safety.js'
 import { Diagnostics, explainError } from './lib/diagnostics.js';
 import { ResearchStore } from './lib/storage.js';
 import { mountDiscovery } from './discovery-ui.js';
+import { mountDeviceHub } from './device-hub.js';
+import { createNativeBluetooth } from './lib/native-bluetooth.js';
+import { bluetoothSupport, makeInspection, identityOf } from './lib/devices.js';
 import {
   createToy,
   validateToy,
@@ -29,6 +32,7 @@ import {
   backup,
   compareSessions,
   sessionText,
+  reviseNotes,
   MAX_FILE_BYTES,
 } from './lib/records.js';
 
@@ -42,7 +46,7 @@ const node = (tag, text, className = '') => {
 const labels = {
   overview: 'Overview',
   protocol: 'Protocol explorer',
-  toys: 'My toys',
+  toys: 'Devices',
   discovery: 'Discovery workbench',
   sessions: 'Research records',
   controls: 'Control laboratory',
@@ -81,6 +85,19 @@ let records = [],
 let settings = {};
 let toys = [],
   editingToyId = null;
+let deviceHub = null,
+  deviceLabel = '';
+const nativePlugin = globalThis.SasoriNativeBluetooth;
+const nativeBluetooth = nativePlugin ? createNativeBluetooth(nativePlugin) : null;
+const currentBluetooth = () => nativeBluetooth || navigator.bluetooth;
+const connectionSecure = () => !!nativeBluetooth || window.isSecureContext;
+const supportState = () =>
+  bluetoothSupport({
+    secure: connectionSecure(),
+    bluetooth: currentBluetooth(),
+    native: !!nativeBluetooth,
+  });
+const refreshHub = () => deviceHub?.render();
 const allProfiles = () => [...PROFILES, ...toys.map(asDeviceProfile)];
 const currentProfile = () => allProfiles().find((p) => p.id === $('profile').value) || PROFILES[0];
 function notice(message) {
@@ -190,11 +207,8 @@ function updateMode() {
   $('connect').textContent = simulated ? 'Run simulated inspection ↗' : 'Connect & inspect ↗';
   $('support').textContent = simulated
     ? 'Synthetic fixtures only. Bluetooth permissions and hardware are never accessed.'
-    : !window.isSecureContext
-      ? 'HTTPS is required for Bluetooth access. Open the published secure URL.'
-      : navigator.bluetooth?.requestDevice
-        ? 'Web Bluetooth detected. Device compatibility still requires physical testing.'
-        : 'Web Bluetooth unavailable. On iPhone, open this HTTPS page in Bluefy. Simulation works here.';
+    : supportState().detail;
+  $('hub-browser-help').hidden = simulated;
   const profile = currentProfile();
   $('device-title').textContent = profile.label;
   $('profile-status').textContent = profile.status;
@@ -202,8 +216,8 @@ function updateMode() {
     !ready ||
     running ||
     (!simulated &&
-      (!navigator.bluetooth?.requestDevice ||
-        !window.isSecureContext ||
+      (!currentBluetooth()?.requestDevice ||
+        !connectionSecure() ||
         (profile.id !== '001' && !profile.custom)));
   $('load-profile').disabled = profile.id !== '001' || running;
   $('keep-setup').disabled = !ready || running;
@@ -225,8 +239,17 @@ function updateMode() {
     .forEach((button) => {
       button.disabled = running;
     });
+  $('toy-list')
+    .querySelectorAll('[data-device-state]')
+    .forEach((badge) => {
+      badge.textContent =
+        running && session?.profileId === badge.dataset.deviceState
+          ? 'Active inspection'
+          : 'Not connected';
+    });
   document.body.classList.toggle('engineering', $('engineering').checked);
   if (!$('engineering').checked) $('include-payloads').checked = false;
+  refreshHub();
 }
 function saveSettings() {
   clearTimeout(settingsTimer);
@@ -316,7 +339,7 @@ function renderServices(services) {
           syncProbeSelection();
           saveSettings();
           notice(
-            'Observed notification endpoint selected for the next manual inspection. No subscription or connection started. Save this setup to My toys to keep it in a profile.',
+            'Observed notification endpoint selected for the next manual inspection. No subscription or connection started. Save this setup to Devices to keep it in a profile.',
           );
         });
         characteristic.append(choose);
@@ -374,7 +397,9 @@ function renderPackets() {
 $('packet-filter').addEventListener('input', renderPackets);
 function handleEvent(event) {
   if (!session) return;
-  if (event.type === 'stage') {
+  if (event.type === 'device') {
+    deviceLabel = event.label;
+  } else if (event.type === 'stage') {
     $('inspection-stage').textContent =
       'Stage: ' + event.stage + ' · ' + event.elapsedMs + ' ms elapsed';
     log('stage', event.stage + ' at ' + event.elapsedMs + ' ms');
@@ -393,6 +418,7 @@ function handleEvent(event) {
     );
     if (event.state === 'inspecting') saveSession(false).catch(problem);
     if (event.state === 'disconnected') {
+      if (session.inspection) session.inspection.gattDurationMs = event.gattDurationMs || 0;
       session.endedAt = new Date().toISOString();
       session.outcome = event.reason || 'disconnected';
       if (!session.stats.packets && event.reason === 'inspection-complete')
@@ -440,6 +466,7 @@ function handleEvent(event) {
       event.error,
     );
   } else log(event.type, event.message || 'Transport event');
+  refreshHub();
 }
 $('connect').addEventListener(
   'click',
@@ -455,6 +482,14 @@ $('connect').addEventListener(
     }
     diagnostics = new Diagnostics();
     session = createSession(simulated ? 'simulated' : 'live', $('profile').value);
+    deviceLabel = '';
+    if (profile.service || $('svc').value.trim())
+      session.inspection = makeInspection(
+        profile,
+        $('svc').value,
+        $('notify').value.trim(),
+        simulated ? 'simulation' : nativeBluetooth ? 'core-bluetooth' : 'web-bluetooth',
+      );
     session.title = (
       profile.label + (simulated ? ' · simulated inspection' : ' · inspection')
     ).slice(0, 180);
@@ -486,7 +521,7 @@ $('connect').addEventListener(
       });
     transport = simulated
       ? new SimulationTransport(handleEvent)
-      : new BluetoothTransport({ emit: handleEvent });
+      : new BluetoothTransport({ emit: handleEvent, bluetooth: currentBluetooth() });
     const result = simulated
       ? transport.connect({ scenario: $('simulation-scenario').value })
       : transport.connect({
@@ -534,6 +569,7 @@ $('save-session').addEventListener(
   safe(() => saveSession()),
 );
 function download(name, body, type) {
+  if (nativePlugin?.shareFile) return nativePlugin.shareFile({ name, text: body }).catch(problem);
   const url = URL.createObjectURL(new Blob([body], { type }));
   const a = document.createElement('a');
   a.href = url;
@@ -545,16 +581,19 @@ function download(name, body, type) {
 }
 function requireToyEditing() {
   if (!ready || running)
-    throw new Error('Wait for storage and stop the inspection before changing toy profiles.');
+    throw new Error('Wait for storage and stop the inspection before changing device profiles.');
 }
 function editToy(toy = null) {
   editingToyId = toy?.id || null;
   $('toy-name').value = toy?.label || '';
+  $('toy-model').value = toy?.model || '';
+  $('toy-revision').value = toy?.revision || 'unknown';
+  $('toy-firmware').value = toy?.firmware || 'unknown';
   $('toy-prefix').value = toy?.namePrefix || '';
   $('toy-service').value = toy?.service || '';
   $('toy-notify').value = toy?.notify || '';
   $('toy-source-note').value = toy?.sourceNote || '';
-  $('toy-form-title').textContent = toy ? 'Edit toy profile' : 'Add a toy';
+  $('toy-form-title').textContent = toy ? 'Edit device profile' : 'Add a device';
 }
 function renderToys() {
   $('toy-list').replaceChildren();
@@ -563,12 +602,12 @@ function renderToys() {
     (store.persistent ? 'Saved on this browser' : 'Temporary memory only; export before closing') +
     ' · ' +
     toys.length +
-    ' / 20 toy profiles';
+    ' / 20 device profiles';
   if (!toys.length)
     $('toy-list').append(
       node(
         'p',
-        'Your saved toy profiles will appear here. The built-in Elmo profile remains in the connection manager.',
+        'Your saved device profiles will appear here. The built-in Elmo profile remains in the connection manager.',
       ),
     );
   for (const toy of toys) {
@@ -588,6 +627,20 @@ function renderToys() {
       ),
       node('p', 'User-supplied source: ' + toy.sourceNote, 'hint'),
     );
+    const identity = identityOf(toy);
+    card.append(
+      node(
+        'p',
+        identity.model + ' · board ' + identity.revision + ' · firmware ' + identity.firmware,
+      ),
+    );
+    const stateBadge = node(
+      'p',
+      running && session?.profileId === toy.id ? 'Active inspection' : 'Not connected',
+      'badge subtle',
+    );
+    stateBadge.dataset.deviceState = toy.id;
+    card.append(stateBadge);
     const actions = node('div', '', 'actions');
     const load = node('button', 'Load for inspection', 'secondary');
     load.addEventListener(
@@ -652,6 +705,9 @@ $('toy-form').addEventListener(
     requireToyEditing();
     const fields = {
       label: $('toy-name').value,
+      model: $('toy-model').value.trim() || $('toy-name').value,
+      revision: $('toy-revision').value.trim() || 'unknown',
+      firmware: $('toy-firmware').value.trim() || 'unknown',
       namePrefix: $('toy-prefix').value,
       service: $('toy-service').value,
       notify: $('toy-notify').value.trim(),
@@ -671,7 +727,7 @@ $('toy-form').addEventListener(
     renderToys();
     notice(
       store.persistent
-        ? 'Toy profile saved on this browser. Choose Load for inspection when ready.'
+        ? 'Device profile saved on this browser. Choose Load for inspection when ready.'
         : store.warning,
     );
   }),
@@ -683,6 +739,9 @@ $('keep-setup').addEventListener(
     const profile = currentProfile();
     editToy(profile.custom ? profile : null);
     $('toy-name').value = profile.label;
+    $('toy-model').value = profile.model || profile.label;
+    $('toy-revision').value = profile.revision || 'unknown';
+    $('toy-firmware').value = profile.firmware || 'unknown';
     $('toy-prefix').value = $('name-prefix').value;
     $('toy-service').value = $('svc').value;
     $('toy-notify').value = $('notify').value;
@@ -729,7 +788,7 @@ $('toy-import').addEventListener(
       requireToyEditing();
       const file = input.files?.[0];
       if (!file) return;
-      if (file.size > MAX_TOY_FILE_BYTES) throw new Error('Toy profile import limit is 128 KB.');
+      if (file.size > MAX_TOY_FILE_BYTES) throw new Error('Device profile import limit is 128 KB.');
       const copies = parseToys(await file.text()).map(createToy);
       await store.saveToys(copies);
       toys = await store.listToys();
@@ -738,7 +797,7 @@ $('toy-import').addEventListener(
       notice(
         'Imported ' +
           copies.length +
-          ' toy profiles as new copies. Review their source notes before inspection.',
+          ' device profiles as new copies. Review their source notes before inspection.',
       );
     } finally {
       input.value = '';
@@ -796,6 +855,7 @@ async function refreshRecords() {
   $('recover-corrupt').hidden = !store.corrupt.length;
   renderRecords();
   updateComparisonOptions();
+  refreshHub();
 }
 function renderRecords() {
   $('records').replaceChildren();
@@ -854,6 +914,18 @@ function selectRecord(id) {
       ' notifications · schema v' +
       r.schemaVersion
     : 'Select a record to inspect or edit its notes.';
+  $('record-history').replaceChildren();
+  for (const revision of r?.noteHistory || []) {
+    const details = node('details', '');
+    details.append(
+      node(
+        'summary',
+        revision.title + ' · saved before ' + new Date(revision.savedAt).toLocaleString(),
+      ),
+      node('p', revision.notes),
+    );
+    $('record-history').append(details);
+  }
   renderRecords();
 }
 $('record-search').addEventListener('input', renderRecords);
@@ -862,15 +934,20 @@ $('update-record').addEventListener(
   safe(async () => {
     const r = records.find((item) => item.id === selectedId);
     if (!r) return;
-    r.title = $('record-title').value || 'Untitled experiment';
-    r.notes = $('record-notes').value;
-    await store.save(r);
+    const revised = reviseNotes(
+      r,
+      $('record-title').value || 'Untitled experiment',
+      $('record-notes').value,
+    );
+    await store.save(revised);
     if (session?.id === r.id) {
-      session.title = r.title;
-      session.notes = r.notes;
-      $('session-title').value = r.title;
+      session.title = revised.title;
+      session.notes = revised.notes;
+      session.noteHistory = revised.noteHistory;
+      $('session-title').value = revised.title;
     }
     await refreshRecords();
+    selectRecord(r.id);
     notice('Research notes saved on this browser.');
   }),
 );
@@ -1185,6 +1262,20 @@ async function initialize() {
   ready = true;
   updateMode();
   await refreshRecords();
+  deviceHub = mountDeviceHub({
+    getState: () => ({
+      profile: currentProfile(),
+      session,
+      records,
+      running,
+      state: transport?.state || 'idle',
+      support: supportState(),
+      deviceLabel,
+    }),
+    notice,
+    navigate,
+    selectRecord,
+  });
   await mountDiscovery({ store, download }).catch(problem);
   if (store.warning) notice(store.warning);
   log('info', 'Project Sasori v0.2.0 ready. No connection starts without your action.');

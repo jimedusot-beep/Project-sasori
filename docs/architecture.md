@@ -33,6 +33,20 @@ flowchart TD
 | site/lib/simulation.js  | Finite synthetic fixture playback with synthetic service UUIDs. Never references navigator.bluetooth.                                           |
 | site/lib/types.d.ts     | Public packet, evidence, profile, capability, and transport type declarations. Core protocol/profile/guard modules are checked with TypeScript. |
 
+## Device workspace and native hosts
+
+The device hub presents actual connection state separately from saved configuration. Device identities and inspection measurements are snapshotted into session v2's optional inspection field; five prior title/note versions are retained in optional noteHistory. The schema remains compatible with older records without these fields. Imported contexts never complete the physical-evidence checklist.
+
+| Module                       | Contract                                                                                                                                    |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| site/device-hub.js           | Active-device status, per-profile evidence collection, recent sessions, timing table, and offline analysis handoff.                         |
+| site/lib/devices.js          | Identity snapshots, shared inspection contract, browser support detection, and evidence candidate assessment.                               |
+| site/lib/native-bluetooth.js | Inspection-only facade over the native Capacitor plugin; reuses BluetoothTransport lifecycle and decoding.                                  |
+| native/ios                   | Reproducible Capacitor build/generator and Swift Core Bluetooth chooser, scoped discovery, notifications, cancellation, and export sharing. |
+| desktop/sasori_ble.py        | Owner-run Bleak inspection and private portable session handoff. No local server or application writes.                                     |
+
+Native assets are bundled locally; no remote web application or browser token is introduced. The iOS native plugin has its own bounded watchdog and background cancellation. The desktop helper uses a local command-line/file handoff instead of opening a web-accessible daemon.
+
 ## Live transport state machine
 
 ```mermaid

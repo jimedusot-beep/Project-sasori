@@ -1,0 +1,37 @@
+# Sasori for iPhone and iPad
+
+This Capacitor app packages the shared Sasori interface with an original Swift Core Bluetooth inspection plugin. It can choose a nearby BLE peripheral, inspect the configured service, capture notifications, disconnect, and share exported research files. It contains no characteristic-write, authentication, motor, audio-command, or firmware API.
+
+## Build and install
+
+Use Node 22+, a Mac with Xcode 26+, and an iPhone/iPad running iOS 16+. From the repository:
+
+    cd native/ios
+    npm ci
+    npm run build
+    npm run prepare:ios
+    npm run open
+
+In Xcode select the **App** target, set your bundle identifier/signing team, select your connected iPhone/iPad, and run. Signing and device provisioning belong to your Apple account. An unsigned simulator build is verified in GitHub Actions; that build cannot be installed as a signed iPhone app. Real Bluetooth behavior requires a physical device.
+
+The build copies the site into a local bundle and adds a bundled Capacitor bootstrap. The generator creates a Swift Package Manager Xcode project, registers SasoriBluetoothPlugin through a custom bridge controller, adds its Swift sources, and supplies the Bluetooth permission description. Generation is repeatable; it does not overwrite an existing user's signing team.
+
+Generated www, ios, build products, and dependencies are ignored by Git. Make application changes in the shared site or Sources; rerun build and prepare. Capacitor/core/ios/cli are pinned to 8.5.3. The project-generation tool's UUID dependency is overridden to the patched compatible 11.1.1 release.
+
+## Runtime behavior
+
+- Loading the app does not scan, connect, or request Bluetooth permission.
+- Connect opens a five-second discovery window followed by an explicit device chooser, filtered by the selected profile's name prefix unless Show all devices was chosen.
+- Only the configured service is inspected. Subscription requires an observed Notify/Indicate property.
+- JavaScript inspection retains its existing duration/operation budgets. The native plugin independently enforces operation timeouts, a 30-second connection ceiling, a 500-notification budget, and a 4 KB incoming notification limit.
+- Backgrounding the app stops scanning/inspection and cancels pending operations. There is no reconnect loop.
+- Session exports open the native share sheet using a temporary protected file removed after sharing/cancellation.
+- The app loads bundled assets, with no remote web application or browser token. Imported files remain inert.
+
+## Verification limits
+
+The CI job compiles the generated app for the iOS simulator without code signing, installs and launches it, waits until the native Bluetooth workspace has rendered, and saves a screenshot. A simulator-only DOM probe reports readiness through the system log; it requests no Bluetooth permission. JavaScript tests exercise the native facade with synthetic plugin callbacks, including cancellation, background stop, invalid/stale notifications, and listener cleanup. Browser fixtures exercise the shared UI through the same bridge contract.
+
+These checks do not establish iPhone radio permissions, real peripheral compatibility, successful Elmo authentication, or physical control. Run the [real inspection procedure](../../docs/iphone-setup.md) on your exact unit.
+
+Implementation references: [Capacitor native code](https://capacitorjs.com/docs/ios/custom-code), [Swift Package Manager](https://capacitorjs.com/docs/ios/spm), and [Apple Core Bluetooth](https://developer.apple.com/documentation/corebluetooth).

@@ -1,0 +1,41 @@
+name: Verify native iPhone app
+on:
+  push:
+    branches-ignore: [main]
+    paths: [native/ios/**, site/**, .github/workflows/native-ios.yml]
+  pull_request:
+    paths: [native/ios/**, site/**, .github/workflows/native-ios.yml]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build-ios:
+    runs-on: macos-15
+    timeout-minutes: 20
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_26.3.app/Contents/Developer
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: native/ios/package-lock.json
+      - run: npm ci
+        working-directory: native/ios
+      - run: npm audit --audit-level=high
+        working-directory: native/ios
+      - run: npm run build && npm run prepare:ios
+        working-directory: native/ios
+      - name: Build unsigned simulator app
+        working-directory: native/ios
+        run: xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration Debug -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' -derivedDataPath build CODE_SIGNING_ALLOWED=NO build
+      - name: Launch and verify native bridge
+        working-directory: native/ios
+        run: python3 smoke.py
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
+        if: always()
+        with:
+          name: native-iphone-verification
+          path: native/ios/build/sasori-iphone.png
+          retention-days: 7
