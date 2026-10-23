@@ -57,6 +57,11 @@ test('source-linked recorder decodes the documented fixture, marks observations,
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(
     true,
   );
+  const timeline = page.locator('#r-timeline');
+  await expect(timeline).toHaveAttribute('tabindex', '0');
+  expect(
+    await timeline.locator('table').evaluate((el) => el.getBoundingClientRect().width),
+  ).toBeGreaterThanOrEqual(680);
   await page.locator('#r-timeline-title').scrollIntoViewIfNeeded();
   await page.screenshot({ path: testInfo.outputPath('protocol-recorder.png') });
 });

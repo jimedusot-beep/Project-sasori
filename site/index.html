@@ -642,7 +642,13 @@ Record the app version, capture method, before/after state, and your normal acti
           <section class="panel" aria-labelledby="r-timeline-title">
             <h2 id="r-timeline-title">3 / Frames and observations</h2>
             <p id="r-summary" role="status"></p>
-            <div id="r-timeline" class="discovery-diff"></div>
+            <div
+              id="r-timeline"
+              class="discovery-diff"
+              role="region"
+              tabindex="0"
+              aria-label="Protocol frames, scroll horizontally on narrow screens"
+            ></div>
             <div class="form-row">
               <label for="r-marker-time"
                 >Marker time (ms)<input
