@@ -1560,3 +1560,17 @@ footer a {
 .control-values dd {
   margin: 0;
 }
+
+.trial-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  max-height: 240px;
+  overflow-y: auto;
+  margin: 16px 0;
+}
+.trial-list button {
+  white-space: normal;
+  text-align: left;
+  overflow-wrap: anywhere;
+}

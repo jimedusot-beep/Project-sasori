@@ -52,3 +52,5 @@ See the [source-verification register](../../experiments/001-elmo-l2l/source-ver
 ## Shared standard controls
 
 The [Universal controls protocol register](../universal-controls.md#primary-protocol-sources-and-reuse) attributes Device Information 1.2, Battery Service 1.1, Immediate Alert 1.0, assigned UUIDs and Silicon Labs numeric alert-level documentation. Original `ble-standard/v1` code adopts those exact standard semantics without importing upstream implementation. It does not generalize those bytes to Elmo or proprietary devices.
+
+The [original MiP adapter and trial workflow](../device-action-validation.md) extends those shared intents using only manufacturer-documented version/status and chest-LED facts from pinned commit `6123d0250f9b0bb6513d31eb6fbdc8213b5268a4`. Implementation is original; no upstream code/assets are imported. Real-device compatibility/effects remain unverified. The private Elmo source-intake script records actual supplied artifact hashes and evidence gaps, without asserting publisher identity or recovering authentication by name/marker alone.

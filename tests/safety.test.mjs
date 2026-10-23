@@ -36,7 +36,9 @@ test('inspection scripts have no write API and all shipped scripts lack credenti
     ...(await readdir('site/lib')).filter((x) => x.endsWith('.js')).map((x) => 'site/lib/' + x),
   ];
   const js = (await Promise.all(paths.map((p) => readFile(p, 'utf8')))).join('\n');
-  for (const path of paths.filter((p) => p !== 'site/lib/standard-controls.js'))
+  for (const path of paths.filter(
+    (p) => !['site/lib/standard-controls.js', 'site/lib/mip-controls.js'].includes(p),
+  ))
     assert.doesNotMatch(
       await readFile(path, 'utf8'),
       /\.writeValue(?:WithoutResponse|WithResponse)?\s*\(/,
