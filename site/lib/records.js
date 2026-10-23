@@ -1,5 +1,6 @@
 import { sanitize } from './diagnostics.js';
 import { validateInspection } from './devices.js';
+import { validateDeviceInformation } from './device-information.js';
 export const FORMAT = 'sasori.session';
 export const SCHEMA_VERSION = 2;
 export const MAX_RECORDS = 50;
@@ -90,6 +91,10 @@ export function validateRecord(input) {
     throw new Error('Invalid import provenance.');
   if (typeof r.payloadsIncluded !== 'boolean') throw new Error('Missing payload policy.');
   const inspection = r.inspection === undefined ? undefined : validateInspection(r.inspection);
+  const deviceInformation =
+    r.deviceInformation === undefined ? undefined : validateDeviceInformation(r.deviceInformation);
+  if (deviceInformation && inspection?.service !== '0000180a-0000-1000-8000-00805f9b34fb')
+    throw new Error('Device information requires a Device Information inspection.');
   if (
     inspection &&
     ((r.source === 'simulated' && inspection.transport !== 'simulation') ||
@@ -194,6 +199,7 @@ export function validateRecord(input) {
       ].map((k) => [k, r[k]]),
     ),
     ...(inspection ? { inspection } : {}),
+    ...(deviceInformation ? { deviceInformation } : {}),
     ...(noteHistory ? { noteHistory } : {}),
   });
 }
@@ -309,6 +315,9 @@ export function sessionText(r) {
     'Outcome: ' + safe.outcome,
     'Notifications: ' + safe.stats.packets + ' · Bytes: ' + safe.stats.bytes,
     'Payloads omitted. No authentication inference.',
+    ...(safe.deviceInformation
+      ? ['Device-reported information: ' + JSON.stringify(safe.deviceInformation)]
+      : []),
     '',
     'NOTES',
     safe.notes,

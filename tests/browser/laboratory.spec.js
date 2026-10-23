@@ -176,6 +176,7 @@ test('manual Elmo probes change only the selected candidate UUID; never start ha
   page,
 }) => {
   await page.goto('/');
+  await page.locator('#connection-task').selectOption('capture');
   await page.locator('#load-profile').click();
   await expect(page.locator('#notify-preset')).toHaveValue('data');
   await page.locator('#notify-preset').selectOption('control');

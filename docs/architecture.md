@@ -37,13 +37,15 @@ flowchart TD
 
 The device hub presents actual connection state separately from saved configuration. Device identities and inspection measurements are snapshotted into session v2's optional inspection field; five prior title/note versions are retained in optional noteHistory. The schema remains compatible with older records without these fields. Imported contexts never complete the physical-evidence checklist.
 
-| Module                       | Contract                                                                                                                                    |
-| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| site/device-hub.js           | Active-device status, per-profile evidence collection, recent sessions, timing table, and offline analysis handoff.                         |
-| site/lib/devices.js          | Identity snapshots, shared inspection contract, browser support detection, and evidence candidate assessment.                               |
-| site/lib/native-bluetooth.js | Inspection-only facade over the native Capacitor plugin; reuses BluetoothTransport lifecycle and decoding.                                  |
-| native/ios                   | Reproducible Capacitor build/generator and Swift Core Bluetooth chooser, scoped discovery, notifications, cancellation, and export sharing. |
-| desktop/sasori_ble.py        | Owner-run Bleak inspection and private portable session handoff. No local server or application writes.                                     |
+| Module                         | Contract                                                                                                                                    |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| site/device-hub.js             | Active-device status, per-profile evidence collection, recent sessions, timing table, and offline analysis handoff.                         |
+| site/lib/devices.js            | Identity snapshots, shared inspection contract, browser support detection, and evidence candidate assessment.                               |
+| site/lib/device-information.js | Standard Device Information UUID/field allowlist, bounded UTF-8 decoding, and imported-field validation.                                    |
+| site/lib/connection-result.js  | Connection outcomes and useful next steps; imported/simulated records never supply live channel shortcuts.                                  |
+| site/lib/native-bluetooth.js   | Inspection-only facade over the native Capacitor plugin; reuses BluetoothTransport lifecycle and decoding.                                  |
+| native/ios                     | Reproducible Capacitor build/generator and Swift Core Bluetooth chooser, scoped discovery, notifications, cancellation, and export sharing. |
+| desktop/sasori_ble.py          | Owner-run Bleak inspection and private portable session handoff. No local server or application writes.                                     |
 
 Native assets are bundled locally; no remote web application or browser token is introduced. The iOS native plugin has its own bounded watchdog and background cancellation. The desktop helper uses a local command-line/file handoff instead of opening a web-accessible daemon.
 
@@ -72,7 +74,7 @@ Each run has a generation counter. A cancelled chooser cannot initiate GATT late
 
 The inspection deadline begins at GATT connection and is armed before discovery. Closing/backgrounding the page stops the inspection. Browser/OS scheduling and power loss still require real-device validation; browser timers are not physical emergency stops.
 
-Events: state, services, packet, info, warning, error. State events include a disconnect reason. Observed metadata is labeled observed-this-session; synthetic metadata is labeled synthetic.
+Events: state, services, device-information, packet, info, warning, error. State events include a disconnect reason. Observed metadata is labeled observed-this-session; synthetic metadata is labeled synthetic. Standard identification requests use only the Device Information service, read five non-unique fields sequentially, emit partial results, then disconnect with identification-complete. The native read API independently restricts access to the same service and field allowlist; it is not a generic characteristic reader.
 
 ## Adding a profile or transport
 

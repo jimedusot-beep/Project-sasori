@@ -145,6 +145,24 @@ export function createNativeBluetooth(plugin) {
                     guard();
                     return characteristic;
                   };
+                  characteristic.readValue = async () => {
+                    guard();
+                    const result = await invoke('readInformation', {
+                      id: current.id,
+                      uuid: item.uuid,
+                    });
+                    guard();
+                    if (
+                      typeof result.hex !== 'string' ||
+                      result.hex.length > 1024 ||
+                      !/^(?:[a-f0-9]{2})*$/i.test(result.hex)
+                    )
+                      throw new Error('Invalid native device information.');
+                    const bytes = Uint8Array.from(result.hex.match(/../g) || [], (pair) =>
+                      parseInt(pair, 16),
+                    );
+                    return new DataView(bytes.buffer);
+                  };
                   characteristics.set(item.uuid, characteristic);
                   return characteristic;
                 });

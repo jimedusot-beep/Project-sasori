@@ -3,7 +3,7 @@
 1. Install/open Bluefy from its official App Store listing linked by [PNN Soft](https://pnnsoft.com/portfolio/detail/bluefy-web-bluetooth-api-solution-for-ios-devices). Do not assume normal Safari exposes Web Bluetooth.
 2. Open the published HTTPS Sasori URL. First try Use simulation → Run simulated inspection. A synthetic session should finish and appear in Research records.
 3. For physical testing, use your own intact Elmo, keep moving parts clear, enable Bluetooth, and close any competing Elmo/nRF connection.
-4. Turn simulation off. Tap Use published Elmo UUIDs and review the community source. The settings are candidates, not yet validated for your unit.
+4. Tap **Love2Learn Elmo** in quick setup. This selects the published service and **Find connection details**, without notifications. The settings are candidates, not yet validated for your unit.
 5. Confirm authorization and tap Connect & inspect. Choose Elmo L2L. If the name-filtered chooser cannot see it, deliberately select Show all Bluetooth devices and retry; choose only your own toy. Keep Bluefy in the foreground and the phone unlocked.
 6. Wait for the 15-second inspection deadline or tap Stop. Check the exact disconnect reason, service map, and counts.
 7. Add a session name and observations. Finished sessions save automatically; use Export backup regularly.
@@ -16,11 +16,11 @@ Bluefy version, iOS version, firmware, and radio conditions affect behavior. A W
 
 Start with these two sessions. The current app already supports both; no additional equipment or software changes are required. Use the existing power switch and original power arrangement, with the mechanism secured. Do not open, reset, or reflash the toy for this experiment.
 
-1. In Bluefy, open [the live laboratory](https://jimedusot-beep.github.io/Project-sasori/). Turn **Use simulation** off and tap **Use published Elmo UUIDs**.
-2. Select **Metadata only (no subscription)** after loading the profile. Loading the profile again selects the data channel, so check the probe selection before connecting.
+1. In Bluefy, open [the live laboratory](https://jimedusot-beep.github.io/Project-sasori/) and tap the **Love2Learn Elmo** quick setup.
+2. Keep **Find connection details** selected. Notifications remain blank. The advanced **Use published Elmo UUIDs** button is under **Capture notifications** and intentionally selects the data channel; it is not needed for this metadata attempt.
 3. Confirm ownership, tap **Connect & inspect**, and select your Elmo. Keep Bluefy visible for the 15-second inspection. Zero received packets are expected in this metadata-only session.
 4. When the session ends, change **Session name** to `E001-01-metadata`, tap **Save session**, and use **Export JSON**. In **Protocol explorer**, check the observed service map for the data endpoint `dab91382-b5a1-e29c-b041-bcd562613bdf` and a `notify` or `indicate` property. A write property by itself is insufficient.
-5. If the metadata session confirms that endpoint and property, return to **Overview**, choose **Data notifications (candidate)**, and make a separate manual inspection. Name the finished session `E001-02-data`, save, and export it. A quiet capture remains inconclusive; do not start guessed writes to make it respond.
+5. If the metadata session confirms that endpoint and property, tap **Capture from Data notifications** in the result card, confirm ownership again, and make a separate manual inspection. Name the finished session `E001-02-data`, save, and export it. A quiet capture remains inconclusive; do not start guessed writes to make it respond.
 
 Use **Copy log** and capture the observed service map if an export is inconvenient. The site cannot connect to your toy from someone else's browser or computer; the live connection must run on your nearby phone.
 
@@ -53,8 +53,8 @@ If byte-level analysis is needed, enable engineering mode **after the live captu
 Do not change several variables in a single experiment. Each session requires a fresh manual tap
 and permission; the app **never** cycles channels or sends physical commands.
 
-1. **Metadata first:** choose **Metadata only (no subscription)**, load the published service UUID, then connect once. Check whether the service and the reported characteristics appear. This is the lowest-impact attempt.
-2. **Data notifications:** choose **Data notifications (candidate)** and inspect for 15 seconds. This is the community-reported `dab91382...` endpoint. Note whether you get the notification-subscription stage or a specific error. No notification is not proof that authentication failed.
+1. **Metadata first:** tap the **Love2Learn Elmo** quick setup and keep **Find connection details** selected, then connect once. Check whether the service and the reported characteristics appear.
+2. **Data notifications:** choose **Capture notifications**, then **Data notifications (candidate)** and inspect for 15 seconds. This is the community-reported `dab91382...` endpoint. Note whether you get the notification-subscription stage or a specific error. No notification is not proof that authentication failed.
 3. **Control notifications:** only after the service map confirms the matching notify property, explicitly choose **Control notifications (candidate)** and inspect in a separate session. This choice subscribes to a notification endpoint; it does not send control commands.
 4. **P2P notifications:** optionally repeat on the community-reported peer-to-peer notify endpoint, again only if its property is present. Do not guess what P2P messages mean.
 5. **Repeat:** run the same successful channel five times under similar conditions. Export and privately retain the metadata backups, logs, firmware/OS/app versions, and observed byte counts. Raw bytes are omitted from ordinary backups unless specifically opted into; review any raw export before sharing.

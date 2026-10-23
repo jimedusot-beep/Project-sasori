@@ -3,6 +3,10 @@ import assert from 'node:assert/strict';
 import { createNativeBluetooth } from '../site/lib/native-bluetooth.js';
 import { BluetoothTransport } from '../site/lib/bluetooth.js';
 import { ELMO_SERVICE, ELMO_NOTIFY } from '../site/lib/profiles.js';
+import {
+  DEVICE_INFORMATION_SERVICE,
+  DEVICE_INFORMATION_FIELDS,
+} from '../site/lib/device-information.js';
 function fixture() {
   const listeners = new Map(),
     calls = [];
@@ -41,6 +45,35 @@ const options = {
   durationMs: 1000,
   namePrefix: 'Elmo',
 };
+test('native identity reads share the standard field allowlist and finish without subscription', async () => {
+  const f = fixture();
+  f.plugin.getService = async () => ({ uuid: DEVICE_INFORMATION_SERVICE });
+  f.plugin.getCharacteristics = async () => ({
+    characteristics: DEVICE_INFORMATION_FIELDS.map((field) => ({
+      uuid: field.uuid,
+      properties: ['read'],
+    })),
+  });
+  f.plugin.readInformation = async ({ uuid }) => {
+    f.plugin.calls.push(['read', uuid]);
+    return { hex: '46697874757265' };
+  };
+  await f.transport.connect({ ...options, service: DEVICE_INFORMATION_SERVICE, notify: '' });
+  assert.equal(
+    f.events.findLast((e) => e.type === 'device-information').information.model,
+    'Fixture',
+  );
+  assert.deepEqual(
+    f.plugin.calls.filter((c) => c[0] === 'read').map((c) => c[1]),
+    DEVICE_INFORMATION_FIELDS.map((field) => field.uuid),
+  );
+  assert.equal(
+    f.plugin.calls.some((c) => c[0] === 'subscribe'),
+    false,
+  );
+  assert.equal(f.transport.state, 'disconnected');
+  assert.equal(f.plugin.listeners.size, 0);
+});
 test('native facade reuses the inspection lifecycle and never initiates hardware at construction', async () => {
   const f = fixture();
   assert.equal(f.plugin.calls.length, 0);

@@ -13,6 +13,7 @@ public class SasoriBluetoothPlugin: CAPPlugin, CAPBridgedPlugin, CBCentralManage
         CAPPluginMethod(name: "connect", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "getService", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "getCharacteristics", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "readInformation", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "startNotifications", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "disconnect", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "shareFile", returnType: CAPPluginReturnPromise)
@@ -23,6 +24,13 @@ public class SasoriBluetoothPlugin: CAPPlugin, CAPBridgedPlugin, CBCentralManage
     private var active: CBPeripheral?
     private var inspectedService: CBService?
     private var subscribed: CBCharacteristic?
+    private var informationRead: CBCharacteristic?
+    private let informationService = "0000180a-0000-1000-8000-00805f9b34fb"
+    private let informationFields: Set<String> = [
+        "00002a29-0000-1000-8000-00805f9b34fb", "00002a24-0000-1000-8000-00805f9b34fb",
+        "00002a27-0000-1000-8000-00805f9b34fb", "00002a26-0000-1000-8000-00805f9b34fb",
+        "00002a28-0000-1000-8000-00805f9b34fb"
+    ]
     private var configuredService = ""
     private var prefix = ""
     private var showAll = false
@@ -90,6 +98,7 @@ public class SasoriBluetoothPlugin: CAPPlugin, CAPBridgedPlugin, CBCentralManage
         selected = nil
         inspectedService = nil
         subscribed = nil
+        informationRead = nil
         peers.removeAll()
         let errorCode: String
         switch reason {
@@ -193,6 +202,21 @@ public class SasoriBluetoothPlugin: CAPPlugin, CAPBridgedPlugin, CBCentralManage
             peripheral.discoverCharacteristics(nil, for: service)
         }
     }
+    @objc public func readInformation(_ call: CAPPluginCall) {
+        DispatchQueue.main.async {
+            guard let peripheral = self.active, peripheral.state == .connected,
+                  peripheral.identifier.uuidString == call.getString("id"),
+                  self.configuredService == self.informationService,
+                  let requested = call.getString("uuid")?.lowercased(), self.informationFields.contains(requested),
+                  let characteristic = self.inspectedService?.characteristics?.first(where: { self.uuid($0.uuid) == requested }),
+                  characteristic.properties.contains(.read) else {
+                call.reject("Only observed model, manufacturer, and revision strings can be read.", "NotSupportedError"); return
+            }
+            guard self.begin(call, "read-information") else { return }
+            self.informationRead = characteristic
+            peripheral.readValue(for: characteristic)
+        }
+    }
     @objc public func startNotifications(_ call: CAPPluginCall) {
         DispatchQueue.main.async {
             guard let peripheral = self.active, peripheral.state == .connected,
@@ -249,6 +273,20 @@ public class SasoriBluetoothPlugin: CAPPlugin, CAPBridgedPlugin, CBCentralManage
         else { resolve() }
     }
     public func peripheral(_ peripheral: CBPeripheral, didUpdateValueFor characteristic: CBCharacteristic, error: Error?) {
+        if active?.identifier == peripheral.identifier, operation == "read-information", informationRead === characteristic {
+            informationRead = nil
+            guard error == nil, let value = characteristic.value, value.count <= 512 else {
+                operationTimer?.invalidate()
+                operationTimer = nil
+                let call = pending
+                pending = nil
+                operation = ""
+                call?.reject("Device information is unavailable or exceeds 512 bytes.", "NotSupportedError")
+                return
+            }
+            resolve(["hex": value.map { String(format: "%02x", $0) }.joined()])
+            return
+        }
         guard active?.identifier == peripheral.identifier, subscribed === characteristic else { return }
         guard error == nil, let value = characteristic.value, value.count <= 4096 else { finish("invalid-notification"); return }
         packetCount += 1

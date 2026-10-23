@@ -78,7 +78,7 @@ export function bluetoothSupport({ secure = true, bluetooth, native = false } = 
     available: false,
     title: 'This browser cannot connect over Bluetooth',
     detail:
-      'On iPhone or iPad, open this same Sasori page inside Bluefy. The connection controls and records stay in Sasori. Offline tools and simulation work here.',
+      'On iPhone or iPad, open Sasori in Bluefy. On Mac or Windows, use Chrome with Bluetooth enabled, or the desktop helper. Offline tools and simulation work here.',
   };
 }
 export function inspectionEvidence(records, profile) {

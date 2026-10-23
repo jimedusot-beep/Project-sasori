@@ -30,6 +30,8 @@ Generated www, ios, build products, and dependencies are ignored by Git. Make ap
 
 ## Verification limits
 
+**Read model & firmware** uses Core Bluetooth reads for five standard Device Information strings: manufacturer, model, hardware, firmware, and software. The Swift plugin enforces that service/field allowlist and a 512-byte response cap. Serial numbers, System ID, generic reads, characteristic writes, and firmware interfaces are excluded. Identification disconnects when the reads finish; the same UI can save the reported fields in a reusable device setup or a metadata connection report.
+
 The CI job compiles the generated app for the iOS simulator without code signing, installs and launches it, waits until the native Bluetooth workspace has rendered, and saves a screenshot. A simulator-only DOM probe reports readiness through the system log; it requests no Bluetooth permission. JavaScript tests exercise the native facade with synthetic plugin callbacks, including cancellation, background stop, invalid/stale notifications, and listener cleanup. Browser fixtures exercise the shared UI through the same bridge contract.
 
 These checks do not establish iPhone radio permissions, real peripheral compatibility, successful Elmo authentication, or physical control. Run the [real inspection procedure](../../docs/iphone-setup.md) on your exact unit.
