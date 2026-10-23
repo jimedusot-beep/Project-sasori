@@ -21,7 +21,7 @@
   <body>
     <a class="skip" href="#workspace">Skip to laboratory</a>
     <aside class="rail">
-      <a class="brand" href="#overview" aria-label="Sasori laboratory home">
+      <a class="brand" href="#overview">
         <svg viewBox="0 0 40 40" aria-hidden="true">
           <path
             d="M20 3 35 12v16L20 37 5 28V12Z"
@@ -49,6 +49,9 @@
         <button class="nav" data-page="toys"><span aria-hidden="true">▧</span> Devices</button>
         <button class="nav" data-page="discovery">
           <span aria-hidden="true">⌕</span> Discovery workbench
+        </button>
+        <button class="nav" data-page="recorder">
+          <span aria-hidden="true">⇄</span> Protocol recorder
         </button>
         <button class="nav" data-page="sessions">
           <span aria-hidden="true">▤</span> Research records
@@ -547,6 +550,169 @@
               service scanner. Bluetooth Classic, USB-only, infrared, and proprietary radio devices
               require different transports. Physical commands remain locked.
             </p>
+          </section>
+        </section>
+        <section id="page-recorder" class="page" hidden aria-labelledby="recorder-title">
+          <div class="page-heading">
+            <div>
+              <p class="eyebrow">CAPTURE / DECODE / BUILD SUPPORT</p>
+              <h1 id="recorder-title">Understand the conversation.</h1>
+              <p class="lead">
+                Compare what an app sends with what your toy returns. Keep the evidence, labels, and
+                next steps together.
+              </p>
+            </div>
+            <span class="badge subtle">OFFLINE · NO TRANSMISSION</span>
+          </div>
+          <p id="r-status" class="notice" role="status">
+            Import normalized TX/RX JSON or CSV. Binary HCI/btsnoop/PCAP extraction is not
+            implemented here. Current Sasori sessions provide RX only.
+          </p>
+          <div class="workspace-grid">
+            <section class="panel" aria-labelledby="r-import-title">
+              <h2 id="r-import-title">1 / Load a conversation</h2>
+              <label for="r-adapter">Analysis adapter</label
+              ><select id="r-adapter"></select>
+              <details>
+                <summary>CSV capture identity (JSON carries its own identity)</summary>
+                <label for="r-label">Capture label</label
+                ><input id="r-label" maxlength="120" value="First app exchange" />
+                <label for="r-model">Exact model</label
+                ><input id="r-model" maxlength="160" value="Love2Learn Elmo B6572" />
+                <label for="r-firmware">Firmware</label
+                ><input id="r-firmware" maxlength="60" value="unknown" />
+                <label for="r-transport">Transport</label
+                ><select id="r-transport">
+                  <option value="ble">Bluetooth LE</option>
+                  <option value="serial">Serial / internal bus</option>
+                  <option value="audio">Audio</option>
+                  <option value="infrared">Infrared</option>
+                  <option value="other">Other</option>
+                </select>
+                <label for="r-evidence">Source claim</label
+                ><select id="r-evidence">
+                  <option value="owner-observed">Owner-observed · imported claim</option>
+                  <option value="community-reported">Community-reported</option>
+                  <option value="synthetic">Synthetic</option>
+                </select>
+                <label for="r-source">Capture source and settings</label
+                ><textarea id="r-source" maxlength="2000">
+Record the app version, capture method, before/after state, and your normal action. Keep credentials out of public reports.</textarea>
+              </details>
+              <label for="r-file">Import trace JSON / normalized CSV · 512 KiB maximum</label
+              ><input id="r-file" type="file" accept=".json,.csv,application/json,text/csv" />
+              <label for="r-input">Or paste normalized trace data</label
+              ><textarea
+                id="r-input"
+                maxlength="524288"
+                spellcheck="false"
+                placeholder="time_ms,direction,endpoint,hex&#10;0,tx,handle:0x0012,14&#10;85,rx,handle:0x0015,31 34 30 45 30 32 31 42 30 37"
+              ></textarea>
+              <div class="actions">
+                <button id="r-import" class="primary">Load pasted trace</button
+                ><button id="r-example" class="secondary">Try synthetic MiP example</button
+                ><button id="r-current-session" class="secondary">
+                  Copy current Sasori RX capture
+                </button>
+              </div>
+              <p class="hint">
+                256 frames · 1,024 bytes per frame · 40 KiB retained raw bytes · 100 markers.
+                Imported bytes are analyzed, never replayed to a toy.
+              </p>
+            </section>
+            <section class="panel" aria-labelledby="r-adapter-title">
+              <h2 id="r-adapter-title">2 / Adapter support</h2>
+              <p>
+                One interface for device-specific evidence, decoders, command definitions, and
+                recovery. The Elmo adapter has inspection and historical text analysis; live
+                authentication and physical actions remain unavailable.
+              </p>
+              <div id="r-readiness"></div>
+              <button id="r-plan" class="secondary" disabled>
+                Inspect documented MiP query bytes
+              </button>
+              <pre id="r-plan-output" role="region" aria-label="Offline command definition"></pre>
+              <p class="hint">
+                Query definitions are offline data. No imported manifest or source claim can enable
+                a sender. Physical acceptance target: ten successful fresh connections and actions,
+                with rejection, timeout, and recovery tests.
+              </p>
+            </section>
+          </div>
+          <section class="panel" aria-labelledby="r-timeline-title">
+            <h2 id="r-timeline-title">3 / Frames and observations</h2>
+            <p id="r-summary" role="status"></p>
+            <div
+              id="r-timeline"
+              class="discovery-diff"
+              role="region"
+              tabindex="0"
+              aria-label="Protocol frames, scroll horizontally on narrow screens"
+            ></div>
+            <div class="form-row">
+              <label for="r-marker-time"
+                >Marker time (ms)<input
+                  id="r-marker-time"
+                  type="number"
+                  min="0"
+                  max="86400000"
+                  step="any"
+                  value="0"
+              /></label>
+              <label for="r-marker-label"
+                >What happened?<input
+                  id="r-marker-label"
+                  maxlength="120"
+                  placeholder="e.g. Pressed normal play button" /></label
+              ><button id="r-add-marker" class="secondary" disabled>Add observation marker</button>
+            </div>
+            <ul id="r-markers"></ul>
+            <div class="form-row">
+              <label for="r-tx">Selected TX frame<select id="r-tx"></select></label
+              ><label for="r-rx">Selected RX frame<select id="r-rx"></select></label
+              ><button id="r-interval" class="secondary" disabled>Measure selected interval</button>
+            </div>
+            <p id="r-interval-output" role="status"></p>
+            <label class="checkline" for="r-keep-raw"
+              ><input id="r-keep-raw" type="checkbox" /> Include raw frame bytes when saving or
+              exporting</label
+            >
+            <p class="hint">
+              Off by default. Metadata saves keep frame timings, direction, endpoints, lengths, and
+              markers, but cannot reconstruct the bytes. Raw data can contain authentication
+              material; review privately.
+            </p>
+            <div class="actions">
+              <button id="r-save" class="primary" disabled>Save trace to Research records</button
+              ><button id="r-export" class="secondary" disabled>Export trace JSON</button
+              ><button id="r-use-a" class="secondary" disabled>Use trace as A</button
+              ><button id="r-use-b" class="secondary" disabled>Use trace as B</button
+              ><button id="r-compare" class="secondary" disabled>Compare A and B</button>
+            </div>
+            <pre id="r-comparison" aria-label="Trace comparison"></pre>
+          </section>
+          <section class="panel">
+            <h2>Saved protocol traces</h2>
+            <div id="r-saved"></div>
+            <p class="hint">
+              Delete traces or export a full metadata backup in Research records. Raw retention
+              applies to each trace save; ordinary notebook backups omit bytes.
+            </p>
+          </section>
+          <section class="panel" aria-labelledby="r-sources-title">
+            <h2 id="r-sources-title">Sources behind these tools</h2>
+            <p>
+              Eight cited inspirations, with inspected revisions and reuse decisions. These are
+              original Sasori implementations; upstream code, audio, firmware, and credentials are
+              not bundled.
+            </p>
+            <div id="r-inspirations" class="discovery-methods"></div>
+            <a
+              href="https://github.com/jimedusot-beep/Project-sasori/blob/main/docs/research/adapter-inspirations.md"
+              target="_blank"
+              rel="noopener noreferrer"
+              >Read the source-to-implementation register ↗</a
+            >
           </section>
         </section>
         <section id="page-discovery" class="page" hidden aria-labelledby="discovery-title">

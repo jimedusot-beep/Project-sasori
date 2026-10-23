@@ -1,5 +1,11 @@
 # Source, license, and reuse register
 
+## October 23 adapter and recorder implementation
+
+The [eight-source implementation register](adapter-inspirations.md) cites NonaSuomy/Love2LearnElmo, Bluefluff, the official WowWee MiP protocol, Hacksby, PixMob reverse engineering, PulseView/sigrok, Pybricks, and Home Assistant at inspected revisions. It records file-level license limits, reference-only decisions, and the original Sasori module using each aspect. The [Protocol recorder](../protocol-recorder.md) now implements normalized TX/RX ingestion, markers, timelines, comparisons, optional private raw retention, an immutable adapter registry, and a documented offline MiP version codec. No upstream runtime or live Elmo authentication implementation was copied.
+
+## Earlier source register
+
 Reviewed October 20, 2026 (America/New_York). Primary sources are preferred for API behavior. Community experiments remain claims pending reproduction. No upstream code, firmware, app binary, audio, or credentials were copied into the laboratory.
 
 | Source                                                                                                                          | License / standing                                                                                  | Relevance and intended use                                                | Compatibility limit                                                         |

@@ -1,0 +1,28 @@
+{
+  "format": "sasori.trace",
+  "schemaVersion": 1,
+  "label": "Synthetic MiP software version",
+  "model": "WowWee MiP",
+  "firmware": "unknown",
+  "transport": "ble",
+  "evidence": "synthetic",
+  "sourceNote": "Synthetic timing; non-secret request/reply bytes from WowWeeLabs/MiP-BLE-Protocol README at 6123d0250f9b0bb6513d31eb6fbdc8213b5268a4. Not a physical capture or acceptance result.",
+  "payloadsIncluded": true,
+  "frames": [
+    {
+      "tMs": 0,
+      "direction": "tx",
+      "endpoint": "0000ffe9-0000-1000-8000-00805f9b34fb",
+      "length": 1,
+      "hex": "14"
+    },
+    {
+      "tMs": 85,
+      "direction": "rx",
+      "endpoint": "0000ffe4-0000-1000-8000-00805f9b34fb",
+      "length": 10,
+      "hex": "31 34 30 45 30 32 31 42 30 37"
+    }
+  ],
+  "markers": [{ "tMs": 0, "label": "Synthetic status-query example" }]
+}
