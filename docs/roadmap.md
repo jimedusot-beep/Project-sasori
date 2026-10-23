@@ -1,5 +1,11 @@
 # Prioritized roadmap
 
+## Two independent Elmo tracks
+
+The original-board milestones M1-M3 below apply to commands sent through Hasbro's firmware. Replacement-controller development follows the [retrofit assignments](../experiments/001-elmo-l2l/retrofit/README.md) and does not depend on original-board authentication. Its independent prerequisites are a reviewed custom protocol/design, exact controller and driver selection, isolated wiring and measured operating limits.
+
+Assignment 1 now has a source-labeled [inventory](../experiments/001-elmo-l2l/retrofit/hardware-inventory.md), [measurement worksheet](../experiments/001-elmo-l2l/retrofit/bench-worksheet.md) and explicit hardware blockers. Assignment 2 has a [proposed virtual-controller specification](superpowers/specs/2026-10-22-custom-controller-design.md) awaiting owner review. Firmware, coordinated physical audio/mouth operation and a USB bridge are not implemented. No simulation can close the physical acceptance milestones.
+
 ## M1 — Repeatable physical inspection
 
 Tracked in [issue #4](https://github.com/jimedusot-beep/Project-sasori/issues/4).

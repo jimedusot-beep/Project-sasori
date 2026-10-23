@@ -67,6 +67,7 @@ The site serves on port 4173. Live Web Bluetooth requires HTTPS or an eligible l
 
 ## Documentation
 
+- [Elmo retrofit build assignments](experiments/001-elmo-l2l/retrofit/README.md), [hardware inventory and parts requirements](experiments/001-elmo-l2l/retrofit/hardware-inventory.md), and [beginner bench worksheet](experiments/001-elmo-l2l/retrofit/bench-worksheet.md). The [virtual-controller design](docs/superpowers/specs/2026-10-22-custom-controller-design.md) is proposed for review; no replacement-controller implementation or hardware approval is claimed.
 - [Architecture and module APIs](docs/architecture.md)
 - [Protocol specification and unknowns](docs/protocol.md)
 - [Experiment 001](experiments/001-elmo-l2l/README.md), [evidence register](experiments/001-elmo-l2l/evidence-register.md), and [historical inbound bytes](experiments/001-elmo-l2l/protocol-notifications.md)

@@ -64,6 +64,10 @@ Add factual profile metadata with a source and an explicit evidence class. Unkno
 
 A future adapter should emit the same transport events, pass lifecycle/cancellation tests, respect finite budgets, and keep device-specific packet handling outside the UI. A physical command adapter is intentionally absent. It requires a new reviewed implementation, verified protocol evidence, separately measured operating limits, and hardware tests; setting a flag cannot enable one.
 
+### Proposed custom-controller addition
+
+The [virtual Elmo design](superpowers/specs/2026-10-22-custom-controller-design.md) proposes a separate request schema, pulse-based simulator, acknowledgement/state contract and panel in the existing Control laboratory. This is a proposal, not an implemented module list. It does not reuse original Elmo UUIDs or change inspection capabilities. Later custom firmware/USB control requires its own board-specific evidence; Hasbro authentication is not a dependency for independently controlled hardware. The [retrofit plan](../experiments/001-elmo-l2l/retrofit/README.md) separates all seven assignments and their current exit evidence.
+
 ## Storage lifecycle
 
 IndexedDB uses records and settings stores. A v1 sessions store is copied through migration without deleting the original store. A blocked/open failure produces a visible temporary-memory warning. A version change closes the old connection and requires reload instead of silently losing saved records. Invalid records are skipped and counted; valid records remain available.

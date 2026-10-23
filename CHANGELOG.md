@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Add the Elmo retrofit conversion plan, ownership/evidence inventory, compatibility-based parts requirements and beginner measurement worksheet. Separate replacement-controller milestones from original-board BLE authentication; propose a virtual-controller specification for review without changing runtime or approving hardware.
 - Add My toys: persistent inspection profiles, source notes, individual name filters, editing, separate JSON profile backups/imports, and metadata-only first inspections. Select observed Notify/Indicate endpoints for a subsequent manual inspection; synthetic endpoints cannot be promoted.
 - Upgrade IndexedDB to version 3 without replaying stale v1 sessions over edited records. Keep custom profiles bounded to 20 and validate entire profile imports before writing.
 - Reject non-boolean optional packet flags before importing or reviewing captures, matching the existing session schema. Preserve valid booleans and legacy records without flags; reject a mixed backup as a whole when one packet is invalid.
