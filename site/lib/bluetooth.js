@@ -45,6 +45,7 @@ export class BluetoothTransport {
     this.busy = false;
     this.startedAt = 0;
     this.currentStage = null;
+    this.connectedAt = null;
   }
   markStage(stage) {
     this.currentStage = stage;
@@ -90,6 +91,7 @@ export class BluetoothTransport {
     this.busy = true;
     this.services = [];
     this.packetCount = 0;
+    this.connectedAt = null;
     const run = ++this.generation;
     this.startedAt = Date.now();
     this.setState('selecting');
@@ -107,7 +109,8 @@ export class BluetoothTransport {
       const selected = await withTimeout(chooser, this.chooserMs, 'Device selection');
       this.check(run);
       this.device = selected;
-      this.onDisconnect = () => {
+      this.emit({ type: 'device', label: selected.name || namePrefix || 'Selected BLE device' });
+      this.onDisconnect = (event) => {
         if (
           run !== this.generation ||
           this.state === 'disconnecting' ||
@@ -118,7 +121,17 @@ export class BluetoothTransport {
           type: 'warning',
           message: 'Unexpected Bluetooth disconnect. No automatic reconnect will occur.',
         });
-        this.disconnect('unexpected');
+        const reason = [
+          'page-hidden',
+          'native-deadline',
+          'packet-limit',
+          'services-changed',
+          'bluetooth-unavailable',
+          'invalid-notification',
+        ].includes(event.reason)
+          ? event.reason
+          : 'unexpected';
+        this.disconnect(reason);
       };
       selected.addEventListener('gattserverdisconnected', this.onDisconnect);
       this.setState('connecting');
@@ -133,6 +146,7 @@ export class BluetoothTransport {
       );
       this.server = await withTimeout(attempt, this.operationMs, 'GATT connection');
       this.check(run);
+      this.connectedAt = performance.now();
       this.timer = setTimeout(() => this.disconnect('inspection-complete'), durationMs);
       this.setState('discovering');
       this.markStage('service-discovery');
@@ -225,6 +239,7 @@ export class BluetoothTransport {
   disconnect(reason = 'user') {
     if (!ACTIVE.has(this.state) && this.state !== 'error') return;
     ++this.generation;
+    this.bluetooth?.cancelRequest?.();
     clearTimeout(this.timer);
     this.timer = null;
     this.markStage('teardown');
@@ -240,6 +255,13 @@ export class BluetoothTransport {
     this.device = null;
     this.onDisconnect = null;
     this.busy = false;
-    this.setState('disconnected', { reason });
+    this.setState('disconnected', {
+      reason,
+      gattDurationMs:
+        this.connectedAt === null
+          ? 0
+          : Math.max(0, Math.round(performance.now() - this.connectedAt)),
+    });
+    this.connectedAt = null;
   }
 }

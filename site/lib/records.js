@@ -1,4 +1,5 @@
 import { sanitize } from './diagnostics.js';
+import { validateInspection } from './devices.js';
 export const FORMAT = 'sasori.session';
 export const SCHEMA_VERSION = 2;
 export const MAX_RECORDS = 50;
@@ -79,6 +80,22 @@ export function validateRecord(input) {
     throw new Error('Invalid session dates.');
   if (r.importedAt != null && !dateOK(r.importedAt)) throw new Error('Invalid import provenance.');
   if (typeof r.payloadsIncluded !== 'boolean') throw new Error('Missing payload policy.');
+  const inspection = r.inspection === undefined ? undefined : validateInspection(r.inspection);
+  let noteHistory;
+  if (r.noteHistory !== undefined) {
+    if (!Array.isArray(r.noteHistory) || r.noteHistory.length > 5)
+      throw new Error('Invalid note history.');
+    noteHistory = r.noteHistory.map((entry) => {
+      if (
+        !entry ||
+        !dateOK(entry.savedAt) ||
+        !bounded(entry.title, 180) ||
+        !bounded(entry.notes, 20000)
+      )
+        throw new Error('Invalid note revision.');
+      return { savedAt: entry.savedAt, title: entry.title, notes: entry.notes };
+    });
+  }
   if (
     !Array.isArray(r.packets) ||
     r.packets.length > 500 ||
@@ -140,8 +157,8 @@ export function validateRecord(input) {
   if (new TextEncoder().encode(JSON.stringify(r)).byteLength > MAX_RECORD_BYTES)
     throw new Error('Record is too large. Export fewer payloads.');
   // Whitelist the schema so arbitrary imported object keys never enter the app.
-  return structuredClone(
-    Object.fromEntries(
+  return structuredClone({
+    ...Object.fromEntries(
       [
         'format',
         'schemaVersion',
@@ -161,7 +178,22 @@ export function validateRecord(input) {
         'payloadsIncluded',
       ].map((k) => [k, r[k]]),
     ),
-  );
+    ...(inspection ? { inspection } : {}),
+    ...(noteHistory ? { noteHistory } : {}),
+  });
+}
+export function reviseNotes(record, title, notes) {
+  const clean = validateRecord(record);
+  if (clean.title === title && clean.notes === notes) return clean;
+  return validateRecord({
+    ...clean,
+    title,
+    notes,
+    noteHistory: [
+      ...(clean.noteHistory || []),
+      { savedAt: new Date().toISOString(), title: clean.title, notes: clean.notes },
+    ].slice(-5),
+  });
 }
 export function portableRecord(record, includePayloads = false) {
   const clean = structuredClone(record);

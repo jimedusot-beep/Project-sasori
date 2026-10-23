@@ -19,6 +19,9 @@ export function validateToy(input) {
     schemaVersion: 1,
     id: input.id,
     label: text(input.label, 80, 'Toy name', true),
+    model: text(input.model ?? input.label, 160, 'Exact model', true),
+    revision: text(input.revision ?? 'unknown', 60, 'Board revision', true),
+    firmware: text(input.firmware ?? 'unknown', 60, 'Firmware', true),
     namePrefix: text(input.namePrefix, 60, 'Bluetooth name prefix'),
     service: normalizeUUID(text(input.service, 128, 'Service UUID', true)),
     notify:
@@ -44,6 +47,9 @@ export function exportToys(toys) {
       return {
         ...clean,
         label: sanitizeText(clean.label).slice(0, 80),
+        model: sanitizeText(clean.model).slice(0, 160),
+        revision: sanitizeText(clean.revision).slice(0, 60),
+        firmware: sanitizeText(clean.firmware).slice(0, 60),
         sourceNote: sanitizeText(clean.sourceNote).slice(0, 1000),
       };
     }),

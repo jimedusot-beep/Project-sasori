@@ -29,6 +29,7 @@ test('all shipped scripts lack characteristic write APIs, credential input and r
   const paths = [
     'site/app.js',
     'site/discovery-ui.js',
+    'site/device-hub.js',
     'site/elmo-packets.mjs',
     ...(await readdir('site/lib')).filter((x) => x.endsWith('.js')).map((x) => 'site/lib/' + x),
   ];
