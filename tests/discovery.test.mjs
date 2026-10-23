@@ -41,7 +41,7 @@ test('nine discovery methods preserve separate research boundaries', () => {
 test('byte and pulse parsers accept documented representations and enforce bounds', () => {
   assert.deepEqual(parseCapture('0x00:0XAf-10, FF', 'bytes'), [0, 175, 16, 255]);
   assert.deepEqual(parseCapture('9000, 4500\n560 560', 'pulses'), [9000, 4500, 560, 560]);
-  for (const bad of ['', 'a', '0g', '0x', '<script>', '00'.repeat(4097)])
+  for (const bad of ['', 'a', 'a b', '0a b0 1', '-01', '0g', '0x', '<script>', '00'.repeat(4097)])
     assert.throws(() => parseCapture(bad, 'bytes'));
   for (const bad of ['', '-1', '0', '1.5', '1e3', '10000001', '10,'.repeat(2049)])
     assert.throws(() => parseCapture(bad, 'pulses'));
@@ -139,7 +139,7 @@ test('synthetic sine WAV analysis identifies its spectral peak, duration, amplit
     assert.ok(Math.abs(result.summary.dominantHz - 1000) <= result.summary.binHz);
     assert.equal(result.summary.clipped, 0);
     assert.equal(result.waveform.length, 256);
-    assert.equal(result.spectrum.length, 1024);
+    assert.equal(result.spectrum.length, 1025);
     assert.ok(result.spectrum.every((v) => Number.isFinite(v) && v >= -80 && v <= 0));
   }
 });

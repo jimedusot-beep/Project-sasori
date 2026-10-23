@@ -255,7 +255,7 @@ export async function mountDiscovery({ store, download }) {
   $('d-compare').addEventListener(
     'click',
     safe(() => {
-      const result = compareCaptures(first, second, Number($('d-tolerance').value));
+      const result = compareCaptures(first, second, $('d-tolerance').valueAsNumber);
       const container = $('d-comparison');
       container.replaceChildren(
         element(

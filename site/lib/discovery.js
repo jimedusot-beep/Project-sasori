@@ -115,14 +115,15 @@ export function parseCapture(text, format) {
   if (typeof text !== 'string' || text.length > 32768)
     throw new Error('Capture text limit is 32,768 characters.');
   if (format === 'bytes') {
-    const compact = text
+    const groups = text
       .trim()
-      .replace(/\b0x/gi, '')
-      .replace(/[\s,:-]/g, '');
-    if (!compact || compact.length % 2 || !/^[0-9a-f]+$/i.test(compact))
+      .split(/[\s,:-]+/)
+      .map((group) => group.replace(/^0x/i, ''));
+    if (groups.some((group) => !/^(?:[0-9a-f]{2})+$/i.test(group)))
       throw new Error(
         'Enter complete hex byte pairs, separated by spaces, commas, colons, or dashes.',
       );
+    const compact = groups.join('');
     return valuesOK(
       compact.match(/../g).map((pair) => parseInt(pair, 16)),
       format,
@@ -420,7 +421,7 @@ export function inspectWav(buffer) {
     return { min, max };
   });
   const size = 2048,
-    spectrum = new Float64Array(size / 2);
+    spectrum = new Float64Array(size / 2 + 1);
   // Average up to eight Hann-windowed FFT power spectra across the entire file.
   const windows = Math.min(8, Math.max(1, Math.ceil(frames / size)));
   for (let window = 0; window < windows; window++) {
