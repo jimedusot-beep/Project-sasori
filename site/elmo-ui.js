@@ -22,7 +22,7 @@ const errors = {
   'unsupported-device':
     'This toy does not expose the expected Elmo channels. Try connection inspection in the laboratory.',
   'malformed-authentication':
-    'Elmo sent an unsupported authentication reply. No greeting was requested.',
+    'Elmo sent an unsupported authentication reply. The connection was closed.',
   'unsupported-notification': 'Elmo sent an unsupported notification. The connection was closed.',
   'unsolicited-acceptance':
     'The reply arrived before Sasori’s challenge response. Connect again to make a fresh check.',
