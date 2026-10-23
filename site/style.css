@@ -477,13 +477,26 @@ input[type='range'] {
   padding: 0;
   border: 0;
 }
-input[type='file'] {
+.file-button input[type='file'] {
   position: absolute;
   width: 1px;
   height: 1px;
   opacity: 0;
   min-height: 0;
   padding: 0;
+}
+input[type='file']::file-selector-button {
+  color: #dce3db;
+  background: #26322a;
+  border: 1px solid #4a584a;
+  border-radius: 4px;
+  padding: 6px 8px;
+  margin-right: 8px;
+  cursor: pointer;
+}
+.file-button:focus-within {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
 }
 .checkline {
   display: flex;

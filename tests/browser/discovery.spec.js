@@ -14,6 +14,11 @@ async function analyze(page, values) {
   await page.locator('#d-analyze').click();
   await expect(page.locator('#d-save')).toBeEnabled();
 }
+async function chooseFile(page, id, file) {
+  const choosing = page.waitForEvent('filechooser');
+  await page.locator(id).click();
+  await (await choosing).setFiles(file);
+}
 test('byte comparison, private retention, metadata backup, and imported copies survive reload', async ({
   page,
 }) => {
@@ -47,7 +52,7 @@ test('byte comparison, private retention, metadata backup, and imported copies s
   const text = await readFile(await (await downloading).path(), 'utf8');
   const backup = JSON.parse(text);
   expect(backup.records.every((r) => r.values === null && !r.payloadsIncluded)).toBe(true);
-  await page.locator('#d-import').setInputFiles({
+  await chooseFile(page, '#d-import', {
     name: 'metadata.json',
     mimeType: 'application/json',
     buffer: Buffer.from(text),
@@ -89,7 +94,7 @@ test('pulse comparisons respect tolerance and reject cross-model inference', asy
 test('local WAV inspection plots synthetic audio and saves only a summary', async ({ page }) => {
   await open(page);
   await page.locator('#d-method').selectOption('sound');
-  await page.locator('#d-wav').setInputFiles({
+  await chooseFile(page, '#d-wav', {
     name: 'synthetic-sine.wav',
     mimeType: 'audio/wav',
     buffer: Buffer.from(syntheticWav()),
