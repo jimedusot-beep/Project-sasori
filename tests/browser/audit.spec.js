@@ -32,7 +32,7 @@ async function nativeCapture(page) {
   await page.locator('#consent').check();
   await page.locator('#connect').click();
   await expect(page.locator('#state')).toHaveText('Inspecting');
-  await page.getByRole('button', { name: 'Research records', exact: true }).click();
+  await page.getByRole('button', { name: /^Research records/ }).click();
   await expect(page.locator('.record-row')).toHaveCount(1);
   await page.locator('.record-row').click();
 }
