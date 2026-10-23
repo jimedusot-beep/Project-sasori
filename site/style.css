@@ -1545,3 +1545,18 @@ footer a {
     scroll-behavior: auto !important;
   }
 }
+
+#page-universal {
+  overflow-wrap: anywhere;
+}
+.control-values {
+  display: grid;
+  grid-template-columns: minmax(90px, 0.4fr) minmax(0, 1fr);
+  gap: 8px 16px;
+}
+.control-values dt {
+  color: var(--muted);
+}
+.control-values dd {
+  margin: 0;
+}

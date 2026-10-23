@@ -4,7 +4,9 @@ A mobile workbench for observing Bluetooth devices, preserving research, and dev
 
 The device workspace connects saved identities, active connection status, notification timelines, Discovery analysis, and versioned research notes. Start with [Quick connections](docs/quick-connect.md): Elmo settings are included, and another BLE toy can expose its model/firmware without manual UUID entry. Native access is available as a buildable [iPhone app](native/ios/README.md) and a local [desktop BLE helper](desktop/README.md); real-device validation remains required.
 
-**v0.2.0 is an experimental, inspection-only release. Real iPhone/Bluefy/Elmo validation is still required.** Independent fan research; no affiliation with Hasbro or Naruto.
+**v0.2.0 is experimental. Elmo remains inspection-only; shared standard BLE identity, battery, and mild-alert controls are available on devices exposing those services. Real-device validation is still required.** Independent fan research; no affiliation with Hasbro or Naruto.
+
+[Universal controls](docs/universal-controls.md) provides one connection-and-action workspace across compatible BLE devices, remembered local device references, and reusable setup backups. Start with **Universal controls → Try offline demo**, then select a real device to see its actual standard capabilities. Custom Elmo authentication, movement and playback remain unverified.
 
 ## Try the laboratory
 
@@ -21,8 +23,10 @@ The published UUID profile is transcribed from [NonaSuomy's GATT table](https://
 
 ## What works in software
 
+- [Universal controls](docs/universal-controls.md): reusable standard BLE connection, Identify, battery Status, bounded mild Find/alert, Stop, saved reconnect references and private setup backups. Web and native iPhone share the same command runner. Unsupported controls remain unavailable.
+
 - User-initiated, name-filtered discovery; service/characteristic metadata inspection; optional notification subscription.
-- [Protocol recorder](docs/protocol-recorder.md): normalized TX/RX JSON/CSV import, observation markers, frame timelines, selected intervals, byte/timing comparisons, and reusable trace records with opt-in raw retention. Built-in source-linked adapter manifests include Elmo analysis and an original manufacturer-documented MiP offline codec. [All eight inspirations and reuse decisions](docs/research/adapter-inspirations.md) are pinned and cited; no live command sender or Elmo authentication is claimed.
+- [Protocol recorder](docs/protocol-recorder.md): normalized TX/RX JSON/CSV import, observation markers, frame timelines, selected intervals, byte/timing comparisons, and reusable trace records with opt-in raw retention. Built-in source-linked adapter manifests include Elmo analysis and an original manufacturer-documented MiP offline codec. [All eight inspirations and reuse decisions](docs/research/adapter-inspirations.md) are pinned and cited; the recorder sends no commands and Elmo authentication is not claimed.
 - Quick Elmo/unknown-toy setups, bounded standard model/firmware reads on web and native iPhone, useful connection results, observed-channel shortcuts, and metadata connection reports. Identity reads finish as soon as the available fields have been read.
 - Integrated browser/Bluefy setup, active-device status, per-profile recent sessions, physical-evidence collection checklist, notification timing, direct offline analysis handoff, and five previous title/note versions.
 - A shared inspection adapter contract used by the web transport, native Core Bluetooth facade, and desktop Bleak helper. Imported profiles never execute or unlock commands.

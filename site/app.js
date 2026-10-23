@@ -15,6 +15,7 @@ import { Diagnostics, explainError } from './lib/diagnostics.js';
 import { ResearchStore } from './lib/storage.js';
 import { mountDiscovery } from './discovery-ui.js';
 import { mountRecorder } from './recorder-ui.js';
+import { mountControls } from './controls-ui.js';
 import { mountDeviceHub } from './device-hub.js';
 import { createNativeBluetooth } from './lib/native-bluetooth.js';
 import { bluetoothSupport, makeInspection, identityOf } from './lib/devices.js';
@@ -54,6 +55,7 @@ const labels = {
   recorder: 'Protocol recorder',
   sessions: 'Research records',
   controls: 'Control laboratory',
+  universal: 'Universal controls',
   research: 'Evidence & guides',
 };
 function analyzeOfflinePacket() {
@@ -91,6 +93,9 @@ let settings = {};
 let toys = [],
   editingToyId = null;
 let recorder = null;
+let controlsHub = null,
+  controlsActive = false,
+  controlsSynthetic = false;
 let deviceHub = null,
   deviceLabel = '';
 const nativePlugin = globalThis.SasoriNativeBluetooth;
@@ -257,8 +262,14 @@ $('notify-preset').addEventListener('change', () => {
 function updateMode() {
   const simulated = $('simulation').checked;
   const task = $('connection-task').value;
-  $('mode-badge').textContent = simulated ? 'SIMULATION · NO HARDWARE' : 'LIVE · INSPECTION ONLY';
-  $('mode-badge').classList.toggle('warm', simulated);
+  $('mode-badge').textContent = controlsActive
+    ? controlsSynthetic
+      ? 'DEMO · STANDARD CONTROLS'
+      : 'LIVE · STANDARD CONTROLS'
+    : simulated
+      ? 'SIMULATION · NO HARDWARE'
+      : 'LIVE · INSPECTION ONLY';
+  $('mode-badge').classList.toggle('warm', controlsActive ? controlsSynthetic : simulated);
   $('simulation-config').hidden = !simulated;
   $('live-config').hidden = simulated;
   $('connect').textContent = simulated
@@ -329,6 +340,9 @@ function updateMode() {
   document.body.classList.toggle('engineering', $('engineering').checked);
   if (!$('engineering').checked) $('include-payloads').checked = false;
   syncRecordActions();
+  $('connect').disabled ||= controlsActive;
+  $('global-stop').disabled = !(running || controlsActive);
+  for (const id of ['quick-elmo', 'quick-identify']) $(id).disabled ||= controlsActive;
   refreshHub();
 }
 function saveSettings(immediate = false) {
@@ -568,7 +582,7 @@ function handleEvent(event) {
 $('connect').addEventListener(
   'click',
   safe(() => {
-    if (!ready || running) return;
+    if (!ready || running || controlsActive) return;
     const simulated = $('simulation').checked;
     const profile = currentProfile();
     if (!simulated) {
@@ -641,7 +655,10 @@ $('connect').addEventListener(
   }),
 );
 for (const id of ['disconnect', 'global-stop'])
-  $(id).addEventListener('click', () => transport?.disconnect('user'));
+  $(id).addEventListener('click', () => {
+    transport?.disconnect('user');
+    controlsHub?.stop('user');
+  });
 $('session-title').addEventListener('input', () => {
   if (session) session.title = $('session-title').value || 'Untitled experiment';
 });
@@ -763,6 +780,16 @@ function renderToys() {
         editToy(toy);
       }),
     );
+    const controls = node('button', 'Open shared controls', 'secondary');
+    controls.addEventListener(
+      'click',
+      safe(() => {
+        if (running || controlsActive) throw new Error('Stop the current connection first.');
+        controlsHub?.useToy(toy);
+        navigate('universal');
+      }),
+    );
+    card.append(controls);
     const remove = node('button', 'Delete profile', 'text-button');
     let armed = false;
     remove.addEventListener(
@@ -1383,6 +1410,7 @@ $('trouble').addEventListener('change', updateTrouble);
 updateTrouble();
 function stopAll(reason) {
   transport?.disconnect(reason);
+  controlsHub?.stop(reason);
   auth.cancel();
   stopSequence();
   if ('speechSynthesis' in window) speechSynthesis.cancel();
@@ -1401,7 +1429,7 @@ window.addEventListener('error', () => {
   notice(
     'The interface encountered an error. Stop the inspection, export your log if possible, and reload.',
   );
-  transport?.disconnect('interface-error');
+  stopAll('interface-error');
 });
 async function initialize() {
   $('connect').disabled = true;
@@ -1446,6 +1474,21 @@ async function initialize() {
         'application/json',
       );
     }),
+  });
+  controlsHub = await mountControls({
+    store,
+    bluetooth: currentBluetooth(),
+    native: !!nativeBluetooth,
+    secure: connectionSecure(),
+    download,
+    canStart: () => ready && !running,
+    changed: (active, synthetic) => {
+      if (controlsActive !== active || controlsSynthetic !== synthetic) {
+        controlsActive = active;
+        controlsSynthetic = synthetic;
+        updateMode();
+      }
+    },
   });
   await mountDiscovery({ store, download }).catch(problem);
   recorder = await mountRecorder({

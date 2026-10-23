@@ -3,7 +3,7 @@ import UIKit
 import CoreBluetooth
 import Capacitor
 
-// Inspection only. There is deliberately no characteristic-write or firmware API.
+// Inspection and a separate fixed standard-control mode. No arbitrary write or firmware API.
 @objc(SasoriBluetoothPlugin)
 public class SasoriBluetoothPlugin: CAPPlugin, CAPBridgedPlugin, CBCentralManagerDelegate, CBPeripheralDelegate {
     public let identifier = "SasoriBluetoothPlugin"
@@ -14,6 +14,8 @@ public class SasoriBluetoothPlugin: CAPPlugin, CAPBridgedPlugin, CBCentralManage
         CAPPluginMethod(name: "getService", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "getCharacteristics", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "readInformation", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "readStandard", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "alertStandard", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "startNotifications", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "disconnect", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "shareFile", returnType: CAPPluginReturnPromise)
@@ -31,6 +33,14 @@ public class SasoriBluetoothPlugin: CAPPlugin, CAPBridgedPlugin, CBCentralManage
         "00002a27-0000-1000-8000-00805f9b34fb", "00002a26-0000-1000-8000-00805f9b34fb",
         "00002a28-0000-1000-8000-00805f9b34fb"
     ]
+    private let batteryService = "0000180f-0000-1000-8000-00805f9b34fb"
+    private let batteryLevel = "00002a19-0000-1000-8000-00805f9b34fb"
+    private let alertService = "00001802-0000-1000-8000-00805f9b34fb"
+    private let alertLevel = "00002a06-0000-1000-8000-00805f9b34fb"
+    private var standardControls = false
+    private var standardServices: [String: CBService] = [:]
+    private var rememberedId = ""
+    private var alertTimer: Timer?
     private var configuredService = ""
     private var prefix = ""
     private var showAll = false
@@ -53,7 +63,10 @@ public class SasoriBluetoothPlugin: CAPPlugin, CAPBridgedPlugin, CBCentralManage
         if let observer = backgroundObserver { NotificationCenter.default.removeObserver(observer) }
         operationTimer?.invalidate()
         scanTimer?.invalidate()
+        alertTimer?.invalidate()
+        alertTimer = nil
         watchdog?.invalidate()
+        alertTimer?.invalidate()
     }
     private func uuid(_ value: CBUUID) -> String {
         let text = value.uuidString.lowercased()
@@ -82,10 +95,20 @@ public class SasoriBluetoothPlugin: CAPPlugin, CAPBridgedPlugin, CBCentralManage
         operation = ""
         call?.resolve(data)
     }
+    private func rejectOperation(_ message: String, _ code: String) {
+        operationTimer?.invalidate()
+        operationTimer = nil
+        let call = pending
+        pending = nil
+        operation = ""
+        call?.reject(message, code)
+    }
     private func finish(_ reason: String) {
         manager?.stopScan()
         scanning = false
         scanTimer?.invalidate()
+        alertTimer?.invalidate()
+        alertTimer = nil
         watchdog?.invalidate()
         operationTimer?.invalidate()
         picker?.dismiss(animated: true)
@@ -99,6 +122,9 @@ public class SasoriBluetoothPlugin: CAPPlugin, CAPBridgedPlugin, CBCentralManage
         inspectedService = nil
         subscribed = nil
         informationRead = nil
+        standardServices.removeAll()
+        rememberedId = ""
+        standardControls = false
         peers.removeAll()
         let errorCode: String
         switch reason {
@@ -109,7 +135,7 @@ public class SasoriBluetoothPlugin: CAPPlugin, CAPBridgedPlugin, CBCentralManage
             else if manager?.state == .unsupported { errorCode = "NotSupportedError" }
             else { errorCode = "InvalidStateError" }
         case "selection-unavailable": errorCode = "InvalidStateError"
-        case "connection-failed", "unexpected", "characteristic-discovery-failed", "subscription-failed", "services-changed":
+        case "connection-failed", "unexpected", "service-discovery-failed", "alert-clear-failed", "characteristic-discovery-failed", "subscription-failed", "services-changed":
             errorCode = "NetworkError"
         case "invalid-notification": errorCode = "NotSupportedError"
         default: errorCode = "AbortError"
@@ -128,6 +154,17 @@ public class SasoriBluetoothPlugin: CAPPlugin, CAPBridgedPlugin, CBCentralManage
                   call.getBool("showAllDevices") == true || !prefix.trimmingCharacters(in: .whitespaces).isEmpty
             else { call.reject("Choose an identified service and a device name filter.", "InvalidStateError"); return }
             guard self.begin(call, "choose", seconds: 40) else { return }
+            self.standardControls = call.getBool("standardControls") == true
+            if self.standardControls && service != self.informationService {
+                self.rejectOperation("Standard controls use only the fixed SIG services.", "NotSupportedError")
+                return
+            }
+            self.standardServices.removeAll()
+            self.rememberedId = self.standardControls ? (call.getString("rememberedId") ?? "") : ""
+            if self.rememberedId.count > 256 {
+                self.rejectOperation("Invalid saved device reference.", "InvalidStateError")
+                return
+            }
             self.configuredService = service
             self.prefix = prefix
             self.showAll = call.getBool("showAllDevices") ?? false
@@ -140,6 +177,12 @@ public class SasoriBluetoothPlugin: CAPPlugin, CAPBridgedPlugin, CBCentralManage
         guard operation == "choose", !scanning, let manager = manager else { return }
         if manager.state == .unknown || manager.state == .resetting { return }
         guard manager.state == .poweredOn else { finish("bluetooth-unavailable"); return }
+        if standardControls, let id = UUID(uuidString: rememberedId),
+           let known = manager.retrievePeripherals(withIdentifiers: [id]).first {
+            selected = known
+            resolve(["id": known.identifier.uuidString, "name": known.name ?? "Saved Bluetooth device"])
+            return
+        }
         scanning = true
         manager.scanForPeripherals(withServices: nil, options: [CBCentralManagerScanOptionAllowDuplicatesKey: false])
         scanTimer = Timer.scheduledTimer(withTimeInterval: 5, repeats: false) { [weak self] _ in self?.showPicker() }
@@ -149,7 +192,7 @@ public class SasoriBluetoothPlugin: CAPPlugin, CAPBridgedPlugin, CBCentralManage
         guard operation == "choose", let controller = bridge?.viewController,
               controller.presentedViewController == nil else { finish("selection-unavailable"); return }
         guard !peers.isEmpty else { finish("no-matching-devices"); return }
-        let alert = UIAlertController(title: "Choose your device", message: "Sasori inspects only the sourced service in your selected profile.", preferredStyle: .actionSheet)
+        let alert = UIAlertController(title: "Choose your device", message: standardControls ? "Sasori checks model information, battery, and optional standard alert controls." : "Sasori inspects only the sourced service in your selected profile.", preferredStyle: .actionSheet)
         picker = alert
         for (index, peripheral) in peers.enumerated() {
             alert.addAction(UIAlertAction(title: String(index + 1) + " · " + (peripheral.name ?? "Unnamed device"), style: .default) { [weak self] _ in
@@ -183,22 +226,27 @@ public class SasoriBluetoothPlugin: CAPPlugin, CAPBridgedPlugin, CBCentralManage
         DispatchQueue.main.async {
             guard let peripheral = self.active, peripheral.state == .connected,
                   peripheral.identifier.uuidString == call.getString("id"),
-                  call.getString("uuid")?.lowercased() == self.configuredService else {
-                call.reject("Only the selected profile service is available.", "InvalidStateError"); return
+                  let requested = call.getString("uuid")?.lowercased(),
+                  self.standardControls ? [self.informationService, self.batteryService, self.alertService].contains(requested) : requested == self.configuredService else {
+                call.reject("Only the selected profile or fixed standard services are available.", "InvalidStateError"); return
             }
             guard self.begin(call, "service") else { return }
-            peripheral.discoverServices([CBUUID(string: self.configuredService)])
+            self.configuredService = requested
+            peripheral.discoverServices([CBUUID(string: requested)])
         }
     }
     @objc public func getCharacteristics(_ call: CAPPluginCall) {
         DispatchQueue.main.async {
             guard let peripheral = self.active, peripheral.state == .connected,
                   peripheral.identifier.uuidString == call.getString("id"),
-                  let service = self.inspectedService,
-                  call.getString("service")?.lowercased() == self.configuredService else {
+                  let requested = call.getString("service")?.lowercased(),
+                  let service = self.standardControls ? self.standardServices[requested] : self.inspectedService,
+                  self.uuid(service.uuid) == requested,
+                  self.standardControls || requested == self.configuredService else {
                 call.reject("Inspect the selected service first.", "InvalidStateError"); return
             }
             guard self.begin(call, "characteristics") else { return }
+            self.configuredService = requested
             peripheral.discoverCharacteristics(nil, for: service)
         }
     }
@@ -206,7 +254,7 @@ public class SasoriBluetoothPlugin: CAPPlugin, CAPBridgedPlugin, CBCentralManage
         DispatchQueue.main.async {
             guard let peripheral = self.active, peripheral.state == .connected,
                   peripheral.identifier.uuidString == call.getString("id"),
-                  self.configuredService == self.informationService,
+                  !self.standardControls, self.configuredService == self.informationService,
                   let requested = call.getString("uuid")?.lowercased(), self.informationFields.contains(requested),
                   let characteristic = self.inspectedService?.characteristics?.first(where: { self.uuid($0.uuid) == requested }),
                   characteristic.properties.contains(.read) else {
@@ -217,10 +265,55 @@ public class SasoriBluetoothPlugin: CAPPlugin, CAPBridgedPlugin, CBCentralManage
             peripheral.readValue(for: characteristic)
         }
     }
+    @objc public func readStandard(_ call: CAPPluginCall) {
+        DispatchQueue.main.async {
+            guard self.standardControls, let peripheral = self.active, peripheral.state == .connected,
+                  peripheral.identifier.uuidString == call.getString("id"),
+                  let service = call.getString("service")?.lowercased(),
+                  let requested = call.getString("uuid")?.lowercased(),
+                  (service == self.informationService && self.informationFields.contains(requested)) ||
+                  (service == self.batteryService && requested == self.batteryLevel),
+                  let characteristic = self.standardServices[service]?.characteristics?.first(where: { self.uuid($0.uuid) == requested }),
+                  characteristic.properties.contains(.read) else {
+                call.reject("Only observed standard battery and model fields can be read.", "NotSupportedError"); return
+            }
+            guard self.begin(call, "read-information") else { return }
+            self.informationRead = characteristic
+            peripheral.readValue(for: characteristic)
+        }
+    }
+    @objc public func alertStandard(_ call: CAPPluginCall) {
+        DispatchQueue.main.async {
+            guard self.standardControls, self.pending == nil, let peripheral = self.active,
+                  peripheral.state == .connected, peripheral.identifier.uuidString == call.getString("id"),
+                  let level = call.getInt("level"), level == 0 || level == 1,
+                  let characteristic = self.standardServices[self.alertService]?.characteristics?.first(where: { self.uuid($0.uuid) == self.alertLevel }),
+                  characteristic.properties.contains(.writeWithoutResponse) else {
+                call.reject("Only an observed standard no-alert / mild-alert control is available.", "NotSupportedError"); return
+            }
+            guard peripheral.canSendWriteWithoutResponse else {
+                if level == 0 { self.finish("alert-clear-failed") }
+                call.reject("The Bluetooth write queue is busy.", "NetworkError"); return
+            }
+            self.alertTimer?.invalidate()
+            self.alertTimer = nil
+            peripheral.writeValue(Data([UInt8(level)]), for: characteristic, type: .withoutResponse)
+            if level == 1 {
+                self.alertTimer = Timer.scheduledTimer(withTimeInterval: 2, repeats: false) { [weak self, weak peripheral] _ in
+                    guard let self = self, let peripheral = peripheral, self.active === peripheral, peripheral.state == .connected else { return }
+                    if peripheral.canSendWriteWithoutResponse {
+                        peripheral.writeValue(Data([0]), for: characteristic, type: .withoutResponse)
+                        self.alertTimer = nil
+                    } else { self.finish("alert-clear-failed") }
+                }
+            }
+            call.resolve(["queued": true, "acknowledged": false])
+        }
+    }
     @objc public func startNotifications(_ call: CAPPluginCall) {
         DispatchQueue.main.async {
             guard let peripheral = self.active, peripheral.state == .connected,
-                  peripheral.identifier.uuidString == call.getString("id"), self.subscribed == nil,
+                  peripheral.identifier.uuidString == call.getString("id"), !self.standardControls, self.subscribed == nil,
                   let characteristic = self.inspectedService?.characteristics?.first(where: { self.uuid($0.uuid) == call.getString("uuid") }),
                   characteristic.properties.contains(.notify) || characteristic.properties.contains(.indicate) else {
                 call.reject("An observed Notify or Indicate endpoint is required.", "NotSupportedError"); return
@@ -244,7 +337,7 @@ public class SasoriBluetoothPlugin: CAPPlugin, CAPBridgedPlugin, CBCentralManage
     }
     public func centralManager(_ central: CBCentralManager, didConnect peripheral: CBPeripheral) {
         guard active?.identifier == peripheral.identifier, operation == "connect" else { central.cancelPeripheralConnection(peripheral); return }
-        watchdog = Timer.scheduledTimer(withTimeInterval: 30, repeats: false) { [weak self] _ in self?.finish("native-deadline") }
+        watchdog = Timer.scheduledTimer(withTimeInterval: standardControls ? 300 : 30, repeats: false) { [weak self] _ in self?.finish("native-deadline") }
         resolve()
     }
     public func centralManager(_ central: CBCentralManager, didFailToConnect peripheral: CBPeripheral, error: Error?) {
@@ -255,8 +348,14 @@ public class SasoriBluetoothPlugin: CAPPlugin, CAPBridgedPlugin, CBCentralManage
     }
     public func peripheral(_ peripheral: CBPeripheral, didDiscoverServices error: Error?) {
         guard active?.identifier == peripheral.identifier, operation == "service" else { return }
-        guard error == nil, let service = peripheral.services?.first(where: { uuid($0.uuid) == configuredService }) else { finish("service-not-found"); return }
-        inspectedService = service
+        guard error == nil else { finish("service-discovery-failed"); return }
+        guard let service = peripheral.services?.first(where: { uuid($0.uuid) == configuredService }) else {
+            if standardControls { rejectOperation("Standard service not exposed by this device.", "NotFoundError") }
+            else { finish("service-not-found") }
+            return
+        }
+        if standardControls { standardServices[uuid(service.uuid)] = service }
+        else { inspectedService = service }
         resolve(["uuid": uuid(service.uuid)])
     }
     public func peripheral(_ peripheral: CBPeripheral, didDiscoverCharacteristicsFor service: CBService, error: Error?) {

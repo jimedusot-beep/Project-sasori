@@ -89,3 +89,7 @@ A future adapter should emit the same transport events, pass lifecycle/cancellat
 IndexedDB uses records, settings, toys, and discoveries stores. Version 4 adds discoveries without rewriting existing data. A v1 sessions store is copied through migration without deleting the original store. A blocked/open failure produces a visible temporary-memory warning. A version change closes the old connection and requires reload instead of silently losing saved records. Invalid session records are skipped and counted; valid sessions remain available. Invalid discovery records surface a validation error rather than being silently deleted.
 
 Writes enforce capacity and record size without evicting experiments. Import validates the whole batch, creates fresh IDs, and marks imported provenance. The UI never automatically sends or replays imported bytes.
+
+## Shared standard device controls
+
+[Universal controls](universal-controls.md) adds `site/lib/standard-controls.js` (fixed capability negotiation and intent runner), `site/controls-ui.js` (saved connection workspace), and `site/lib/control-setups.js` (bounded private setup validation and portable backups). Standard-control writes are limited to the observed Immediate Alert characteristic under its exact SIG service, mild/none only. All other toy/Elmo writes remain excluded. Storage adds a separate settings key with revision conflict detection, preserving IndexedDB v4 and existing preferences. Web and native controls share the runner; the Swift bridge independently enforces the same fixed read/alert allowlists.

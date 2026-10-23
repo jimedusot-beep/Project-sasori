@@ -46,6 +46,9 @@
         <button class="nav" data-page="protocol">
           <span aria-hidden="true">⌁</span> Protocol explorer
         </button>
+        <button class="nav" data-page="universal">
+          <span aria-hidden="true">⌁</span> Universal controls
+        </button>
         <button class="nav" data-page="toys"><span aria-hidden="true">▧</span> Devices</button>
         <button class="nav" data-page="discovery">
           <span aria-hidden="true">⌕</span> Discovery workbench
@@ -102,6 +105,10 @@
             <div class="heading-tag"><span class="dot"></span> OBSERVATION BEFORE CONTROL</div>
           </div>
           <section class="quick-start" aria-label="Quick device setup">
+            <button class="quick-card" data-go="universal">
+              <strong>Universal controls</strong
+              ><span>Saved connections · shared device actions</span>
+            </button>
             <button id="quick-elmo" class="quick-card" type="button" disabled>
               <strong>Love2Learn Elmo</strong><span>Connection details · settings included</span>
             </button>
@@ -550,6 +557,112 @@
               service scanner. Bluetooth Classic, USB-only, infrared, and proprietary radio devices
               require different transports. Physical commands remain locked.
             </p>
+          </section>
+        </section>
+        <section id="page-universal" class="page" hidden aria-labelledby="universal-title">
+          <div class="page-heading">
+            <div>
+              <p class="eyebrow">CONNECT ONCE · REUSE YOUR SETUP</p>
+              <h1 id="universal-title">One place for your devices.</h1>
+              <p>
+                Connect, check available features, and use the same controls across compatible
+                Bluetooth devices.
+              </p>
+            </div>
+          </div>
+          <div class="workspace-grid">
+            <section class="panel" aria-labelledby="u-connection-title">
+              <h2 id="u-connection-title">1 / Connect or reconnect</h2>
+              <p id="u-platform"></p>
+              <label for="u-device">Saved device</label
+              ><select id="u-device">
+                <option value="">Choose a new Bluetooth device</option>
+              </select>
+              <p id="u-binding" class="hint"></p>
+              <details>
+                <summary>Device name and connection filter</summary>
+                <label for="u-label">Your name for this device</label
+                ><input id="u-label" maxlength="80" placeholder="e.g. Desk gadget" />
+                <label for="u-prefix">Bluetooth name starts with (optional)</label
+                ><input
+                  id="u-prefix"
+                  maxlength="60"
+                  placeholder="Blank shows all Bluetooth devices"
+                />
+                <div class="actions">
+                  <button id="u-save-name" class="secondary">Save name / filter</button
+                  ><button id="u-forget" class="text-button">Forget saved setup</button>
+                </div>
+              </details>
+              <p>
+                Choose a device you own or are authorized to control. Find / alert can make a sound,
+                light, or movement depending on the device.
+              </p>
+              <div class="actions">
+                <button id="u-connect" class="primary" disabled>Connect device</button
+                ><button id="u-choose" class="secondary" disabled>Choose another device</button
+                ><button id="u-demo" class="secondary">Try offline demo</button>
+              </div>
+              <p id="u-storage" class="hint"></p>
+              <div class="actions">
+                <button id="u-export" class="secondary">Export setups</button
+                ><label class="file-button" for="u-import"
+                  >Import setups<input id="u-import" type="file" accept=".json,application/json"
+                /></label>
+              </div>
+              <p class="hint">
+                Setups stay after a disconnect. Backups omit private device references; select the
+                device once after importing.
+              </p>
+            </section>
+            <section class="panel" aria-labelledby="u-actions-title">
+              <div class="panel-head">
+                <h2 id="u-actions-title">2 / Use available controls</h2>
+                <span id="u-state" class="badge">idle</span>
+              </div>
+              <h3 id="u-device-name">No device selected</h3>
+              <p id="u-message" role="status">
+                Select a saved device or connect a new one. No connection starts automatically.
+              </p>
+              <div class="actions">
+                <button id="u-identify" class="secondary" disabled>Identify</button
+                ><button id="u-status" class="secondary" disabled>Status</button
+                ><button id="u-alert" class="secondary" disabled>Find / alert (1.5 s)</button
+                ><button id="u-stop" class="danger" disabled>Stop &amp; disconnect</button>
+              </div>
+              <p id="u-demo-effect" class="badge" hidden>DEMO · the desk gadget is waving hello</p>
+              <ul id="u-capabilities"></ul>
+              <p id="u-battery">Battery: not read</p>
+              <dl id="u-values" class="control-values"></dl>
+              <p id="u-read-time" class="hint"></p>
+              <button id="u-report" class="secondary">Export result</button>
+              <p class="hint">
+                Controls become available only when the device exposes the matching standard
+                service. Find sends a mild alert, then no-alert; it has no acknowledgment. Stop
+                disconnects. Sessions end after five minutes or when Sasori is hidden.
+              </p>
+            </section>
+          </div>
+          <section class="panel" aria-labelledby="u-compatibility-title">
+            <h2 id="u-compatibility-title">Shared commands, matching adapters</h2>
+            <p>
+              This connection can read standard model / firmware and battery information, and
+              request a standard mild alert where supported. Devices can expose some, all, or none
+              of these features. Custom playback, movement, power, authentication, TV control, and
+              firmware changes still need a matching adapter.
+            </p>
+            <p>
+              Elmo’s custom authentication and actions remain unverified. You can reuse its saved
+              inspection setup in Devices and compare captures in Protocol recorder.
+            </p>
+            <div class="actions">
+              <button class="secondary" data-go="toys">Saved inspection setups</button
+              ><button class="secondary" data-go="recorder">Protocol recorder</button>
+            </div>
+            <details>
+              <summary>Bluetooth standard references</summary>
+              <ul id="u-sources"></ul>
+            </details>
           </section>
         </section>
         <section id="page-recorder" class="page" hidden aria-labelledby="recorder-title">
