@@ -1,8 +1,9 @@
+import Foundation
 import Capacitor
 
-@objc(SasoriViewController)
 class SasoriViewController: CAPBridgeViewController {
     override func capacitorDidLoad() {
         bridge?.registerPluginInstance(SasoriBluetoothPlugin())
+        NSLog("Sasori native inspection bridge registered")
     }
 }

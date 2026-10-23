@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Restructure device connections around selected identity, actual active connection state, recent sessions, browser setup, capture timeline, and direct notification handoff to Discovery.
+- Extend saved profiles with model/revision/firmware, snapshot inspection transport and measured GATT duration, and collect non-imported live capture candidates without claiming physical verification.
+- Preserve the last five previous research title/note versions in local records and metadata backups.
+- Add a buildable Capacitor iPhone app with a scoped Core Bluetooth inspection plugin, explicit chooser, native watchdog/background teardown, and protected temporary file sharing.
+- Add a Python/Bleak desktop inspection helper with finite budgets, explicit device selection, private exclusive exports, metadata defaults, and fake-client regression tests.
+
 - Add the offline Discovery workbench with nine interface research plans, exact model/source/evidence labels, byte diffs, and tolerant infrared pulse comparisons. Cross-model, method, or representation comparisons are rejected.
 - Inspect bounded PCM16 WAV files locally with waveform, averaged FFT spectrum, and amplitude statistics. Save only scalar audio summaries; audio is never played, stored, uploaded, or transmitted.
 - Upgrade IndexedDB to version 4 while preserving sessions, settings, and toy profiles. Discovery captures have a separate bounded store, explicit raw-retention choice, metadata-only exports, and atomic imports with fresh IDs and imported-claim labels.

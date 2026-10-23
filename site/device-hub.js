@@ -22,6 +22,7 @@ export function mountDeviceHub({ getState, notice, navigate, selectRecord }) {
   });
   $('hub-analyze-last').addEventListener('click', () => {
     const { session, profile } = getState();
+    if (session?.profileId !== profile.id) return;
     const packet = session?.packets.findLast((p) => p.hex);
     if (!packet) return;
     const identity = session.inspection || identityOf(profile);
@@ -67,7 +68,8 @@ export function mountDeviceHub({ getState, notice, navigate, selectRecord }) {
         ' · ' +
         state
       : 'No active connection. Saved profiles keep configuration; each inspection requires a fresh connection.';
-    $('hub-analyze-last').disabled = !session?.packets.some((p) => p.hex);
+    $('hub-analyze-last').disabled =
+      session?.profileId !== profile.id || !session?.packets.some((p) => p.hex);
     const identity = session?.inspection && running ? session.inspection : identityOf(profile);
     $('hub-current-title').textContent = running
       ? deviceLabel || profile.label
@@ -80,11 +82,12 @@ export function mountDeviceHub({ getState, notice, navigate, selectRecord }) {
         ? 'SIMULATION · NO HARDWARE'
         : 'LIVE · INSPECTION ONLY'
       : 'Select a profile and tap Connect & inspect. Saved profiles are not active connections.';
-    $('hub-current-result').textContent = session?.endedAt
-      ? 'Last result: ' + session.outcome + ' · ' + session.stats.packets + ' notifications'
-      : running
-        ? 'Keep this app visible during the inspection. Use Stop to disconnect.'
-        : 'Manual connection · one device at a time';
+    $('hub-current-result').textContent =
+      session?.profileId === profile.id && session?.endedAt
+        ? 'Last result: ' + session.outcome + ' · ' + session.stats.packets + ' notifications'
+        : running
+          ? 'Keep this app visible during the inspection. Use Stop to disconnect.'
+          : 'Manual connection · one device at a time';
     const evidence = inspectionEvidence(records, profile);
     $('hub-evidence-count').textContent = evidence.complete + ' / 5 full-length capture candidates';
     $('hub-evidence').replaceChildren();

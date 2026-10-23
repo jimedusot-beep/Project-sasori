@@ -30,3 +30,12 @@ jobs:
       - name: Build unsigned simulator app
         working-directory: native/ios
         run: xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration Debug -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' -derivedDataPath build CODE_SIGNING_ALLOWED=NO build
+      - name: Launch and verify native bridge
+        working-directory: native/ios
+        run: python3 smoke.py
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
+        if: always()
+        with:
+          name: native-iphone-verification
+          path: native/ios/build/sasori-iphone.png
+          retention-days: 7

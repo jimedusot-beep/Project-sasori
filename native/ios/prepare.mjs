@@ -28,11 +28,13 @@ for (const name of ['SasoriBluetoothPlugin.swift', 'SasoriViewController.swift']
 function removeUndefined(value) {
   if (!value || typeof value !== 'object') return;
   for (const key of Object.keys(value)) {
-    if (value[key] === undefined) delete value[key];
+    if (value[key] === undefined || (key === 'explicitFileType' && value[key] === 'undefined'))
+      delete value[key];
     else removeUndefined(value[key]);
   }
 }
 removeUndefined(project.hash);
+project.updateBuildProperty('IPHONEOS_DEPLOYMENT_TARGET', '16.0');
 await writeFile(root + 'ios/App/App.xcodeproj/project.pbxproj', project.writeSync());
 const storyboard = root + 'ios/App/App/Base.lproj/Main.storyboard';
 await writeFile(
