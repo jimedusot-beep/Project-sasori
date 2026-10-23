@@ -25,6 +25,7 @@
   margin: 0 0 20px;
 }
 .quick-card {
+  text-decoration: none;
   text-align: left;
   white-space: normal;
   background: var(--panel);

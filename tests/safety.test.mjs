@@ -32,12 +32,18 @@ test('inspection scripts have no write API and all shipped scripts lack credenti
     'site/device-hub.js',
     'site/controls-ui.js',
     'site/recorder-ui.js',
+    'site/elmo-ui.js',
     'site/elmo-packets.mjs',
     ...(await readdir('site/lib')).filter((x) => x.endsWith('.js')).map((x) => 'site/lib/' + x),
   ];
   const js = (await Promise.all(paths.map((p) => readFile(p, 'utf8')))).join('\n');
   for (const path of paths.filter(
-    (p) => !['site/lib/standard-controls.js', 'site/lib/mip-controls.js'].includes(p),
+    (p) =>
+      ![
+        'site/lib/standard-controls.js',
+        'site/lib/mip-controls.js',
+        'site/lib/elmo-remote.js',
+      ].includes(p),
   ))
     assert.doesNotMatch(
       await readFile(path, 'utf8'),
@@ -48,4 +54,8 @@ test('inspection scripts have no write API and all shipped scripts lack credenti
   const html = await readFile('site/index.html', 'utf8');
   assert.doesNotMatch(html, /type="password"/);
   assert.match(html, /connect-src 'none'/);
+  const remote = await readFile('site/elmo.html', 'utf8');
+  assert.match(remote, /connect-src 'none'/);
+  assert.match(remote, /form-action 'none'/);
+  assert.match(remote, /autocomplete="off"/);
 });

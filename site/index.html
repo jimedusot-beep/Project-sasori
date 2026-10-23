@@ -105,6 +105,9 @@
             <div class="heading-tag"><span class="dot"></span> OBSERVATION BEFORE CONTROL</div>
           </div>
           <section class="quick-start" aria-label="Quick device setup">
+            <a class="quick-card" href="elmo.html">
+              <strong>Elmo remote ↗</strong><span>Connect · check status · request a greeting</span>
+            </a>
             <button class="quick-card" data-go="universal">
               <strong>Universal controls</strong
               ><span>Saved connections · shared device actions</span>
@@ -727,9 +730,9 @@
               protocol. Motion, audio, TV control and firmware commands are not included.
             </p>
             <p>
-              Elmo’s web/native connection remains inspection-only. An experimental desktop client
-              now supports a known-password handshake and an optional greeting; real-unit testing is
-              pending.
+              The <a href="elmo.html">Elmo remote</a> provides an experimental browser
+              known-password handshake, input/volume queries and one greeting request. Native
+              inspection remains separate; real-unit testing is pending.
               <a
                 href="https://github.com/jimedusot-beep/Project-sasori/blob/main/docs/device-action-validation.md#finish-elmo-authentication"
                 target="_blank"
@@ -1183,9 +1186,9 @@ No packet analyzed yet.</pre>
               <span class="badge warm">SYNTHETIC ONLY</span>
             </div>
             <p>
-              Live authentication is unavailable. No Elmo challenge-response protocol has been
-              independently validated here. These fixtures test application outcomes and budgets;
-              they implement no Elmo handshake.
+              These fixtures test synthetic application outcomes and budgets; they implement no Elmo
+              handshake. The separate <a href="elmo.html">Elmo remote</a> runs the source-derived
+              known-password protocol. Independent real-toy validation is pending.
             </p>
             <div class="form-row">
               <label for="auth-scenario"

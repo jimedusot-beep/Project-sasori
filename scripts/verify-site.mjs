@@ -18,7 +18,16 @@ async function check(relative) {
 }
 for (let attempt = 1; attempt <= 4; attempt++) {
   try {
-    for (const file of ['index.html', 'app.js', 'style.css', 'tokens.css', 'icon.svg'])
+    for (const file of [
+      'index.html',
+      'app.js',
+      'style.css',
+      'tokens.css',
+      'icon.svg',
+      'elmo.html',
+      'elmo.css',
+      'elmo-ui.js',
+    ])
       await check(file);
     console.log('Verified deployed HTTPS site and ' + checked.size + ' assets at ' + base);
     process.exit(0);
