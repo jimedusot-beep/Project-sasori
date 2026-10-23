@@ -6,12 +6,16 @@ import {
   validateRecord,
   portableRecord,
   backup,
+  serializeBackup,
   parseImport,
+  reviseNotes,
+  MAX_FILE_BYTES,
   compareSessions,
   sessionText,
 } from '../site/lib/records.js';
 import { decodePacket } from '../site/lib/protocol.js';
 import { Diagnostics, sanitize, sanitizeText, explainError } from '../site/lib/diagnostics.js';
+import { ResearchStore } from '../site/lib/storage.js';
 function capture() {
   const r = createSession('live');
   r.packets.push(decodePacket(new TextEncoder().encode('password=private-synthetic-value')));
@@ -105,6 +109,7 @@ test('malformed, oversized, future and foreign records are rejected', () => {
     { source: 'verified' },
     { id: '../../bad' },
     { startedAt: 'no' },
+    { importedAt: '2026-10-23T00:00:00Z' + ' '.repeat(70) },
     { notes: 'a'.repeat(20001) },
     { stats: { packets: -1 } },
     { packets: Array(501).fill({}) },
@@ -174,12 +179,37 @@ test('JSON session and metadata backup imports round trip', () => {
   assert.equal(parseImport(JSON.stringify(r), 'capture.json')[0].id, r.id);
   assert.equal(parseImport(JSON.stringify(backup([r])), 'backup.json').length, 1);
 });
+test('complete ASCII and Unicode notebooks restore with every note revision', async () => {
+  for (const [count, value, versions] of [
+    [50, 'x'.repeat(19999), 6],
+    [32, '界'.repeat(20000), 4],
+  ]) {
+    const store = await new ResearchStore({ indexedDB: null }).open();
+    const records = Array.from({ length: count }, (_, index) => {
+      let record = createSession('imported', '001', 'Synthetic notebook ' + index);
+      record.endedAt = record.startedAt;
+      for (let revision = 0; revision < versions; revision++)
+        record = reviseNotes(record, 'Revision ' + revision, value);
+      return record;
+    });
+    await store.saveMany(records);
+    const text = serializeBackup(await store.list());
+    assert.ok(Buffer.byteLength(text) > 2 * 1024 * 1024);
+    assert.ok(Buffer.byteLength(text) < MAX_FILE_BYTES);
+    const restored = parseImport(text, 'sasori-backup.json');
+    assert.deepEqual(
+      restored.map((r) => [r.id, r.notes, r.noteHistory]),
+      (await store.list()).map((r) => [r.id, r.notes, r.noteHistory]),
+    );
+  }
+  assert.throws(() => serializeBackup([]), /1–50/);
+});
 test('invalid backup is rejected as a whole before writing any record', () => {
   assert.throws(() =>
     parseImport('{"format":"sasori.backup","schemaVersion":2,"records":[{}]}', 'backup.json'),
   );
   assert.throws(() => parseImport('{bad', 'invalid.json'), /not valid/);
-  assert.throws(() => parseImport('x'.repeat(2 * 1024 * 1024 + 1), 'big.txt'), /2 MB/);
+  assert.throws(() => parseImport('x'.repeat(MAX_FILE_BYTES + 1), 'big.txt'), /13 MB/);
 });
 test('TXT and CSV import are inert notes, preserving source text', () => {
   for (const filename of ['notes.txt', 'measurements.csv']) {

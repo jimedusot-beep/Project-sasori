@@ -4,10 +4,18 @@ export const FORMAT = 'sasori.session';
 export const SCHEMA_VERSION = 2;
 export const MAX_RECORDS = 50;
 export const MAX_TOTAL_BYTES = 8 * 1024 * 1024;
-export const MAX_FILE_BYTES = 2 * 1024 * 1024;
+// A complete 50-record notebook can exceed 2 MB. This finite file budget also fits
+// 50 maximum-size validated records plus the compact backup envelope.
+export const MAX_FILE_BYTES = 13 * 1024 * 1024;
 export const MAX_RECORD_BYTES = 250000;
 const dateOK = (value) => typeof value === 'string' && Number.isFinite(Date.parse(value));
 const bounded = (value, max) => typeof value === 'string' && value.length <= max;
+// Local IDs and import timestamps are bounded separately. Copying a full notebook
+// must not push unchanged research data past its byte budget merely by adding provenance.
+export function recordDataBytes(record) {
+  return new TextEncoder().encode(JSON.stringify({ ...record, id: '', importedAt: null }))
+    .byteLength;
+}
 // Record IDs identify local notes, never credentials. Insecure preview origins may lack randomUUID.
 export function recordId(cryptoApi = globalThis.crypto) {
   if (typeof cryptoApi?.randomUUID === 'function') return cryptoApi.randomUUID();
@@ -78,7 +86,8 @@ export function validateRecord(input) {
     throw new Error('Record text exceeds the supported size.');
   if (!dateOK(r.startedAt) || (r.endedAt !== null && !dateOK(r.endedAt)))
     throw new Error('Invalid session dates.');
-  if (r.importedAt != null && !dateOK(r.importedAt)) throw new Error('Invalid import provenance.');
+  if (r.importedAt != null && (!bounded(r.importedAt, 64) || !dateOK(r.importedAt)))
+    throw new Error('Invalid import provenance.');
   if (typeof r.payloadsIncluded !== 'boolean') throw new Error('Missing payload policy.');
   const inspection = r.inspection === undefined ? undefined : validateInspection(r.inspection);
   if (
@@ -160,7 +169,7 @@ export function validateRecord(input) {
     )
   )
     throw new Error('Invalid session statistics.');
-  if (new TextEncoder().encode(JSON.stringify(r)).byteLength > MAX_RECORD_BYTES)
+  if (recordDataBytes(r) > MAX_RECORD_BYTES)
     throw new Error('Record is too large. Export fewer payloads.');
   // Whitelist the schema so arbitrary imported object keys never enter the app.
   return structuredClone({
@@ -241,6 +250,8 @@ export function portableRecord(record, includePayloads = false) {
   return validateRecord(sanitize(clean));
 }
 export function backup(records) {
+  if (!Array.isArray(records) || !records.length || records.length > MAX_RECORDS)
+    throw new Error('Choose 1–50 records for a backup.');
   return {
     format: 'sasori.backup',
     schemaVersion: 2,
@@ -249,9 +260,13 @@ export function backup(records) {
     records: records.map((r) => portableRecord(r)),
   };
 }
+export function serializeBackup(records) {
+  // Compact serialization keeps whitespace from exceeding the supported import/share budget.
+  return JSON.stringify(backup(records));
+}
 export function parseImport(text, filename = 'import.txt') {
   if (new TextEncoder().encode(text).byteLength > MAX_FILE_BYTES)
-    throw new Error('Import limit is 2 MB.');
+    throw new Error('Import limit is 13 MB.');
   const extension = filename.split('.').pop().toLowerCase();
   if (extension === 'json') {
     let data;

@@ -117,10 +117,6 @@ export class BluetoothTransport {
           this.state === 'disconnected'
         )
           return;
-        this.emit({
-          type: 'warning',
-          message: 'Unexpected Bluetooth disconnect. No automatic reconnect will occur.',
-        });
         const reason = [
           'page-hidden',
           'native-deadline',
@@ -128,9 +124,30 @@ export class BluetoothTransport {
           'services-changed',
           'bluetooth-unavailable',
           'invalid-notification',
+          'operation-timeout',
+          'connection-failed',
+          'service-not-found',
+          'characteristic-discovery-failed',
+          'subscription-failed',
         ].includes(event.reason)
           ? event.reason
           : 'unexpected';
+        if (event.error)
+          this.emit({
+            type: 'error',
+            error: {
+              ...explainError(event.error),
+              stage: this.currentStage,
+              elapsedMs: Math.max(0, Date.now() - this.startedAt),
+            },
+          });
+        this.emit({
+          type: reason === 'unexpected' ? 'warning' : 'info',
+          message:
+            reason === 'unexpected'
+              ? 'Unexpected Bluetooth disconnect. No automatic reconnect will occur.'
+              : 'Bluetooth inspection ended: ' + reason + '. No automatic reconnect will occur.',
+        });
         this.disconnect(reason);
       };
       selected.addEventListener('gattserverdisconnected', this.onDisconnect);
@@ -230,7 +247,9 @@ export class BluetoothTransport {
       });
       this.setState('error');
       this.disconnect(
-        error?.name === 'NotFoundError' && !this.device ? 'selection-cancelled' : 'operation-error',
+        ['NotFoundError', 'AbortError'].includes(error?.name) && !this.device
+          ? 'selection-cancelled'
+          : 'operation-error',
       );
     } finally {
       if (run === this.generation) this.busy = false;

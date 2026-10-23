@@ -1,5 +1,24 @@
 // Web-Bluetooth-shaped inspection facade. No command-write surface.
 export function createNativeBluetooth(plugin) {
+  const errorNames = new Set([
+    'AbortError',
+    'InvalidStateError',
+    'NetworkError',
+    'NotFoundError',
+    'NotSupportedError',
+    'SecurityError',
+    'TimeoutError',
+  ]);
+  async function invoke(method, options) {
+    try {
+      return await plugin[method](options);
+    } catch (error) {
+      // Capacitor uses error.code for the Swift rejection code; Error.name stays "Error".
+      if (errorNames.has(error?.code))
+        throw new DOMException(error.message || 'Native Bluetooth operation failed.', error.code);
+      throw error;
+    }
+  }
   let device = null,
     listeners = [],
     generation = 0;
@@ -10,11 +29,12 @@ export function createNativeBluetooth(plugin) {
     characteristics.clear();
   };
   const unavailable = () => new DOMException('Native inspection cancelled', 'AbortError');
-  function close(reason = 'unexpected') {
+  function close(reason = 'unexpected', error = null) {
     if (device) {
       device.gatt.connected = false;
       const event = new Event('gattserverdisconnected');
       event.reason = reason;
+      if (error) event.error = error;
       device.dispatchEvent(event);
     }
     cleanup();
@@ -31,7 +51,18 @@ export function createNativeBluetooth(plugin) {
       cleanup();
       const registered = await Promise.allSettled([
         plugin.addListener('disconnected', (event) => {
-          if (run === generation && device?.id === event.id) close(event.reason || 'unexpected');
+          if (run !== generation || device?.id !== event.id) return;
+          const expectedStop = ['user', 'page-hidden', 'native-deadline', 'packet-limit'].includes(
+            event.reason,
+          );
+          const error =
+            !expectedStop && errorNames.has(event.errorCode)
+              ? new DOMException(
+                  'Native Bluetooth inspection ended: ' + event.reason + '.',
+                  event.errorCode,
+                )
+              : null;
+          close(event.reason || 'unexpected', error);
         }),
         plugin.addListener('notification', (event) => {
           if (run !== generation || !device?.gatt.connected || device.id !== event.id) return;
@@ -63,7 +94,7 @@ export function createNativeBluetooth(plugin) {
       }
       listeners = handles;
       try {
-        const selected = await plugin.requestDevice({
+        const selected = await invoke('requestDevice', {
           service: options.optionalServices[0],
           namePrefix: options.filters?.[0]?.namePrefix || '',
           showAllDevices: options.acceptAllDevices === true,
@@ -79,20 +110,20 @@ export function createNativeBluetooth(plugin) {
           connected: false,
           async connect() {
             guard();
-            await plugin.connect({ id: current.id });
+            await invoke('connect', { id: current.id });
             guard();
             this.connected = true;
             return this;
           },
           async getPrimaryService(uuid) {
             guard();
-            const service = await plugin.getService({ id: current.id, uuid });
+            const service = await invoke('getService', { id: current.id, uuid });
             guard();
             return {
               uuid: service.uuid,
               async getCharacteristics() {
                 guard();
-                const response = await plugin.getCharacteristics({
+                const response = await invoke('getCharacteristics', {
                   id: current.id,
                   service: service.uuid,
                 });
@@ -110,7 +141,7 @@ export function createNativeBluetooth(plugin) {
                   );
                   characteristic.startNotifications = async () => {
                     guard();
-                    await plugin.startNotifications({ id: current.id, uuid: item.uuid });
+                    await invoke('startNotifications', { id: current.id, uuid: item.uuid });
                     guard();
                     return characteristic;
                   };

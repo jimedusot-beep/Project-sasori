@@ -25,7 +25,7 @@ Generated www, ios, build products, and dependencies are ignored by Git. Make ap
 - Only the configured service is inspected. Subscription requires an observed Notify/Indicate property.
 - JavaScript inspection retains its existing duration/operation budgets. The native plugin independently enforces operation timeouts, a 30-second connection ceiling, a 500-notification budget, and a 4 KB incoming notification limit.
 - Backgrounding the app stops scanning/inspection and cancels pending operations. There is no reconnect loop.
-- Session exports open the native share sheet using a temporary protected file removed after sharing/cancellation.
+- Session exports open the native share sheet using a temporary protected file removed after sharing/cancellation. The finite 13 MB file budget matches the web import limit and accommodates a compact full-notebook backup; the 8 MB notebook and per-record limits still apply.
 - The app loads bundled assets, with no remote web application or browser token. Imported files remain inert.
 
 ## Verification limits

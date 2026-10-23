@@ -52,7 +52,7 @@ Records belong to this browser and exact site origin. They do not synchronize ac
 
 Default saves and backups omit raw payload bytes and text. Engineering mode allows deliberate raw session export/storage, reset to off for each new session. Unknown binary secrets cannot be reliably sanitized; raw hex may reveal the original bytes even when text is redacted. Review raw captures privately. Never commit credentials or personal identifiers.
 
-Limits: 50 records, 8 MB application budget, 250 KB per record, 2 MB per imported file, and 20,000 characters per note. Larger research collections should use multiple metadata backups. No browser GitHub-token synchronization is implemented.
+Limits: 50 records, 8 MB research-data budget, 250 KB per record, 13 MB per imported file, and 20,000 characters per note. Full notebooks export compact metadata backups that fit the import and native-share file budget. The storage, per-record, packet and note limits remain in effect during restoration. Bounded local IDs and import timestamps are accounted for separately so restoring a full notebook preserves its data. No browser GitHub-token synchronization is implemented.
 
 ## Development and checks
 
@@ -74,6 +74,7 @@ The site serves on port 4173. Live Web Bluetooth requires HTTPS or an eligible l
 ## Documentation
 
 - [Architecture and module APIs](docs/architecture.md)
+- [October 23 code and reliability audit](docs/audit-2026-10-23.md)
 - [Connected devices and evidence collection](docs/connected-devices.md), [device adapter contract](docs/adapter-contract.md)
 - [Native iPhone build/install](native/ios/README.md) and [desktop helper setup](desktop/README.md)
 - [Discovery workbench: captures, comparisons, sound analysis, and backups](docs/discovery-workbench.md)

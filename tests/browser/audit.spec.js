@@ -99,6 +99,21 @@ test('the active capture must stop before its research record can be deleted', a
   expect(await savedRecords(page)).toHaveLength(0);
 });
 
+test('successive edits to a standalone note preserve the preceding revision', async ({ page }) => {
+  await page.goto('/#sessions');
+  await expect(page.locator('#storage-summary')).toContainText('IndexedDB');
+  await page.locator('#new-note').click();
+  await page.locator('#record-notes').fill('First standalone observation');
+  await page.locator('#update-record').click();
+  await page.locator('#record-notes').fill('Second standalone observation');
+  await page.locator('#update-record').click();
+  await expect(page.locator('#record-history')).toContainText('First standalone observation');
+  await page.reload();
+  await page.locator('.record-row').click();
+  await expect(page.locator('#record-notes')).toHaveValue('Second standalone observation');
+  await expect(page.locator('#record-history')).toContainText('First standalone observation');
+});
+
 test('a complete notebook backup larger than 2 MB can be restored', async ({ page }) => {
   const records = Array.from({ length: 20 }, (_, index) => {
     let record = createSession('imported', '001', 'Synthetic backup ' + index);

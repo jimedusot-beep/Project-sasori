@@ -29,7 +29,7 @@ import {
   createSession,
   portableRecord,
   parseImport,
-  backup,
+  serializeBackup,
   compareSessions,
   sessionText,
   reviseNotes,
@@ -76,6 +76,7 @@ let diagnostics = new Diagnostics(),
   ready = false;
 let records = [],
   selectedId = null,
+  noteSavePending = false,
   deleteArmed = null,
   deleteTimer,
   settingsTimer,
@@ -249,6 +250,7 @@ function updateMode() {
     });
   document.body.classList.toggle('engineering', $('engineering').checked);
   if (!$('engineering').checked) $('include-payloads').checked = false;
+  syncRecordActions();
   refreshHub();
 }
 function saveSettings() {
@@ -839,6 +841,7 @@ $('export-text').addEventListener(
 );
 async function refreshRecords() {
   records = await store.list();
+  $('backup').disabled = !records.length;
   $('record-count').textContent = records.length;
   $('storage-state').textContent = store.persistent
     ? 'IndexedDB · ' + records.length + ' records'
@@ -854,6 +857,7 @@ async function refreshRecords() {
       : '');
   $('recover-corrupt').hidden = !store.corrupt.length;
   renderRecords();
+  syncRecordActions();
   updateComparisonOptions();
   refreshHub();
 }
@@ -927,34 +931,61 @@ function selectRecord(id) {
     $('record-history').append(details);
   }
   renderRecords();
+  syncRecordActions();
+}
+function syncRecordActions() {
+  const active = running && session?.id === selectedId;
+  const selected = records.some((r) => r.id === selectedId);
+  for (const id of ['record-title', 'record-notes', 'update-record'])
+    $(id).disabled = !selected || noteSavePending;
+  $('delete-record').disabled = !selected || active || noteSavePending;
+  $('record-delete-help').textContent = active
+    ? 'Stop the active inspection before deleting its record.'
+    : 'Deletion requires a second click. Export a backup first if this record matters.';
 }
 $('record-search').addEventListener('input', renderRecords);
 $('update-record').addEventListener(
   'click',
   safe(async () => {
     const r = records.find((item) => item.id === selectedId);
-    if (!r) return;
-    const revised = reviseNotes(
-      r,
-      $('record-title').value || 'Untitled experiment',
-      $('record-notes').value,
-    );
-    await store.save(revised);
-    if (session?.id === r.id) {
-      session.title = revised.title;
-      session.notes = revised.notes;
-      session.noteHistory = revised.noteHistory;
-      $('session-title').value = revised.title;
+    if (!r || noteSavePending) return;
+    noteSavePending = true;
+    // Read the editor before locking it, and keep concurrent saves from basing
+    // their revision history on the same stale stored record.
+    const title = $('record-title').value || 'Untitled experiment';
+    const notes = $('record-notes').value;
+    syncRecordActions();
+    try {
+      const current =
+        session?.id === r.id ? portableRecord(session, $('include-payloads').checked) : r;
+      const revised = reviseNotes(current, title, notes);
+      // Update the live source before awaiting storage. A notification can trigger an
+      // autosave while this transaction is pending; that snapshot must include the edit.
+      if (session?.id === r.id) {
+        session.title = revised.title;
+        session.notes = revised.notes;
+        session.noteHistory = revised.noteHistory;
+        $('session-title').value = revised.title;
+      }
+      await store.save(revised);
+      await refreshRecords();
+      if (selectedId === r.id) selectRecord(r.id);
+      notice('Research notes saved on this browser.');
+    } finally {
+      noteSavePending = false;
+      syncRecordActions();
     }
-    await refreshRecords();
-    selectRecord(r.id);
-    notice('Research notes saved on this browser.');
   }),
 );
 $('delete-record').addEventListener(
   'click',
   safe(async () => {
     if (!selectedId) return;
+    if (noteSavePending) return;
+    if (running && session?.id === selectedId) {
+      notice('Stop the active inspection before deleting its record.');
+      return;
+    }
     if (deleteArmed !== selectedId) {
       deleteArmed = selectedId;
       $('delete-record').textContent = 'Confirm deletion';
@@ -965,10 +996,11 @@ $('delete-record').addEventListener(
       }, 5000);
       return;
     }
-    await store.remove(selectedId);
+    const id = selectedId;
+    await store.remove(id);
     clearTimeout(deleteTimer);
     await refreshRecords();
-    selectRecord(null);
+    if (selectedId === id) selectRecord(null);
     notice('Record deleted locally.');
   }),
 );
@@ -1028,7 +1060,7 @@ $('backup').addEventListener(
   'click',
   safe(async () => {
     const all = await store.list();
-    download('sasori-backup.json', JSON.stringify(backup(all), null, 2), 'application/json');
+    download('sasori-backup.json', serializeBackup(all), 'application/json');
   }),
 );
 $('import-file').addEventListener(
@@ -1037,7 +1069,7 @@ $('import-file').addEventListener(
     const file = event.target.files[0];
     if (!file) return;
     try {
-      if (file.size > MAX_FILE_BYTES) throw new Error('Import limit is 2 MB.');
+      if (file.size > MAX_FILE_BYTES) throw new Error('Import limit is 13 MB.');
       const imported = parseImport(await file.text(), file.name);
       await store.importCopies(imported);
       await refreshRecords();

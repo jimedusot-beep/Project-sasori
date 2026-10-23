@@ -93,7 +93,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
       console.log(JSON.stringify(reviewElmoCapture(readFileSync(path, 'utf8')), null, 2));
     } catch {
       // Neither parser messages nor native filesystem errors may echo private input or paths.
-      console.error('Cannot review capture. Use a valid Sasori JSON export, at most 2 MB.');
+      console.error('Cannot review capture. Use a valid Sasori JSON export, at most 13 MB.');
       process.exitCode = 1;
     }
   }

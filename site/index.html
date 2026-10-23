@@ -812,7 +812,7 @@ No packet analyzed yet.</pre>
               <button id="recover-corrupt" class="danger" hidden>Remove invalid records</button>
             </div>
             <p class="hint">
-              JSON sessions/backups or TXT/CSV notes · 2 MB file limit · text notes up to 20,000
+              JSON sessions/backups or TXT/CSV notes · 13 MB file limit · text notes up to 20,000
               characters
             </p>
           </div>
@@ -840,10 +840,20 @@ No packet analyzed yet.</pre>
               <div class="actions">
                 <button id="update-record" class="primary" disabled>Save notes</button
                 ><button id="export-record" class="secondary" disabled>Export record</button
-                ><button id="delete-record" class="danger" disabled>Delete record</button>
+                ><button
+                  id="delete-record"
+                  class="danger"
+                  aria-describedby="record-delete-help"
+                  disabled
+                >
+                  Delete record
+                </button>
               </div>
               <p class="hint">
-                Deletion requires a second click. Export a backup first if this record matters.
+                <span id="record-delete-help"
+                  >Deletion requires a second click. Export a backup first if this record
+                  matters.</span
+                >
               </p>
               <details>
                 <summary>Previous note versions (last five)</summary>

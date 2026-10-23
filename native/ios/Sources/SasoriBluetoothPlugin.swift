@@ -91,11 +91,25 @@ public class SasoriBluetoothPlugin: CAPPlugin, CAPBridgedPlugin, CBCentralManage
         inspectedService = nil
         subscribed = nil
         peers.removeAll()
+        let errorCode: String
+        switch reason {
+        case "operation-timeout", "native-deadline": errorCode = "TimeoutError"
+        case "no-matching-devices", "service-not-found": errorCode = "NotFoundError"
+        case "bluetooth-unavailable":
+            if manager?.state == .unauthorized { errorCode = "SecurityError" }
+            else if manager?.state == .unsupported { errorCode = "NotSupportedError" }
+            else { errorCode = "InvalidStateError" }
+        case "selection-unavailable": errorCode = "InvalidStateError"
+        case "connection-failed", "unexpected", "characteristic-discovery-failed", "subscription-failed", "services-changed":
+            errorCode = "NetworkError"
+        case "invalid-notification": errorCode = "NotSupportedError"
+        default: errorCode = "AbortError"
+        }
         if let peripheral = peripheral {
             manager?.cancelPeripheralConnection(peripheral)
-            notifyListeners("disconnected", data: ["id": peripheral.identifier.uuidString, "reason": reason])
+            notifyListeners("disconnected", data: ["id": peripheral.identifier.uuidString, "reason": reason, "errorCode": errorCode])
         }
-        call?.reject("Bluetooth inspection ended: " + reason, reason == "operation-timeout" ? "TimeoutError" : "AbortError")
+        call?.reject("Bluetooth inspection ended: " + reason, errorCode)
     }
     @objc public func requestDevice(_ call: CAPPluginCall) {
         DispatchQueue.main.async {
@@ -249,7 +263,7 @@ public class SasoriBluetoothPlugin: CAPPlugin, CAPBridgedPlugin, CBCentralManage
         DispatchQueue.main.async {
             guard let name = call.getString("name"),
                   name.range(of: "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,79}\\.(json|txt)$", options: .regularExpression) != nil,
-                  let text = call.getString("text"), let data = text.data(using: .utf8), data.count <= 2 * 1024 * 1024,
+                  let text = call.getString("text"), let data = text.data(using: .utf8), data.count <= 13 * 1024 * 1024,
                   let controller = self.bridge?.viewController, controller.presentedViewController == nil else {
                 call.reject("Unsupported export or another dialog is open."); return
             }

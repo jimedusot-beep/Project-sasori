@@ -1,4 +1,10 @@
-import { validateRecord, recordId, MAX_RECORDS, MAX_TOTAL_BYTES } from './records.js';
+import {
+  validateRecord,
+  recordId,
+  recordDataBytes,
+  MAX_RECORDS,
+  MAX_TOTAL_BYTES,
+} from './records.js';
 import { validateToy, MAX_TOYS } from './toys.js';
 import { validateDiscovery, MAX_DISCOVERIES, MAX_DISCOVERY_BYTES } from './discovery.js';
 const request = (req) =>
@@ -129,9 +135,11 @@ export class ResearchStore {
         throw new Error(
           '50-record limit reached. Export a backup, then delete records you no longer need.',
         );
-      if (
-        new TextEncoder().encode(JSON.stringify([...merged.values()])).byteLength > MAX_TOTAL_BYTES
-      )
+      const dataBytes = [...merged.values()].reduce(
+        (bytes, record) => bytes + recordDataBytes(record),
+        merged.size + 1, // Array brackets and separators.
+      );
+      if (dataBytes > MAX_TOTAL_BYTES)
         throw new Error(
           '8 MB storage budget reached. Export a backup before deleting old records.',
         );
@@ -164,7 +172,6 @@ export class ResearchStore {
         ...r,
         id: recordId(),
         importedAt: new Date().toISOString(),
-        title: ('Imported · ' + r.title).slice(0, 180),
       })),
     );
   }
