@@ -23,6 +23,8 @@ Exit criterion: independently reproduced authentication with bounded opt-in traf
 
 Only after M2 and separate protocol/physical-limit evidence: characterize one known action at a time, define independent operating envelopes and a physical power stop, then add guarded adapters and regression fixtures. No raw transmitter in the normal UI.
 
+For the independent hardware path, see [Elmo replacement-controller research](replacement-controller-research.md). It can proceed without recovering the original Bluetooth authentication scheme, but physical power and movement tests require independent electrical and safety verification.
+
 ## M4 — Broader laboratory
 
 Implement device profiles 002–004 as independent modules; use the simulator contract first. Add private Bleak transport and H.E.R.B.I.E. session ingestion. Any authenticated remote management needs a separate backend and threat review.

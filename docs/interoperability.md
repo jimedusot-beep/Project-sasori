@@ -8,6 +8,10 @@ Required information: ID, profile, title, timestamps, outcome, notes, packet met
 
 v1 migration fills empty service metadata, missing counters, notes/outcome, and a false payload policy. Unknown versions are rejected; nothing is guessed about their schema. A v1 IndexedDB sessions store is retained after copying valid records into v2.
 
+## Current offline handoff into REA-Recovery-Kit
+
+The owner-run, private capture handoff is described in [docs/rea-handoff.md](rea-handoff.md). The new `npm run handoff:rea -- /private/session.json` command emits metadata counts only. An explicitly acknowledged complete raw/live session can be converted locally into REA `protocol_capture.py` JSONL; it must be kept outside the Git repository. All source labels remain user-file claims and no live hardware writes or network actions are implemented by the converter.
+
 ## Future transport contract
 
 A private local Python adapter using Bleak may emit the same event categories as BluetoothTransport: state, services, packet, error, warning, and info. It must preserve source and evidence labels, enforce budgets, and disconnect on cancellation. Device-specific protocol code stays separate from transport.
