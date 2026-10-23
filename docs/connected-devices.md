@@ -12,6 +12,8 @@ Sasori has one foreground inspection connection at a time. **Devices** holds sav
 6. **Analyze latest notification** copies the current profile's transient received bytes into Discovery with its identity, timestamp, endpoint, and provenance. This is offline analysis and does not enable raw storage automatically.
 7. Finished sessions save locally. Research records supports notes, the last five previous title/note versions, metadata exports, and backup/import. Imported source claims remain marked as imported.
 
+Notes can be edited during an inspection; incoming notifications preserve the pending edit. The note editor waits for each save before accepting the next edit. Stop an active inspection before deleting its record. Full notebook backups use compact JSON and support files up to 13 MB, including native sharing. The notebook remains limited to 50 records / 8 MB, with 250 KB per record; a larger file limit does not bypass those storage limits. Bounded local IDs/import timestamps are accounted for separately to preserve restore headroom; imported titles are preserved, and the imported-claim badge distinguishes copies.
+
 For a first Elmo inspection, choose **Metadata only (no subscription)** in the probe selector. Confirm the service and notification properties before selecting a notification channel for a separate inspection. Detailed reproducible steps remain in [iPhone setup](iphone-setup.md).
 
 ## What the status means

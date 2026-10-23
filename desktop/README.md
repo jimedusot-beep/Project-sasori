@@ -31,7 +31,7 @@ Only after metadata confirms the notify endpoint, run a separate capture:
 
 For another profile, provide sourced --service, optional --notify, --name-prefix, --model, --revision, --firmware, and --profile-id values. Blank notifications mean metadata only. An unknown name requires explicit --show-all. Full 128-bit UUIDs are required; firmware-update services are excluded.
 
-Duration defaults to 15 seconds and is bounded to 0.1–30 seconds. Ctrl+C requests teardown and retains a user-stop record when possible. Driver operations and teardown have finite budgets. Capture is capped at 500 notifications; only the first 1,024 bytes of an explicitly retained packet are kept, with original length/truncation statistics preserved.
+Duration defaults to 15 seconds and is bounded to 0.1–30 seconds. Ctrl+C requests teardown and retains a user-stop record when possible. Driver operations and teardown have finite budgets. Capture is capped at 500 notifications. Explicit raw retention keeps at most the first 1,024 bytes per packet and 40 KB across the session, so the result fits the shared 250 KB record limit, including a full 128-characteristic service map. After that raw budget is exhausted, metadata is still captured; original lengths and truncation statistics remain available. Identity and title bounds use the shared format's UTF-16 units so Unicode exports remain importable.
 
 ## Import and privacy
 

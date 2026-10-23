@@ -2,7 +2,14 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { IDBFactory } from 'fake-indexeddb';
 import { ResearchStore } from '../site/lib/storage.js';
-import { createSession } from '../site/lib/records.js';
+import {
+  createSession,
+  recordDataBytes,
+  serializeBackup,
+  parseImport,
+  MAX_RECORD_BYTES,
+  MAX_TOTAL_BYTES,
+} from '../site/lib/records.js';
 const open = async () => new ResearchStore({ indexedDB: new IDBFactory(), name: 'test' }).open();
 test('IndexedDB saves, reloads and deletes sessions', async () => {
   const store = await open(),
@@ -91,8 +98,44 @@ test('restored records get new IDs and cannot overwrite an experiment', async ()
   await store.importCopies([r]);
   const records = await store.list();
   assert.equal(records.length, 2);
-  assert.ok(records.some((x) => x.title.startsWith('Imported')));
+  const restored = records.find((x) => x.importedAt);
+  assert.ok(restored);
+  assert.notEqual(restored.id, r.id);
+  assert.equal(restored.title, r.title);
   store.db.close();
+});
+test('an exactly full notebook restores without losing data to import-provenance overhead', async () => {
+  function sizedRecord(bytes) {
+    const record = createSession('imported', '001', 'Synthetic full-notebook boundary');
+    record.endedAt = record.startedAt;
+    const event = { timestamp: record.startedAt, level: 'info', message: 'x'.repeat(4000) };
+    const count = Math.floor(
+      (bytes - recordDataBytes(record) + 1) / (JSON.stringify(event).length + 1),
+    );
+    record.events = Array.from({ length: count }, () => event);
+    record.notes = 'x'.repeat(bytes - recordDataBytes(record));
+    assert.equal(recordDataBytes(record), bytes);
+    return record;
+  }
+  const records = Array.from({ length: 33 }, () => sizedRecord(MAX_RECORD_BYTES));
+  records.push(sizedRecord(MAX_TOTAL_BYTES - 33 * MAX_RECORD_BYTES - 35));
+  for (const indexedDB of [null, new IDBFactory()]) {
+    const original = await new ResearchStore({ indexedDB, name: 'full-notebook' }).open();
+    await original.saveMany(records);
+    const text = serializeBackup(await original.list());
+    const restored = await new ResearchStore({ indexedDB, name: 'restored-notebook' }).open();
+    await restored.importCopies(parseImport(text, 'sasori-backup.json'));
+    const copied = await restored.list();
+    assert.equal(copied.length, records.length);
+    assert.ok(copied.every((r) => r.importedAt && !records.some((old) => old.id === r.id)));
+    assert.equal(
+      copied.reduce((bytes, r) => bytes + recordDataBytes(r), copied.length + 1),
+      MAX_TOTAL_BYTES,
+    );
+    assert.deepEqual(copied.map((r) => r.notes).sort(), records.map((r) => r.notes).sort());
+    original.db?.close();
+    restored.db?.close();
+  }
 });
 test('settings persist without authorization or credentials', async () => {
   const store = await open();

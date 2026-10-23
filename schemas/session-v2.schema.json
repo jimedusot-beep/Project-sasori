@@ -53,6 +53,7 @@
     },
     "importedAt": {
       "type": ["string", "null"],
+      "maxLength": 64,
       "format": "date-time"
     },
     "outcome": {

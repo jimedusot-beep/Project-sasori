@@ -1,6 +1,7 @@
 import asyncio
 import json
 import os
+import shutil
 from pathlib import Path
 import subprocess
 import sys
@@ -9,7 +10,7 @@ from types import SimpleNamespace
 import unittest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from sasori_ble import ELMO_SERVICE, ELMO_NOTIFY, ROOT, inspect_device, session_for, write_private
+from sasori_ble import ELMO_SERVICE, ELMO_NOTIFY, ROOT, MAX_RAW_BYTES, inspect_device, session_for, write_private
 
 
 def config(**patch):
@@ -38,6 +39,35 @@ class Client:
 
 
 class DesktopTests(unittest.IsolatedAsyncioTestCase):
+    @unittest.skipUnless(shutil.which("node"), "Node is needed for the shared web-record validator.")
+    async def test_noisy_raw_and_unicode_exports_pass_the_shared_web_validator(self):
+        class NoisyRaw(Client):
+            def __init__(self, *args, **kwargs):
+                super().__init__(*args, **kwargs)
+                properties = ["read", "write", "write-without-response", "notify", "indicate"]
+                self.services[0].characteristics = [SimpleNamespace(uuid=ELMO_NOTIFY, properties=properties) for _ in range(128)]
+
+            async def start_notify(self, characteristic, callback):
+                for _ in range(500):
+                    callback(characteristic, bytes(1024))
+
+        raw = await inspect_device(object(), config(retain_payloads=True, model="界" * 160, revision="界" * 60, firmware="界" * 60), NoisyRaw)
+        self.assertEqual(raw["stats"]["packets"], 500)
+        self.assertEqual(raw["stats"]["bytes"], 500 * 1024)
+        self.assertLessEqual(sum(len(p["hex"].split()) for p in raw["packets"]), MAX_RAW_BYTES)
+        self.assertTrue(any(p["truncated"] and not p["hex"] for p in raw["packets"]))
+        unicode_record = session_for(config(model="🤖" * 80, revision="🤖" * 30), "simulated")
+        with tempfile.TemporaryDirectory() as directory:
+            for index, record in enumerate([raw, unicode_record]):
+                path = Path(directory) / (str(index) + ".json")
+                path.write_text(json.dumps(record), encoding="utf8")
+                checked = subprocess.run([
+                    shutil.which("node"), "--input-type=module", "--eval",
+                    "import {readFileSync} from 'node:fs'; import {validateRecord} from './site/lib/records.js'; validateRecord(JSON.parse(readFileSync(process.argv[1], 'utf8')));",
+                    str(path),
+                ], cwd=ROOT, capture_output=True, text=True)
+                self.assertEqual(checked.returncode, 0, checked.stderr)
+
     async def test_metadata_omits_bytes_and_tears_down(self):
         clients = []
 
@@ -115,7 +145,7 @@ class DesktopTests(unittest.IsolatedAsyncioTestCase):
         def forbidden(*args, **kwargs):
             raise AssertionError("Driver must not be created")
 
-        for patch in [{"service": "invented"}, {"duration": 60}, {"model": ""}]:
+        for patch in [{"service": "invented"}, {"duration": 60}, {"model": ""}, {"model": "🤖" * 81}, {"firmware": "🤖" * 31}]:
             with self.assertRaises(ValueError):
                 await inspect_device(object(), config(**patch), forbidden)
 

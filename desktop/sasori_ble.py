@@ -13,6 +13,18 @@ ELMO_SERVICE = "dab91435-b5a1-e29c-b041-bcd562613bdf"
 ELMO_NOTIFY = "dab91382-b5a1-e29c-b041-bcd562613bdf"
 PROPERTIES = {"read", "write", "write-without-response", "notify", "indicate"}
 ROOT = Path(__file__).resolve().parents[1]
+MAX_RAW_BYTES = 40 * 1024
+
+
+def text_units(value):
+    """Match the shared JavaScript record format's UTF-16 string bounds."""
+    return len(value.encode("utf-16-le")) // 2
+
+
+def text_prefix(value, limit):
+    while text_units(value) > limit:
+        value = value[:-1]
+    return value
 
 
 def stamp():
@@ -37,12 +49,12 @@ def session_for(config, source="live"):
     model = config.get("model", "Love2Learn Elmo · B6572")
     revision, firmware = config.get("revision", "unknown"), config.get("firmware", "unknown")
     for value, limit in [(model, 160), (revision, 60), (firmware, 60)]:
-        if not isinstance(value, str) or not value.strip() or len(value) > limit:
+        if not isinstance(value, str) or not value.strip() or text_units(value) > limit:
             raise ValueError("Invalid device identity.")
     return {
         "format": "sasori.session", "schemaVersion": 2, "id": str(uuid.uuid4()),
         "source": source, "profileId": config.get("profile_id", "001"), "importedAt": None,
-        "title": model[:140] + (" · simulated inspection" if source == "simulated" else " · desktop inspection"),
+        "title": text_prefix(model, 140) + (" · simulated inspection" if source == "simulated" else " · desktop inspection"),
         "startedAt": stamp(), "endedAt": None, "outcome": "active", "notes": "",
         "packets": [], "events": [], "services": [],
         "stats": {"packets": 0, "bytes": 0, "malformed": 0, "truncated": 0},
@@ -60,6 +72,7 @@ async def inspect_device(device, config, client_factory, stop_event=None):
     reason = "inspection-complete"
     connected_at = None
     accepting = True
+    retained_bytes = 0
     stage = "gatt-connection"
 
     def event(level, message):
@@ -75,7 +88,7 @@ async def inspect_device(device, config, client_factory, stop_event=None):
                             services=[record["inspection"]["service"]], timeout=6, pair=False)
 
     def received(characteristic, data):
-        nonlocal reason
+        nonlocal reason, retained_bytes
         if not accepting:
             return
         if len(record["packets"]) >= 500:
@@ -83,11 +96,12 @@ async def inspect_device(device, config, client_factory, stop_event=None):
             stop.set()
             return
         length = len(data)
-        raw = bytes(data[:1024])
+        retained = min(length, 1024, MAX_RAW_BYTES - retained_bytes) if record["payloadsIncluded"] else min(length, 1024)
         packet = {"timestamp": stamp(), "characteristic": str(characteristic.uuid).lower(),
-                  "length": length, "kind": "unknown", "truncated": length > 1024, "malformed": False}
+                  "length": length, "kind": "unknown", "truncated": length > retained, "malformed": False}
         if record["payloadsIncluded"]:
-            packet.update(hex=raw[:1024].hex(" "), text="")
+            packet.update(hex=bytes(data[:retained]).hex(" "), text="")
+            retained_bytes += retained
         record["packets"].append(packet)
         record["stats"]["packets"] += 1
         record["stats"]["bytes"] += length
