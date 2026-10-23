@@ -22,6 +22,7 @@ The published UUID profile is transcribed from [NonaSuomy's GATT table](https://
 ## What works in software
 
 - User-initiated, name-filtered discovery; service/characteristic metadata inspection; optional notification subscription.
+- [Protocol recorder](docs/protocol-recorder.md): normalized TX/RX JSON/CSV import, observation markers, frame timelines, selected intervals, byte/timing comparisons, and reusable trace records with opt-in raw retention. Built-in source-linked adapter manifests include Elmo analysis and an original manufacturer-documented MiP offline codec. [All eight inspirations and reuse decisions](docs/research/adapter-inspirations.md) are pinned and cited; no live command sender or Elmo authentication is claimed.
 - Quick Elmo/unknown-toy setups, bounded standard model/firmware reads on web and native iPhone, useful connection results, observed-channel shortcuts, and metadata connection reports. Identity reads finish as soon as the available fields have been read.
 - Integrated browser/Bluefy setup, active-device status, per-profile recent sessions, physical-evidence collection checklist, notification timing, direct offline analysis handoff, and five previous title/note versions.
 - A shared inspection adapter contract used by the web transport, native Core Bluetooth facade, and desktop Bleak helper. Imported profiles never execute or unlock commands.
@@ -75,6 +76,7 @@ The site serves on port 4173. Live Web Bluetooth requires HTTPS or an eligible l
 ## Documentation
 
 - [Architecture and module APIs](docs/architecture.md)
+- [Protocol recorder, trace format, and adapter catalog](docs/protocol-recorder.md), [eight-source implementation register](docs/research/adapter-inspirations.md)
 - [October 23 code and reliability audit](docs/audit-2026-10-23.md)
 - [Connected devices and evidence collection](docs/connected-devices.md), [device adapter contract](docs/adapter-contract.md)
 - [Quick connections, model/firmware reads, and reusable setups](docs/quick-connect.md)

@@ -14,6 +14,7 @@ import { CAPABILITIES, validateCommand, virtualPosition } from './lib/safety.js'
 import { Diagnostics, explainError } from './lib/diagnostics.js';
 import { ResearchStore } from './lib/storage.js';
 import { mountDiscovery } from './discovery-ui.js';
+import { mountRecorder } from './recorder-ui.js';
 import { mountDeviceHub } from './device-hub.js';
 import { createNativeBluetooth } from './lib/native-bluetooth.js';
 import { bluetoothSupport, makeInspection, identityOf } from './lib/devices.js';
@@ -50,6 +51,7 @@ const labels = {
   protocol: 'Protocol explorer',
   toys: 'Devices',
   discovery: 'Discovery workbench',
+  recorder: 'Protocol recorder',
   sessions: 'Research records',
   controls: 'Control laboratory',
   research: 'Evidence & guides',
@@ -88,6 +90,7 @@ let records = [],
 let settings = {};
 let toys = [],
   editingToyId = null;
+let recorder = null;
 let deviceHub = null,
   deviceLabel = '';
 const nativePlugin = globalThis.SasoriNativeBluetooth;
@@ -145,6 +148,7 @@ function navigate(page) {
   history.replaceState(null, '', '#' + page);
   window.scrollTo(0, 0);
   if (page === 'sessions') refreshRecords().catch(problem);
+  if (page === 'recorder') recorder?.refresh().catch(problem);
 }
 document
   .querySelectorAll('[data-page], [data-go]')
@@ -1444,6 +1448,13 @@ async function initialize() {
     }),
   });
   await mountDiscovery({ store, download }).catch(problem);
+  recorder = await mountRecorder({
+    store,
+    download,
+    onSaved: refreshRecords,
+    getSession: () => session,
+    navigate,
+  });
   if (store.warning) notice(store.warning);
   log('info', 'Project Sasori v0.2.0 ready. No connection starts without your action.');
   navigate(location.hash.slice(1));

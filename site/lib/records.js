@@ -1,6 +1,7 @@
 import { sanitize } from './diagnostics.js';
 import { validateInspection } from './devices.js';
 import { validateDeviceInformation } from './device-information.js';
+import { validateTrace, portableTrace } from './traces.js';
 export const FORMAT = 'sasori.session';
 export const SCHEMA_VERSION = 2;
 export const MAX_RECORDS = 50;
@@ -91,6 +92,12 @@ export function validateRecord(input) {
     throw new Error('Invalid import provenance.');
   if (typeof r.payloadsIncluded !== 'boolean') throw new Error('Missing payload policy.');
   const inspection = r.inspection === undefined ? undefined : validateInspection(r.inspection);
+  const protocolTrace = r.protocolTrace === undefined ? undefined : validateTrace(r.protocolTrace);
+  if (
+    protocolTrace &&
+    (r.source === 'live' || (protocolTrace.payloadsIncluded && !r.payloadsIncluded))
+  )
+    throw new Error('Offline traces cannot claim live inspection or override the payload policy.');
   const deviceInformation =
     r.deviceInformation === undefined ? undefined : validateDeviceInformation(r.deviceInformation);
   if (deviceInformation && inspection?.service !== '0000180a-0000-1000-8000-00805f9b34fb')
@@ -199,6 +206,7 @@ export function validateRecord(input) {
       ].map((k) => [k, r[k]]),
     ),
     ...(inspection ? { inspection } : {}),
+    ...(protocolTrace ? { protocolTrace } : {}),
     ...(deviceInformation ? { deviceInformation } : {}),
     ...(noteHistory ? { noteHistory } : {}),
   });
@@ -253,6 +261,8 @@ export function portableRecord(record, includePayloads = false) {
     ['packets', 'bytes', 'malformed', 'truncated'].map((key) => [key, clean.stats[key]]),
   );
   clean.payloadsIncluded = !!includePayloads;
+  if (clean.protocolTrace)
+    clean.protocolTrace = portableTrace(clean.protocolTrace, includePayloads);
   return validateRecord(sanitize(clean));
 }
 export function backup(records) {
@@ -315,6 +325,16 @@ export function sessionText(r) {
     'Outcome: ' + safe.outcome,
     'Notifications: ' + safe.stats.packets + ' · Bytes: ' + safe.stats.bytes,
     'Payloads omitted. No authentication inference.',
+    ...(safe.protocolTrace
+      ? [
+          'Protocol trace: ' +
+            safe.protocolTrace.frames.length +
+            ' frames · ' +
+            safe.protocolTrace.markers.length +
+            ' markers · ' +
+            safe.protocolTrace.model,
+        ]
+      : []),
     ...(safe.deviceInformation
       ? ['Device-reported information: ' + JSON.stringify(safe.deviceInformation)]
       : []),

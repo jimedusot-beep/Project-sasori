@@ -1,4 +1,20 @@
 @import url('tokens.css');
+#page-recorder {
+  overflow-wrap: anywhere;
+}
+#r-input {
+  min-height: 160px;
+  font-family: var(--mono);
+}
+#r-timeline td {
+  overflow-wrap: anywhere;
+  max-width: 380px;
+}
+#r-inspirations a,
+#r-inspirations button {
+  display: inline-block;
+  margin-top: 10px;
+}
 .quick-start {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr));

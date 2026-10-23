@@ -35,6 +35,8 @@ flowchart TD
 
 ## Device workspace and native hosts
 
+The Protocol recorder (`site/recorder-ui.js`) imports only offline normalized data. `site/lib/traces.js` validates bounded TX/RX frames, timing, markers, metadata/raw policies, selected intervals, and same-index comparisons. `site/lib/adapters.js` contains an immutable source-linked analysis registry, a manufacturer-documented MiP offline version codec, and explicit Elmo protocol gaps. `site/lib/inspirations.js` supplies eight pinned source/license receipts to the UI. Optional `protocolTrace` in session v2 uses the existing v4 record store, shares its budgets, and is excluded from live inspection evidence. Ordinary portable exports/backups strip trace bytes; keeping them requires an explicit raw export/save. No trace import, manifest flag, decoder result, or command definition invokes a hardware sender. See [Protocol recorder](protocol-recorder.md) and [source-to-implementation mapping](research/adapter-inspirations.md).
+
 The device hub presents actual connection state separately from saved configuration. Device identities and inspection measurements are snapshotted into session v2's optional inspection field; five prior title/note versions are retained in optional noteHistory. The schema remains compatible with older records without these fields. Imported contexts never complete the physical-evidence checklist.
 
 | Module                         | Contract                                                                                                                                    |
