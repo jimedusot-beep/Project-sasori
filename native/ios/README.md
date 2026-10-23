@@ -1,6 +1,6 @@
 # Sasori for iPhone and iPad
 
-This Capacitor app packages the shared Sasori interface with an original Swift Core Bluetooth inspection plugin. It can choose a nearby BLE peripheral, inspect the configured service, capture notifications, disconnect, and share exported research files. The original inspection mode contains no command-write API. A separate [Universal controls](../../docs/universal-controls.md) mode reads fixed standard identity/battery fields and can request a bounded mild Immediate Alert. There is no arbitrary characteristic-write, custom authentication, motor, audio-command, or firmware API.
+This Capacitor app packages the shared Sasori interface with an original Swift Core Bluetooth plugin. It can choose a nearby BLE peripheral, inspect the configured service, capture notifications, disconnect, and share exported research files. The original inspection mode contains no command-write API. [Universal controls](../../docs/universal-controls.md) offers fixed standard BLE identity/battery/alert operations and a separately selected original WowWee MiP protocol family. MiP has two fixed queries and a dim-blue/off chest LED operation. There is no arbitrary characteristic-write, custom Elmo authentication, motor, audio-command, or firmware API.
 
 ## Build and install
 
@@ -22,7 +22,7 @@ Generated www, ios, build products, and dependencies are ignored by Git. Make ap
 
 - Loading the app does not scan, connect, or request Bluetooth permission.
 - Connect opens a five-second discovery window followed by an explicit device chooser, filtered by the selected profile's name prefix unless Show all devices was chosen.
-- In inspection mode only the configured service is inspected. Subscription requires an observed Notify/Indicate property. Shared controls inspect only the fixed SIG Device Information, Battery and Immediate Alert services; available actions are rediscovered on every connection.
+- In inspection mode only the configured service is inspected. Subscription requires an observed Notify/Indicate property. Standard controls inspect only the fixed SIG Device Information, Battery and Immediate Alert services. The explicitly selected MiP family discovers only FFE0/FFE5, subscribes to FFE4, and sends the four reviewed frames through FFE9 using the semantic `mipCommand` bridge method. Available channels are rediscovered on every connection.
 - JavaScript inspection retains its existing duration/operation budgets. The native plugin independently enforces operation timeouts, a 30-second inspection ceiling (five minutes for shared controls), a 500-notification budget, and a 4 KB incoming notification limit.
 - Backgrounding stops scanning, inspection and shared controls and cancels pending operations. There is no reconnect loop. Shared controls can reuse a saved Core Bluetooth peripheral reference after a user presses Reconnect; otherwise the chooser remains available.
 - Session exports open the native share sheet using a temporary protected file removed after sharing/cancellation. The finite 13 MB file budget matches the web import limit and accommodates a compact full-notebook backup; the 8 MB notebook and per-record limits still apply.
@@ -34,6 +34,10 @@ Generated www, ios, build products, and dependencies are ignored by Git. Make ap
 
 The CI job compiles the generated app for the iOS simulator without code signing, installs and launches it, waits until the native Bluetooth workspace has rendered, and saves a screenshot. A simulator-only DOM probe reports readiness through the system log; it requests no Bluetooth permission. JavaScript tests exercise the native facade with synthetic plugin callbacks, including cancellation, background stop, invalid/stale notifications, and listener cleanup. Browser fixtures exercise the shared UI through the same bridge contract.
 
+If `simctl launch` times out after starting the app, the smoke check still requires the fresh simulator's readiness marker and a successful screenshot. A launch timeout alone cannot pass. The extended log window retains a marker emitted before that timeout; Python tests cover both successful evidence recovery and rejection without proof.
+
 These checks do not establish iPhone radio permissions, real peripheral compatibility, successful Elmo authentication, or observed physical effects. Standard mild alert writes have no application acknowledgment; the native plugin independently clears them after two seconds or disconnects if its queue cannot send no-alert. Run the [real inspection procedure](../../docs/iphone-setup.md) on your exact unit.
+
+The MiP LED also has an independent two-second off timer and best-effort off on disconnect. It finishes off rather than restoring a prior color/pattern, and physical cleanup cannot be guaranteed after radio loss. The [real-device check workflow](../../docs/device-action-validation.md) records command timing and owner observations without promoting simulated or imported reports to verified hardware support.
 
 Implementation references: [Capacitor native code](https://capacitorjs.com/docs/ios/custom-code), [Swift Package Manager](https://capacitorjs.com/docs/ios/spm), and [Apple Core Bluetooth](https://developer.apple.com/documentation/corebluetooth).

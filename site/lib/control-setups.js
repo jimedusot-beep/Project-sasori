@@ -1,5 +1,6 @@
 import { recordId } from './records.js';
 import { sanitizeText } from './diagnostics.js';
+import { CONTROL_FAMILIES } from './device-controls.js';
 import { CONTROL_ADAPTER } from './standard-controls.js';
 
 export const MAX_CONTROL_SETUPS = 20;
@@ -26,7 +27,7 @@ export function validateControlSetups(input) {
       typeof t.label !== 'string' ||
       !t.label.trim() ||
       t.label.length > 80 ||
-      t.adapterId !== CONTROL_ADAPTER.id ||
+      !CONTROL_FAMILIES.some((family) => family.id === t.adapterId) ||
       typeof t.namePrefix !== 'string' ||
       t.namePrefix.length > 60 ||
       (t.deviceId !== undefined &&
@@ -37,7 +38,7 @@ export function validateControlSetups(input) {
     return {
       id: t.id,
       label: t.label.trim(),
-      adapterId: CONTROL_ADAPTER.id,
+      adapterId: t.adapterId,
       namePrefix: t.namePrefix.trim(),
       ...(t.deviceId ? { deviceId: t.deviceId } : {}),
     };
@@ -60,18 +61,18 @@ export const emptyControlSetups = () =>
 export function rememberControlDevice(
   input,
   device,
-  { label = '', namePrefix = '', targetId = '' } = {},
+  { label = '', namePrefix = '', targetId = '', adapterId = CONTROL_ADAPTER.id } = {},
 ) {
   const data = validateControlSetups(input);
   if (!device || typeof device.id !== 'string' || !device.id || device.id.length > 256)
     throw new Error('This platform cannot remember the selected device identifier.');
   const existing =
-    data.targets.find((t) => t.deviceId === device.id) ||
-    data.targets.find((t) => t.id === targetId && !t.deviceId);
+    data.targets.find((t) => t.deviceId === device.id && t.adapterId === adapterId) ||
+    data.targets.find((t) => t.id === targetId && !t.deviceId && t.adapterId === adapterId);
   const target = {
     id: existing?.id || 'control-' + recordId(),
     label: (label.trim() || existing?.label || device.name || 'My Bluetooth device').slice(0, 80),
-    adapterId: CONTROL_ADAPTER.id,
+    adapterId,
     namePrefix,
     deviceId: device.id,
   };

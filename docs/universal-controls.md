@@ -1,6 +1,6 @@
 # Universal controls and saved connections
 
-Open [Universal controls](https://jimedusot-beep.github.io/Project-sasori/#universal). The shared command vocabulary is **Connect, Identify, Status, Find / alert, Stop**. A device exposing a supported Bluetooth SIG service uses the same UI and runner without entering its UUIDs or writing a new toy-specific decoder. This is capability-based interoperability, not a universal authentication or firmware-unlock command.
+Open [Universal controls](https://jimedusot-beep.github.io/Project-sasori/#universal). The shared command vocabulary is **Connect, Identify, Status, Find / alert, Stop**. Select a supported protocol/model first: standard BLE or original WowWee MiP. The [family adapter and validation guide](device-action-validation.md) specifies MiP's proprietary framing and the shared connection-check/owner-observation workflow. The remainder of this page describes the standard BLE mapping. This is capability-based interoperability, not a universal authentication or firmware-unlock command.
 
 ## Use it
 
@@ -30,7 +30,7 @@ The original inspection transport and its selected-service restriction remain se
 
 ## Persistence, backup and privacy
 
-Up to 20 saved standard-control setups use a separate `standard-controls` key in IndexedDB v4's existing settings store. Inspection preferences, toy profiles, research records and the database version are preserved. Writes compare a stored revision within one read/write transaction, so a stale window is rejected instead of overwriting newer setups. In-memory fallback is explicitly temporary.
+Up to 20 saved control setups, including their reviewed family IDs, use a separate `standard-controls` key in IndexedDB v4's existing settings store. Inspection preferences, toy profiles, research records and the database version are preserved. Writes compare a stored revision within one read/write transaction, so a stale window is rejected instead of overwriting newer setups. In-memory fallback is explicitly temporary.
 
 A setup contains a local label, optional name filter, reviewed adapter ID and private platform device reference. The reference is kept locally to reconnect the same selected device. **Export setups** omits these references, and imported setups get new IDs and require local device selection. Names/name filters can still identify a device; review a backup before sharing. The control-setup backup is separate from the existing inspection-profile and research-record backups. Malformed, duplicate, unsupported-adapter or excessive batches reject atomically; credentials, arbitrary commands and claimed capabilities are discarded.
 

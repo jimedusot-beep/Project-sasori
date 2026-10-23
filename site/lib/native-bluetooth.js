@@ -1,4 +1,5 @@
 import { STANDARD_SERVICES, ALERT_SERVICE, ALERT_LEVEL } from './standard-controls.js';
+import { MIP_ADAPTER, MIP_SERVICES, MIP_TX, MIP_TX_SERVICE, mipCommand } from './mip-controls.js';
 // Inspection facade plus a separate, fixed SIG standard-control mode.
 export function createNativeBluetooth(plugin) {
   const errorNames = new Set([
@@ -49,6 +50,15 @@ export function createNativeBluetooth(plugin) {
     async requestDevice(options) {
       const run = ++generation;
       const standard = options.sasoriStandardControls === true;
+      const mip = options.sasoriControlAdapter === MIP_ADAPTER.id;
+      if (standard && mip) throw new Error('Choose one control adapter.');
+      if (
+        mip &&
+        (!Array.isArray(options.optionalServices) ||
+          options.optionalServices.length !== MIP_SERVICES.length ||
+          !MIP_SERVICES.every((uuid) => options.optionalServices.includes(uuid)))
+      )
+        throw new Error('MiP controls require the fixed service allowlist.');
       if (
         standard &&
         (!Array.isArray(options.optionalServices) ||
@@ -109,7 +119,9 @@ export function createNativeBluetooth(plugin) {
           showAllDevices: options.acceptAllDevices === true,
           ...(standard
             ? { standardControls: true, rememberedId: options.sasoriRememberedId || '' }
-            : {}),
+            : mip
+              ? { mipControls: true, rememberedId: options.sasoriRememberedId || '' }
+              : {}),
         });
         if (run !== generation) throw unavailable();
         const current = new EventTarget();
@@ -188,6 +200,25 @@ export function createNativeBluetooth(plugin) {
                           'Only the standard no-alert / mild-alert levels are available.',
                         );
                       await invoke('alertStandard', { id: current.id, level: value[0] });
+                      guard();
+                    };
+                  }
+                  if (mip && service.uuid === MIP_TX_SERVICE && item.uuid === MIP_TX) {
+                    characteristic.writeValueWithoutResponse = async (value) => {
+                      guard();
+                      if (!(value instanceof Uint8Array)) throw new Error('Invalid MiP command.');
+                      const action = ['identify', 'status', 'alert', 'clear'].find((intent) => {
+                        const expected = mipCommand(intent);
+                        return (
+                          value.length === expected.length &&
+                          expected.every((byte, index) => value[index] === byte)
+                        );
+                      });
+                      if (!action)
+                        throw new Error(
+                          'MiP native controls accept only the reviewed query and LED commands.',
+                        );
+                      await invoke('mipCommand', { id: current.id, command: action });
                       guard();
                     };
                   }

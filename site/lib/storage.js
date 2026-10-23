@@ -7,6 +7,7 @@ import {
 } from './records.js';
 import { validateToy, MAX_TOYS } from './toys.js';
 import { emptyControlSetups, validateControlSetups } from './control-setups.js';
+import { validateTrials } from './action-trials.js';
 import { validateDiscovery, MAX_DISCOVERIES, MAX_DISCOVERY_BYTES } from './discovery.js';
 const request = (req) =>
   new Promise((resolve, reject) => {
@@ -28,6 +29,7 @@ export class ResearchStore {
     this.discoveries = new Map();
     this.settings = {};
     this.controlSetups = emptyControlSetups();
+    this.actionTrials = [];
     this.persistent = false;
     this.warning = '';
     this.corrupt = [];
@@ -243,6 +245,56 @@ export class ResearchStore {
     target.put(next, 'standard-controls');
     await done;
     return next;
+  }
+  async getActionTrials() {
+    if (this.closed) throw new Error(this.warning);
+    if (!this.persistent) return structuredClone(this.actionTrials);
+    const rows = await request(
+      this.db.transaction('settings', 'readonly').objectStore('settings').get('action-trials'),
+    );
+    return validateTrials(rows || []);
+  }
+  async removeActionTrial(id) {
+    if (!/^trial-[\w-]{1,36}$/.test(id)) throw new Error('Invalid action trial ID.');
+    return this.saveActionTrials([], { removeId: id });
+  }
+  async saveActionTrials(rows, { removeId = '' } = {}) {
+    if (removeId && !/^trial-[\w-]{1,36}$/.test(removeId))
+      throw new Error('Invalid action trial ID.');
+    const clean = validateTrials(rows);
+    this.writeQueue = this.writeQueue
+      .catch(() => {})
+      .then(async () => {
+        if (this.closed) throw new Error(this.warning);
+        if (!this.persistent) {
+          const merged = new Map(this.actionTrials.map((r) => [r.id, r]));
+          merged.delete(removeId);
+          for (const row of clean) merged.set(row.id, row);
+          this.actionTrials = validateTrials([...merged.values()]);
+          return;
+        }
+        const tx = this.db.transaction('settings', 'readwrite'),
+          done = completed(tx);
+        done.catch(() => {});
+        try {
+          const target = tx.objectStore('settings');
+          const rows = await request(target.get('action-trials'));
+          const merged = new Map(validateTrials(rows || []).map((r) => [r.id, r]));
+          merged.delete(removeId);
+          for (const row of clean) merged.set(row.id, row);
+          target.put(validateTrials([...merged.values()]), 'action-trials');
+          await done;
+        } catch (error) {
+          try {
+            tx.abort();
+          } catch {
+            /* Already aborted. */
+          }
+          await done.catch(() => {});
+          throw error;
+        }
+      });
+    return this.writeQueue;
   }
   async listToys() {
     if (this.closed) throw new Error(this.warning);

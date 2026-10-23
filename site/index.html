@@ -574,6 +574,9 @@
             <section class="panel" aria-labelledby="u-connection-title">
               <h2 id="u-connection-title">1 / Connect or reconnect</h2>
               <p id="u-platform"></p>
+              <label for="u-family">Device protocol / model</label
+              ><select id="u-family"></select>
+              <p id="u-family-help" class="hint"></p>
               <label for="u-device">Saved device</label
               ><select id="u-device">
                 <option value="">Choose a new Bluetooth device</option>
@@ -635,32 +638,110 @@
               <p id="u-battery">Battery: not read</p>
               <dl id="u-values" class="control-values"></dl>
               <p id="u-read-time" class="hint"></p>
-              <button id="u-report" class="secondary">Export result</button>
+              <div class="actions">
+                <button id="u-check" class="primary" disabled>Run connection check</button
+                ><button id="u-report" class="secondary">Export result</button>
+              </div>
               <p class="hint">
-                Controls become available only when the device exposes the matching standard
-                service. Find sends a mild alert, then no-alert; it has no acknowledgment. Stop
-                disconnects. Sessions end after five minutes or when Sasori is hidden.
+                A connection check runs available Identify, Status and Find / LED actions. Record
+                what you observe on the physical device below.
               </p>
+              <details>
+                <summary>Command and session limits</summary>
+                <p class="hint">
+                  Available controls depend on the device’s channels. Find requests a mild alert or
+                  MiP blue light, then clear/off. Queued writes do not confirm a physical effect.
+                  Stop disconnects; check the device. Sessions end after five minutes or when Sasori
+                  is hidden.
+                </p>
+              </details>
             </section>
           </div>
+          <section class="panel" aria-labelledby="u-trials-title">
+            <h2 id="u-trials-title">3 / Test on your toy</h2>
+            <p id="u-trial-summary" role="status">Choose a saved device to review checks.</p>
+            <p class="hint">
+              Run a connection check, then record what happened on your toy. Reconnect before the
+              next check.
+            </p>
+            <details>
+              <summary>What counts toward ten checks?</summary>
+              <p class="hint">
+                Ten fresh successful sessions with the same model/firmware and observed
+                effect/recovery form a report ready for review. Failed, untested or changed-identity
+                checks restart the count. Demo/imported trials never count. Owner observations do
+                not independently verify hardware or authentication.
+              </p>
+            </details>
+            <div class="form-row">
+              <label><input id="u-trials-all" type="checkbox" /> Show all saved trials</label>
+            </div>
+            <div
+              id="u-trial-list"
+              class="trial-list"
+              aria-label="Recorded action trials"
+              role="group"
+            ></div>
+            <p id="u-trial-detail"></p>
+            <div class="form-row">
+              <label for="u-observed"
+                >Did the expected light / alert occur?<select id="u-observed">
+                  <option value="not-tested">Not checked</option>
+                  <option value="yes">Yes, I observed it</option>
+                  <option value="no">No</option>
+                </select></label
+              >
+              <label for="u-recovered"
+                >Did it stop and remain usable?<select id="u-recovered">
+                  <option value="not-tested">Not checked</option>
+                  <option value="yes">Yes, I checked recovery</option>
+                  <option value="no">No</option>
+                </select></label
+              >
+            </div>
+            <label for="u-trial-notes">What happened?</label
+            ><textarea
+              id="u-trial-notes"
+              maxlength="500"
+              placeholder="Describe the real effect, timing, disconnect behavior, and recovery."
+            ></textarea>
+            <div class="actions">
+              <button id="u-observation-save" class="secondary" disabled>Save observation</button
+              ><button id="u-trial-remove" class="secondary" disabled>Remove selected trial</button
+              ><button id="u-trials-export" class="secondary" disabled>Export trial report</button
+              ><label class="file-button" for="u-trials-import"
+                >Import trial report<input
+                  id="u-trials-import"
+                  type="file"
+                  accept=".json,application/json"
+              /></label>
+            </div>
+          </section>
           <section class="panel" aria-labelledby="u-compatibility-title">
             <h2 id="u-compatibility-title">Shared commands, matching adapters</h2>
             <p>
-              This connection can read standard model / firmware and battery information, and
-              request a standard mild alert where supported. Devices can expose some, all, or none
-              of these features. Custom playback, movement, power, authentication, TV control, and
-              firmware changes still need a matching adapter.
+              Standard Bluetooth devices share identity, battery and mild-alert controls where
+              exposed. The original WowWee MiP family has a source-cited proprietary version/status
+              and timed LED adapter. Shared action names let each supported family use this
+              workspace; adding another physical unit does not require reimplementing its family
+              protocol. Motion, audio, TV control and firmware commands are not included.
             </p>
             <p>
               Elmo’s custom authentication and actions remain unverified. You can reuse its saved
               inspection setup in Devices and compare captures in Protocol recorder.
+              <a
+                href="https://github.com/jimedusot-beep/Project-sasori/blob/main/docs/device-action-validation.md#finish-elmo-authentication"
+                target="_blank"
+                rel="noopener noreferrer"
+                >Elmo source evidence and next steps</a
+              >.
             </p>
             <div class="actions">
               <button class="secondary" data-go="toys">Saved inspection setups</button
               ><button class="secondary" data-go="recorder">Protocol recorder</button>
             </div>
             <details>
-              <summary>Bluetooth standard references</summary>
+              <summary>Selected adapter protocol references</summary>
               <ul id="u-sources"></ul>
             </details>
           </section>

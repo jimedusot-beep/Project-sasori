@@ -4,9 +4,9 @@ A mobile workbench for observing Bluetooth devices, preserving research, and dev
 
 The device workspace connects saved identities, active connection status, notification timelines, Discovery analysis, and versioned research notes. Start with [Quick connections](docs/quick-connect.md): Elmo settings are included, and another BLE toy can expose its model/firmware without manual UUID entry. Native access is available as a buildable [iPhone app](native/ios/README.md) and a local [desktop BLE helper](desktop/README.md); real-device validation remains required.
 
-**v0.2.0 is experimental. Elmo remains inspection-only; shared standard BLE identity, battery, and mild-alert controls are available on devices exposing those services. Real-device validation is still required.** Independent fan research; no affiliation with Hasbro or Naruto.
+**v0.2.0 is experimental. Elmo remains inspection-only. Shared standard BLE controls and an original WowWee MiP version/status/timed-LED adapter are available in software; real-device validation is still required.** Independent fan research; no affiliation with Hasbro or Naruto.
 
-[Universal controls](docs/universal-controls.md) provides one connection-and-action workspace across compatible BLE devices, remembered local device references, and reusable setup backups. Start with **Universal controls → Try offline demo**, then select a real device to see its actual standard capabilities. Custom Elmo authentication, movement and playback remain unverified.
+[Universal controls](docs/universal-controls.md) provides one connection-and-action workspace, remembered local device references, and reusable setup backups across supported families. Select the protocol/model, try its offline demo, then connect your matching device. **Run connection check** records a repeatable Identify → Status → Find/LED trial with physical-effect/recovery observations. The [adapter and validation guide](docs/device-action-validation.md) explains exact MiP bytes, evidence limits, and private Elmo app-source intake. Custom Elmo authentication, movement and playback remain unverified.
 
 ## Try the laboratory
 
@@ -23,7 +23,7 @@ The published UUID profile is transcribed from [NonaSuomy's GATT table](https://
 
 ## What works in software
 
-- [Universal controls](docs/universal-controls.md): reusable standard BLE connection, Identify, battery Status, bounded mild Find/alert, Stop, saved reconnect references and private setup backups. Web and native iPhone share the same command runner. Unsupported controls remain unavailable.
+- [Universal controls](docs/universal-controls.md): reusable standard BLE and original MiP protocol families; Identify, Status, bounded Find/LED, Stop, saved reconnect references and private setup backups. Web and native iPhone share the same intents. [Action trials](docs/device-action-validation.md) record timings, outcomes and separate owner observations; only fresh local live checks can meet the ten-session review target. Unsupported controls remain unavailable.
 
 - User-initiated, name-filtered discovery; service/characteristic metadata inspection; optional notification subscription.
 - [Protocol recorder](docs/protocol-recorder.md): normalized TX/RX JSON/CSV import, observation markers, frame timelines, selected intervals, byte/timing comparisons, and reusable trace records with opt-in raw retention. Built-in source-linked adapter manifests include Elmo analysis and an original manufacturer-documented MiP offline codec. [All eight inspirations and reuse decisions](docs/research/adapter-inspirations.md) are pinned and cited; the recorder sends no commands and Elmo authentication is not claimed.
@@ -50,7 +50,7 @@ The published UUID profile is transcribed from [NonaSuomy's GATT table](https://
 
 Original [V4 probe](https://elmo-auth-probe-jimbo.jimmysoto1994.chatgpt.site) recovery was attempted through accessible page resources, connected Sites, and prior context. The URL returned HTTP 403, the connected Sites list was empty, and no original source was recovered. This release contains no reconstructed authentication routine.
 
-**Authentication, Elmo audio, sensor semantics, motor control, and safe physical limits remain unverified.** The live transport has no application characteristic-write calls, firmware operation, raw transmitter, automatic reconnect, or credential input. Notification subscription changes the BLE subscription descriptor.
+**Authentication, Elmo audio, sensor semantics, motor control, and safe physical limits remain unverified.** The inspection transport has no application characteristic-write calls. Separate control adapters expose only their fixed reviewed queries/alert/LED commands. There is no generic raw transmitter, firmware operation, automatic reconnect or credential input. Notification subscription changes the BLE subscription descriptor.
 
 ## Your data
 
@@ -80,6 +80,7 @@ The site serves on port 4173. Live Web Bluetooth requires HTTPS or an eligible l
 ## Documentation
 
 - [Architecture and module APIs](docs/architecture.md)
+- [Supported control families, real-device check workflow and private Elmo source intake](docs/device-action-validation.md)
 - [Protocol recorder, trace format, and adapter catalog](docs/protocol-recorder.md), [eight-source implementation register](docs/research/adapter-inspirations.md)
 - [October 23 code and reliability audit](docs/audit-2026-10-23.md)
 - [Connected devices and evidence collection](docs/connected-devices.md), [device adapter contract](docs/adapter-contract.md)

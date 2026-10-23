@@ -69,6 +69,7 @@ export class StandardControls {
     this.unavailable = [];
     this.pending = new Set();
     this.alerting = false;
+    this.effect = 'idle';
     this.alertTimer = null;
     this.sessionTimer = null;
     this.disconnected = null;
@@ -85,6 +86,7 @@ export class StandardControls {
       lastReadAt: this.lastReadAt,
       unavailable: [...this.unavailable],
       alerting: this.alerting,
+      effect: this.effect,
       capabilities: {
         identify: connected && DEVICE_INFORMATION_FIELDS.some((f) => this.channels.has(f.uuid)),
         status: connected && this.channels.has(BATTERY_LEVEL),
@@ -145,6 +147,7 @@ export class StandardControls {
     this.battery = null;
     this.lastReadAt = null;
     this.unavailable = [];
+    this.effect = 'idle';
     this.state = 'connecting';
     this.busy = true;
     this.device = null;
@@ -296,6 +299,7 @@ export class StandardControls {
       } else if (intent === 'alert') {
         // SIG Immediate Alert mild level only. Never map unknown toy bytes to this intent.
         this.alerting = true;
+        this.effect = 'pending';
         this.alertTimer = setTimeout(() => this.clearAlert(run), this.alertMs);
         await this.step(
           this.channels.get(ALERT_LEVEL).writeValueWithoutResponse(Uint8Array.of(1)),
@@ -331,10 +335,14 @@ export class StandardControls {
       );
       this.guard(run);
       this.alerting = false;
+      this.effect = 'cleared';
       this.alertTimer = null;
       this.publish('No-alert request sent. The device provides no acknowledgment.');
     } catch {
-      if (run === this.generation) this.stop('Alert clear failed. Disconnected; check the device.');
+      if (run === this.generation) {
+        this.effect = 'failed';
+        this.stop('Alert clear failed. Disconnected; check the device.');
+      }
     }
   }
   stop(message = 'Stopped. Your saved setup is kept.') {
@@ -354,6 +362,7 @@ export class StandardControls {
     }
     if (this.state === 'connecting' && !device) this.bluetooth?.cancelRequest?.();
     this.channels.clear();
+    if (this.alerting && this.effect !== 'failed') this.effect = 'disconnected';
     this.alerting = false;
     this.busy = false;
     this.state = 'disconnected';
