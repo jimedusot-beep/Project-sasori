@@ -13,6 +13,7 @@ import {
 import { CAPABILITIES, validateCommand, virtualPosition } from './lib/safety.js';
 import { Diagnostics, explainError } from './lib/diagnostics.js';
 import { ResearchStore } from './lib/storage.js';
+import { mountDiscovery } from './discovery-ui.js';
 import {
   createToy,
   validateToy,
@@ -42,6 +43,7 @@ const labels = {
   overview: 'Overview',
   protocol: 'Protocol explorer',
   toys: 'My toys',
+  discovery: 'Discovery workbench',
   sessions: 'Research records',
   controls: 'Control laboratory',
   research: 'Evidence & guides',
@@ -1183,6 +1185,7 @@ async function initialize() {
   ready = true;
   updateMode();
   await refreshRecords();
+  await mountDiscovery({ store, download }).catch(problem);
   if (store.warning) notice(store.warning);
   log('info', 'Project Sasori v0.2.0 ready. No connection starts without your action.');
   navigate(location.hash.slice(1));

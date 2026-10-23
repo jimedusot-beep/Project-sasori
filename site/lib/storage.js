@@ -1,5 +1,6 @@
 import { validateRecord, recordId, MAX_RECORDS, MAX_TOTAL_BYTES } from './records.js';
 import { validateToy, MAX_TOYS } from './toys.js';
+import { validateDiscovery, MAX_DISCOVERIES, MAX_DISCOVERY_BYTES } from './discovery.js';
 const request = (req) =>
   new Promise((resolve, reject) => {
     req.onsuccess = () => resolve(req.result);
@@ -17,6 +18,7 @@ export class ResearchStore {
     this.db = null;
     this.memory = new Map();
     this.toys = new Map();
+    this.discoveries = new Map();
     this.settings = {};
     this.persistent = false;
     this.warning = '';
@@ -31,7 +33,7 @@ export class ResearchStore {
     }
     try {
       this.db = await new Promise((resolve, reject) => {
-        const req = this.factory.open(this.name, 3);
+        const req = this.factory.open(this.name, 4);
         let expired = false;
         const timer = setTimeout(() => {
           expired = true;
@@ -44,6 +46,8 @@ export class ResearchStore {
           if (!db.objectStoreNames.contains('settings')) db.createObjectStore('settings');
           if (!db.objectStoreNames.contains('toys'))
             db.createObjectStore('toys', { keyPath: 'id' });
+          if (!db.objectStoreNames.contains('discoveries'))
+            db.createObjectStore('discoveries', { keyPath: 'id' });
           // v1 used a sessions store. Copy through the versioned session validator.
           if (event.oldVersion < 2 && db.objectStoreNames.contains('sessions')) {
             const cursor = req.transaction.objectStore('sessions').openCursor();
@@ -254,6 +258,72 @@ export class ResearchStore {
         const tx = this.db.transaction('toys', 'readwrite');
         const done = completed(tx);
         tx.objectStore('toys').delete(id);
+        await done;
+      });
+    return this.writeQueue;
+  }
+  async listDiscoveries() {
+    if (this.closed) throw new Error(this.warning);
+    const rows = this.persistent
+      ? await request(
+          this.db.transaction('discoveries', 'readonly').objectStore('discoveries').getAll(),
+        )
+      : [...this.discoveries.values()];
+    // Report invalid data instead of silently losing its recovery path.
+    return rows.map(validateDiscovery).sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  }
+  saveDiscoveries(records) {
+    const clean = records.map(validateDiscovery);
+    this.writeQueue = this.writeQueue
+      .catch(() => {})
+      .then(async () => {
+        if (this.closed) throw new Error(this.warning);
+        const merge = (rows) => {
+          const merged = new Map(rows.map((r) => [r.id, r]));
+          for (const row of clean) merged.set(row.id, row);
+          if (merged.size > MAX_DISCOVERIES)
+            throw new Error(
+              '50-capture limit reached. Export discovery metadata before deleting captures.',
+            );
+          if (
+            new TextEncoder().encode(JSON.stringify([...merged.values()])).byteLength >
+            MAX_DISCOVERY_BYTES
+          )
+            throw new Error(
+              '2 MB discovery budget reached. Export metadata before deleting captures.',
+            );
+          return merged;
+        };
+        if (!this.persistent) {
+          this.discoveries = merge([...this.discoveries.values()]);
+          return;
+        }
+        const tx = this.db.transaction('discoveries', 'readwrite'),
+          done = completed(tx);
+        try {
+          merge(await request(tx.objectStore('discoveries').getAll()));
+          for (const row of clean) tx.objectStore('discoveries').put(row);
+        } catch (error) {
+          tx.abort();
+          await done.catch(() => {});
+          throw error;
+        }
+        await done;
+      });
+    return this.writeQueue;
+  }
+  removeDiscovery(id) {
+    this.writeQueue = this.writeQueue
+      .catch(() => {})
+      .then(async () => {
+        if (this.closed) throw new Error(this.warning);
+        if (!this.persistent) {
+          this.discoveries.delete(id);
+          return;
+        }
+        const tx = this.db.transaction('discoveries', 'readwrite'),
+          done = completed(tx);
+        tx.objectStore('discoveries').delete(id);
         await done;
       });
     return this.writeQueue;

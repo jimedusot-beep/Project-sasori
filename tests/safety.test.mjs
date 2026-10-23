@@ -28,6 +28,7 @@ test('UUID validation requires a concrete full identifier and excludes Nordic DF
 test('all shipped scripts lack characteristic write APIs, credential input and remote senders', async () => {
   const paths = [
     'site/app.js',
+    'site/discovery-ui.js',
     'site/elmo-packets.mjs',
     ...(await readdir('site/lib')).filter((x) => x.endsWith('.js')).map((x) => 'site/lib/' + x),
   ];

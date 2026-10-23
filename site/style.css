@@ -1,4 +1,67 @@
 @import url('tokens.css');
+#page-discovery {
+  overflow-wrap: anywhere;
+}
+.discovery-list,
+.discovery-methods {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+  gap: 18px;
+}
+.discovery-record,
+.discovery-method {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 16px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.discovery-record .badge {
+  white-space: normal;
+}
+.discovery-record h3 {
+  margin-top: 12px;
+}
+.discovery-diff {
+  overflow-x: auto;
+}
+.diff-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--mono);
+  font-size: 12px;
+}
+.diff-table th,
+.diff-table td {
+  text-align: left;
+  padding: 8px;
+  border-bottom: 1px solid var(--line);
+}
+.diff-table caption {
+  text-align: left;
+  color: var(--muted);
+}
+.discovery-chart {
+  margin: 16px 0;
+}
+.discovery-chart figcaption {
+  color: var(--muted);
+  font-size: 12px;
+}
+.discovery-chart canvas {
+  width: 100%;
+  height: auto;
+  background: var(--rail);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+}
+#page-discovery .workspace-grid > div {
+  min-width: 0;
+}
+#d-values {
+  min-height: 110px;
+  font-family: var(--mono);
+}
 * {
   box-sizing: border-box;
 }

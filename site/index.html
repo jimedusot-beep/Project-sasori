@@ -47,6 +47,9 @@
           <span aria-hidden="true">⌁</span> Protocol explorer
         </button>
         <button class="nav" data-page="toys"><span aria-hidden="true">▧</span> My toys</button>
+        <button class="nav" data-page="discovery">
+          <span aria-hidden="true">⌕</span> Discovery workbench
+        </button>
         <button class="nav" data-page="sessions">
           <span aria-hidden="true">▤</span> Research records
           <span id="record-count" class="count">0</span>
@@ -411,6 +414,189 @@
               service scanner. Bluetooth Classic, USB-only, infrared, and proprietary radio toys
               require different transports. Physical commands remain locked.
             </p>
+          </section>
+        </section>
+        <section id="page-discovery" class="page" hidden aria-labelledby="discovery-title">
+          <div class="page-heading">
+            <div>
+              <p class="eyebrow">CAPTURE / COMPARE / UNDERSTAND</p>
+              <h1 id="discovery-title">Follow the evidence.</h1>
+              <p class="lead">
+                Explore the interfaces of your owned toys, one labeled observation at a time.
+              </p>
+            </div>
+            <span class="badge subtle">OFFLINE ANALYSIS</span>
+          </div>
+          <p id="discovery-status" class="notice" role="status">
+            Work locally with byte captures, infrared timings, and audio. No hardware connection
+            starts here.
+          </p>
+          <div class="workspace-grid">
+            <section class="panel" aria-labelledby="d-capture-title">
+              <h2 id="d-capture-title">01 / Label a capture</h2>
+              <form id="d-form">
+                <label for="d-device">Exact device model / revision</label>
+                <input
+                  id="d-device"
+                  maxlength="160"
+                  required
+                  placeholder="e.g. Love2Learn Elmo B6572 · revision unknown"
+                />
+                <label for="d-label">Capture label</label>
+                <input
+                  id="d-label"
+                  maxlength="120"
+                  required
+                  placeholder="e.g. Baseline · normal startup · run 1"
+                />
+                <label for="d-method">Discovery method</label>
+                <select id="d-method" aria-describedby="d-method-hint"></select>
+                <p id="d-method-hint" class="hint"></p>
+                <label for="d-evidence">Evidence class (your source claim)</label>
+                <select id="d-evidence">
+                  <option value="synthetic">Synthetic / software fixture</option>
+                  <option value="owner-observed">
+                    Observed by owner · independently unverified
+                  </option>
+                  <option value="community-reported">
+                    Community-reported · unverified on this unit
+                  </option>
+                </select>
+                <label for="d-source">Source, settings &amp; before/after state</label>
+                <textarea
+                  id="d-source"
+                  maxlength="2000"
+                  required
+                  placeholder="Source reference, date, settings, known state, and what changed. Keep credentials and identifiers out."
+                ></textarea>
+                <label for="d-kind">Capture representation</label>
+                <select id="d-kind">
+                  <option value="bytes">Hex bytes</option>
+                  <option value="pulses">Alternating mark/space timings (µs)</option>
+                </select>
+                <label for="d-values">Capture values</label>
+                <textarea
+                  id="d-values"
+                  maxlength="32768"
+                  required
+                  spellcheck="false"
+                  placeholder="Hex: 60 4e 65 … or timings: 9000, 4500, 560, 560"
+                ></textarea>
+                <p class="hint">
+                  Up to 4,096 bytes or 2,048 positive integer pulse timings. Pulses start with a
+                  mark. No code or commands are executed.
+                </p>
+                <button class="primary" type="submit" id="d-analyze">Analyze capture</button>
+              </form>
+              <p id="d-result" class="hint" role="status">
+                Analyze the current form to prepare a capture.
+              </p>
+              <div class="actions">
+                <button id="d-use-first" class="secondary" disabled>Use current as A</button>
+                <button id="d-use-second" class="secondary" disabled>Use current as B</button>
+              </div>
+              <label class="checkline" for="d-keep-values">
+                <input type="checkbox" id="d-keep-values" /> Keep raw byte / pulse values on this
+                browser
+              </label>
+              <p class="hint">
+                Off by default. Raw bytes may contain private information. Metadata-only saves
+                cannot reconstruct a capture for later comparison.
+              </p>
+              <button id="d-save" class="secondary" disabled>Save capture</button>
+            </section>
+            <div>
+              <section class="panel" aria-labelledby="d-compare-title">
+                <h2 id="d-compare-title">02 / Compare two observations</h2>
+                <p>
+                  Use the same exact model, method, and representation. Select a current analysis or
+                  a saved capture with retained values.
+                </p>
+                <p id="d-first-label">A: no capture selected</p>
+                <p id="d-second-label">B: no capture selected</p>
+                <label for="d-tolerance">Pulse tolerance (µs; ignored for bytes)</label>
+                <input id="d-tolerance" type="number" min="0" max="1000000" step="1" value="100" />
+                <div class="actions">
+                  <button id="d-compare" class="primary" disabled>Compare A and B</button>
+                  <button id="d-clear-comparison" class="secondary">Clear comparison</button>
+                </div>
+                <div id="d-comparison" class="discovery-diff" aria-live="polite"></div>
+                <p class="hint">
+                  Comparison is by position, without alignment. Repeated or changed values do not
+                  prove command meaning, compatibility, or authentication.
+                </p>
+              </section>
+              <section class="panel" aria-labelledby="d-audio-title">
+                <h2 id="d-audio-title">03 / Inspect a local sound recording</h2>
+                <p>
+                  Use the label, exact model, and source above with the Sound method. The first
+                  channel is analyzed; the file is never played or uploaded.
+                </p>
+                <label for="d-wav">Uncompressed PCM16 WAV</label>
+                <input id="d-wav" type="file" accept=".wav,audio/wav" />
+                <p class="hint">
+                  Mono or stereo · 8–192 kHz · up to 30 seconds and 10 MB. Convert other formats
+                  privately before import. Frequencies above half the sample rate are unavailable.
+                </p>
+                <button id="d-inspect-wav" class="secondary">Inspect WAV</button>
+                <p id="d-audio-result" role="status">
+                  Choose a PCM16 WAV and inspect it locally. Select Sound as the method first.
+                </p>
+                <figure class="discovery-chart">
+                  <figcaption>Waveform · start → end · amplitude −1 to +1</figcaption>
+                  <canvas
+                    id="d-waveform"
+                    width="640"
+                    height="120"
+                    hidden
+                    role="img"
+                    aria-label="First-channel waveform. Numerical statistics appear above."
+                  ></canvas>
+                </figure>
+                <figure class="discovery-chart">
+                  <figcaption>
+                    Spectrum · 0 → sample rate / 2 · relative power 0 to −80 dB
+                  </figcaption>
+                  <canvas
+                    id="d-spectrum"
+                    width="640"
+                    height="120"
+                    hidden
+                    role="img"
+                    aria-label="Average first-channel spectrum. Dominant frequency and bin width appear above."
+                  ></canvas>
+                </figure>
+                <p class="hint">
+                  Up to eight 2,048-sample Hann windows, averaged across the recording. A peak alone
+                  does not decode an acoustic protocol.
+                </p>
+                <button id="d-save-audio" class="secondary" disabled>Save audio summary</button>
+              </section>
+            </div>
+          </div>
+          <section class="panel" aria-labelledby="d-notebook-title">
+            <h2 id="d-notebook-title">Discovery notebook</h2>
+            <p id="d-storage" class="hint">Opening local discovery storage…</p>
+            <div class="actions">
+              <button id="d-export" class="secondary" disabled>Export discovery metadata</button>
+            </div>
+            <label for="d-import">Import discovery backup (JSON · up to 1 MB)</label>
+            <input id="d-import" type="file" accept=".json,application/json" />
+            <p class="hint">
+              Saved only in this browser and site origin; no device sync. Discovery, session, and
+              toy backups are separate. Discovery exports omit all raw values and audio, even when
+              byte or pulse values were saved locally. Review labels and source notes before
+              sharing. Imported records receive fresh IDs and retain an imported-claim label.
+            </p>
+            <div id="d-list" class="discovery-list"></div>
+          </section>
+          <section class="panel" aria-labelledby="d-methods-title">
+            <h2 id="d-methods-title">Nine routes to investigate</h2>
+            <p>
+              Research plans for independently identified interfaces. An interface documented on one
+              toy does not establish that Elmo or another model uses it.
+            </p>
+            <div id="d-methods" class="discovery-methods"></div>
           </section>
         </section>
         <section id="page-protocol" class="page" hidden aria-labelledby="protocol-title">

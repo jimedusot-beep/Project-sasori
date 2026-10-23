@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Add the offline Discovery workbench with nine interface research plans, exact model/source/evidence labels, byte diffs, and tolerant infrared pulse comparisons. Cross-model, method, or representation comparisons are rejected.
+- Inspect bounded PCM16 WAV files locally with waveform, averaged FFT spectrum, and amplitude statistics. Save only scalar audio summaries; audio is never played, stored, uploaded, or transmitted.
+- Upgrade IndexedDB to version 4 while preserving sessions, settings, and toy profiles. Discovery captures have a separate bounded store, explicit raw-retention choice, metadata-only exports, and atomic imports with fresh IDs and imported-claim labels.
+
 - Add My toys: persistent inspection profiles, source notes, individual name filters, editing, separate JSON profile backups/imports, and metadata-only first inspections. Select observed Notify/Indicate endpoints for a subsequent manual inspection; synthetic endpoints cannot be promoted.
 - Upgrade IndexedDB to version 3 without replaying stale v1 sessions over edited records. Keep custom profiles bounded to 20 and validate entire profile imports before writing.
 - Reject non-boolean optional packet flags before importing or reviewing captures, matching the existing session schema. Preserve valid booleans and legacy records without flags; reject a mixed backup as a whole when one packet is invalid.
