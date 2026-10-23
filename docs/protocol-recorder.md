@@ -1,6 +1,6 @@
 # Protocol recorder and adapter catalog
 
-Open **Protocol recorder** in [Sasori](https://jimedusot-beep.github.io/Project-sasori/#recorder). The page imports normalized bidirectional frames, preserves their declared source, adds timestamped observations, and compares repeat captures. The source cards cite all eight [adapter inspirations](research/adapter-inspirations.md), inspected revisions, reuse decisions, and implementation paths.
+Open **Protocol recorder** in [Sasori](https://jimedusot-beep.github.io/Project-sasori/#recorder). The page imports normalized bidirectional frames, preserves their declared source, adds timestamped observations, and compares repeat captures. The source cards cite the cited [adapter inspirations](research/adapter-inspirations.md), inspected revisions, reuse decisions, and implementation paths.
 
 ## Try it
 

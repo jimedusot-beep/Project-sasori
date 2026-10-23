@@ -29,7 +29,8 @@ test('source-linked recorder decodes the documented fixture, marks observations,
   await noRadio(page);
   await page.goto('/#recorder');
   await page.locator('#r-example').click();
-  await expect(page.locator('#r-inspirations article')).toHaveCount(8);
+  await expect(page.locator('#r-inspirations article')).toHaveCount(9);
+  await expect(page.locator('#r-inspirations')).toContainText('Elmo pyelmo implementation');
   await expect(page.locator('#r-summary')).toContainText('1 TX / 1 RX');
   await expect(page.locator('#r-timeline')).toContainText('year 14, month 2, day 27, revision 7');
   await page.locator('#r-plan').click();

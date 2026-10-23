@@ -1,8 +1,10 @@
 # Source, license, and reuse register
 
+**Current Elmo update, October 23:** a broader public-community scan recovered the exact previously reported APK, found a newer standalone community implementation, and supported an original bounded desktop known-password client. [Recovered-source provenance and method facts](../../experiments/001-elmo-l2l/recovered-source.md) supersede earlier missing-artifact/construction statements. [Community scan results](community-scan-2026-10-23.md) add FurBLE, PyFluff, LEGO, Sphero, DroidX and Bumble leads. Real-device compatibility/effects remain unverified; no proprietary app code or assets are bundled.
+
 ## October 23 adapter and recorder implementation
 
-The [eight-source implementation register](adapter-inspirations.md) cites NonaSuomy/Love2LearnElmo, Bluefluff, the official WowWee MiP protocol, Hacksby, PixMob reverse engineering, PulseView/sigrok, Pybricks, and Home Assistant at inspected revisions. It records file-level license limits, reference-only decisions, and the original Sasori module using each aspect. The [Protocol recorder](../protocol-recorder.md) now implements normalized TX/RX ingestion, markers, timelines, comparisons, optional private raw retention, an immutable adapter registry, and a documented offline MiP version codec. No upstream runtime or live Elmo authentication implementation was copied.
+The [source implementation register](adapter-inspirations.md) cites NonaSuomy/Love2LearnElmo, Bluefluff, the official WowWee MiP protocol, Hacksby, PixMob reverse engineering, PulseView/sigrok, Pybricks, and Home Assistant at inspected revisions. It records file-level license limits, reference-only decisions, and the original Sasori module using each aspect. The [Protocol recorder](../protocol-recorder.md) now implements normalized TX/RX ingestion, markers, timelines, comparisons, optional private raw retention, an immutable adapter registry, and a documented offline MiP version codec. No upstream runtime or live Elmo authentication implementation was copied.
 
 ## Earlier source register
 

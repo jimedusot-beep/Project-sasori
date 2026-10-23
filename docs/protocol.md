@@ -1,6 +1,6 @@
 # Elmo BLE protocol: facts, candidates, and unknowns
 
-Status: inspection support implemented; real-unit compatibility pending. There is no live authentication or physical command specification.
+Status: web/native inspection support remains separate from the new experimental desktop known-password handshake, input/volume queries and single optional greeting. Relevant app-method facts are now established; real-unit compatibility and physical effects remain unverified. See [recovered source and current gaps](../experiments/001-elmo-l2l/recovered-source.md).
 
 ## Provenance
 
@@ -26,28 +26,28 @@ Binary input is shown in hex with a malformed/non-UTF-8 flag where applicable. L
 
 ## Authentication assessment
 
-Hasbro's historical app terms describe a user-selected password. This establishes neither its wire encoding nor a challenge-response algorithm. The community notebook mentions a securityChallenge field in application notes but does not establish a validated exchange, response construction, success marker, key derivation, retry policy, or compatibility with V4.
+Hasbro's historical app terms and the older community notebook alone did not establish an algorithm. The broader October 23 search recovered the previously reported app archive and a newer community implementation. Direct managed-method inspection now establishes the source-derived subset in [the method register](../experiments/001-elmo-l2l/recovered-source.md): password-byte conversion, MD5, folded Fletcher-32 construction, byte serialization, status framing and selected query/playback writers.
 
-Accordingly there are no live handshake operations, credential inputs, or guessed passwords in Sasori. The authentication UI tests synthetic success, rejection, timeout, cancellation, and inconclusive outcomes only. Its fixture events do not implement or model an Elmo cryptographic algorithm.
+The separate `desktop/sasori_elmo.py` client prompts privately for a known existing password and answers one received challenge. It accepts only explicit status 1 after its current response, rejects malformed/unknown status, and does not enroll passwords, reset, guess, log raw authentication material or retry automatically. Its source-derived synthetic vectors are not real radio captures. The browser authentication UI remains synthetic and does not run this algorithm; browser/native Elmo writes remain unavailable.
 
 ### Earlier app-side research found during the October 21 review
 
-The owner's October 18 teardown report, pages 17–20, reports static analysis of Android app 1.5.1: password and challenge messages, MD5/Fletcher32 involvement, status queries, and playback definitions. See the [app-protocol lead register](../experiments/001-elmo-l2l/app-protocol-leads.md) for reported provenance, candidate bytes, unresolved construction details, and validation order. This review read the report but did not independently inspect its APK or reproduce its method analysis. These are prior-report leads, not a validated authentication algorithm or verified application commands. The community notebook alone does not establish those additional findings.
+The owner's October 18 teardown report, pages 17–20, supplied the earlier app-side leads. The October 21 review read that report but could not reproduce its binary analysis. That acquisition limit is now superseded by the October 23 direct inspection. The [historical lead register](../experiments/001-elmo-l2l/app-protocol-leads.md) and [current method evidence](../experiments/001-elmo-l2l/recovered-source.md) remain distinct from owner-device observations.
 
-Before live authentication: finish repeatable inspection, identify exact characteristics and message boundaries, acquire authorized traces from legitimately held app/device observations, establish a testable success/rejection criterion, and document a finite traffic budget. Keep legitimate credentials in private local memory; never public source or diagnostics.
+Before marking an adapter hardware-verified or expanding its commands, collect repeatable owner-device traces/results, confirm actual framing and rejection/recovery behavior, and record model/firmware and finite traffic budgets. Keep legitimate credentials in private local memory, outside public source and diagnostics. The source-derived desktop subset is ready for an explicit experimental owner-run trial.
 
 ## Command registry
 
-| Category                             | Current entries                                              | Transmission                      |
-| ------------------------------------ | ------------------------------------------------------------ | --------------------------------- |
-| Passive inspection                   | Service metadata and configured notifications                | Explicit connection only; bounded |
-| Experimental application commands    | Prior-report candidates; no complete validated specification | Disabled                          |
-| Verified application commands        | None established                                             | Unavailable                       |
-| Physical voice/motor/sensor commands | No verified protocol or safety envelope                      | Unavailable                       |
-| Simulation                           | Synthetic lifecycle, outcomes, movement, phone-local audio   | No Bluetooth traffic              |
+| Category                          | Current entries                                               | Transmission                                                 |
+| --------------------------------- | ------------------------------------------------------------- | ------------------------------------------------------------ |
+| Passive inspection                | Service metadata and configured notifications                 | Explicit connection only; bounded                            |
+| Experimental desktop Elmo client  | Known-password handshake, volume/input queries, greeting ID 9 | Separate explicit owner-run CLI; hardware validation pending |
+| Verified application commands     | None established                                              | Unavailable                                                  |
+| Web/native physical Elmo controls | No verified physical behavior/recovery on this unit           | Unavailable                                                  |
+| Simulation                        | Synthetic lifecycle, outcomes, movement, phone-local audio    | No Bluetooth traffic                                         |
 
 ## Independent source-verification track
 
-The October 21 [source review](../experiments/001-elmo-l2l/source-verification.md) separately records directly inspected project/community source, prior-report app-message claims, historical user observations and unresolved hypotheses. It reviews open PR #11 at its exact head revision and rereads the original teardown report. The reported APK could not be obtained here (HTTP 403); password/challenge construction, acceptance framing and status-message vectors remain unverified. No application-message constructors or transmitter have been added.
+The October 21 [source review](../experiments/001-elmo-l2l/source-verification.md) preserves its historical acquisition failure and lead classifications. The [October 23 recovered-source record](../experiments/001-elmo-l2l/recovered-source.md) supersedes those missing-artifact/construction statements for the new desktop subset. The remaining gate is real-unit validation, including supported challenge framing, acceptance, query replies, physical greeting behavior and recovery.
 
-The [offline capture reviewer](../experiments/001-elmo-l2l/offline-review.md) handles the existing session envelope and historical byte examples only. Its protocol verdict is always inconclusive. The [live experiment draft](../experiments/001-elmo-l2l/live-experiment.md) defines prerequisites, bounded budgets and accepted/rejected/inconclusive results; it is not ready to run. This track supplies no dependency or gate for replacement-controller development.
+The [offline capture reviewer](../experiments/001-elmo-l2l/offline-review.md) still handles historical session envelopes only and returns an inconclusive protocol verdict. The old [live experiment draft](../experiments/001-elmo-l2l/live-experiment.md) preserves its earlier prerequisites; the new [desktop procedure](../desktop/README.md#experimental-elmo-known-password-check) separately supplies the current bounded trial. Neither source-derived calculations nor imported reports count as actual acceptance on this unit. Replacement-controller development remains independent.

@@ -1,6 +1,6 @@
 # Sasori desktop BLE helper
 
-A local, owner-run Python/Bleak inspection tool. It uses your computer's Bluetooth adapter, asks you to select a nearby device, and creates a Sasori session JSON file. It runs no HTTP server, accepts no remote commands, and has no application-write API.
+The original `sasori_ble.py` is an owner-run Python/Bleak inspection tool. It uses your computer's Bluetooth adapter, asks you to select a nearby device, and creates a Sasori session JSON file. That inspection tool has no application-write API. A separate experimental `sasori_elmo.py` now offers the source-derived known-password Elmo check below. Neither tool runs an HTTP server or accepts remote commands.
 
 Use Python 3.12+ with platform Bluetooth support:
 
@@ -43,8 +43,40 @@ Bluetooth connection/subscription is not Elmo authentication. A silent capture i
 
 ## Tests
 
+The experimental Elmo client has separate codec and fake-radio lifecycle tests in the same suite.
+
     python3 -m unittest discover -s desktop/tests -v
 
 Fake clients cover teardown, cancellation, timing, metadata defaults, raw truncation, invalid profiles, missing endpoints, noisy devices, and exclusive exports. CI also installs/imports the pinned Bleak package. These tests do not access actual hardware.
 
 API references: [Bleak client](https://bleak.readthedocs.io/en/latest/api/client.html) and [scanner](https://bleak.readthedocs.io/en/latest/api/scanner.html).
+
+## Experimental Elmo known-password check
+
+The [recovered source review](../experiments/001-elmo-l2l/recovered-source.md) documents the acquired app's exact hash, relevant methods, and the independently inspected community implementation. Source-derived software is now implemented; Jimmy's real Elmo has not yet been tested with it. This desktop workflow is separate from the browser/native inspection UI.
+
+Practice with no Bluetooth access:
+
+```sh
+.venv/bin/python desktop/sasori_elmo.py --simulate --duration 0.1 --output /tmp/elmo-synthetic-check.json
+```
+
+For your Love2Learn Elmo, use an interactive terminal with Bluetooth permission:
+
+```sh
+.venv/bin/python desktop/sasori_elmo.py --authorize --output /tmp/elmo-first-check.json
+```
+
+The tool scans for five seconds, lists candidates without radio identifiers, and asks you to choose your toy. Enter its **known existing password** in the private prompt. There is no password command-line argument, persistent password storage, automatic enrollment, guessing, reset, or automatic reconnect. Keep another app disconnected from the toy. A missing/wrong password or unsupported challenge fails explicitly.
+
+The helper observes the exact service/notify/write-without-response channels, answers one challenge, and requires a complete `40 01` response after its current challenge response. It then requests volume and input state and briefly monitors touch notifications. Missing query replies stay unknown; no guessed battery percentage or firmware value is produced. The session has a 30-second overall budget, finite operation/auth/query budgets, a 500-notification cap and bounded teardown. Backend cancellation still depends on the OS driver cooperating.
+
+To request one source-catalogued greeting after the handshake, explicitly add `--hello`:
+
+```sh
+.venv/bin/python desktop/sasori_elmo.py --authorize --hello --output /tmp/elmo-greeting-check.json
+```
+
+Only built-in sound ID 9 is exposed, at the toy's existing volume. The request is queued once; no generic sound IDs, volume/settings changes, file/audio uploads, motor or firmware operations are offered. Disconnect is **not** a verified silence command, and a queued greeting does not establish that it played. Observe the actual toy and record the result/recovery before expanding controls.
+
+The new receipt format is `sasori.elmo-check` v1, kept outside the repo with exclusive owner-only file creation. It contains only fixed diagnostic stages, timings, query results and separate untested physical-observation fields. It omits device IDs, passwords, digests, challenges, responses and raw packets. This receipt is **not** a research-session or web action-trial import; review it as its own JSON report. Synthetic runs remain explicitly synthetic. All independent hardware/authentication/physical-effect verification flags remain false, even when the current peer reports password acceptance.

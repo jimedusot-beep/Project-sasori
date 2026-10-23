@@ -2,6 +2,8 @@
 
 Reviewed October 21, 2026 (America/New_York).
 
+**Superseded for the implemented subset on October 23:** the exact reported APK is now acquired, relevant methods have been inspected, and a bounded original desktop client exists. See [recovered-source.md](recovered-source.md) for current evidence and limits. The text below preserves the original prior-report lead register; statements that no source was inspected or no sender exists describe that earlier review.
+
 ## What this adds
 
 The earlier project report, **Elmo_B6572_Teardown_Research_and_Disassembly_Guide.pdf**, revision dated October 18, 2026, pages 17–20 and 32, contains app-side protocol findings that were missing from Sasori's current assessment. This register preserves those findings as **PRIOR-REPORT / NOT INDEPENDENTLY REPRODUCED**. The PDF was read during this review; the archived APK, its signature, its hash, and its method bodies were not independently checked in this session.

@@ -196,7 +196,8 @@ test('MiP source example decodes ASCII-hex replies separately from raw request b
   assert.throws(() => offlineCommand('mip-documented', 'move'));
 });
 test('catalog provenance and readiness cannot turn observations or imported flags into physical authority', () => {
-  assert.equal(INSPIRATIONS.length, 8);
+  assert.equal(INSPIRATIONS.length, 9);
+  assert.ok(getAdapter('elmo-l2l').sources.includes('elmo-pyelmo'));
   for (const source of INSPIRATIONS) {
     assert.match(source.revision, /^[a-f0-9]{40}$/);
     assert.match(source.reference, /^https:\/\/github.com\//);

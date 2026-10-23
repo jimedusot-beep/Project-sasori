@@ -4,9 +4,11 @@ A mobile workbench for observing Bluetooth devices, preserving research, and dev
 
 The device workspace connects saved identities, active connection status, notification timelines, Discovery analysis, and versioned research notes. Start with [Quick connections](docs/quick-connect.md): Elmo settings are included, and another BLE toy can expose its model/firmware without manual UUID entry. Native access is available as a buildable [iPhone app](native/ios/README.md) and a local [desktop BLE helper](desktop/README.md); real-device validation remains required.
 
-**v0.2.0 is experimental. Elmo remains inspection-only. Shared standard BLE controls and an original WowWee MiP version/status/timed-LED adapter are available in software; real-device validation is still required.** Independent fan research; no affiliation with Hasbro or Naruto.
+**v0.2.0 is experimental. Elmo's web/native path remains inspection-only; a separate source-derived desktop known-password client now offers authentication, input/volume queries and one optional greeting. Shared standard BLE controls and an original MiP version/status/timed-LED adapter are also available. Real-device validation is still required.** Independent fan research; no affiliation with Hasbro or Naruto.
 
 [Universal controls](docs/universal-controls.md) provides one connection-and-action workspace, remembered local device references, and reusable setup backups across supported families. Select the protocol/model, try its offline demo, then connect your matching device. **Run connection check** records a repeatable Identify → Status → Find/LED trial with physical-effect/recovery observations. The [adapter and validation guide](docs/device-action-validation.md) explains exact MiP bytes, evidence limits, and private Elmo app-source intake. Custom Elmo authentication, movement and playback remain unverified.
+
+The broader [community scan](docs/research/community-scan-2026-10-23.md) recovered the previously missing Elmo APK and found a newer standalone community client. [Direct method review](experiments/001-elmo-l2l/recovered-source.md) now establishes the implemented handshake subset. Use the [experimental desktop Elmo procedure](desktop/README.md#experimental-elmo-known-password-check) with your known password; source-backed software and synthetic tests do not establish acceptance or physical effects on your particular unit.
 
 ## Try the laboratory
 
@@ -23,10 +25,12 @@ The published UUID profile is transcribed from [NonaSuomy's GATT table](https://
 
 ## What works in software
 
+- [Experimental Elmo desktop client](desktop/README.md#experimental-elmo-known-password-check): privately prompted existing password, one bounded challenge/response, strict acceptance/rejection, volume/input queries, touch monitoring and an opt-in single greeting. No automatic enrollment, reset, raw commands or credential logging. The original inspection helper remains separate.
+
 - [Universal controls](docs/universal-controls.md): reusable standard BLE and original MiP protocol families; Identify, Status, bounded Find/LED, Stop, saved reconnect references and private setup backups. Web and native iPhone share the same intents. [Action trials](docs/device-action-validation.md) record timings, outcomes and separate owner observations; only fresh local live checks can meet the ten-session review target. Unsupported controls remain unavailable.
 
 - User-initiated, name-filtered discovery; service/characteristic metadata inspection; optional notification subscription.
-- [Protocol recorder](docs/protocol-recorder.md): normalized TX/RX JSON/CSV import, observation markers, frame timelines, selected intervals, byte/timing comparisons, and reusable trace records with opt-in raw retention. Built-in source-linked adapter manifests include Elmo analysis and an original manufacturer-documented MiP offline codec. [All eight inspirations and reuse decisions](docs/research/adapter-inspirations.md) are pinned and cited; the recorder sends no commands and Elmo authentication is not claimed.
+- [Protocol recorder](docs/protocol-recorder.md): normalized TX/RX JSON/CSV import, observation markers, frame timelines, selected intervals, byte/timing comparisons, and reusable trace records with opt-in raw retention. Built-in source-linked adapter manifests include Elmo analysis and an original manufacturer-documented MiP offline codec. [Protocol sources and reuse decisions](docs/research/adapter-inspirations.md) are pinned and cited; the recorder sends no commands and Elmo authentication is not claimed.
 - Quick Elmo/unknown-toy setups, bounded standard model/firmware reads on web and native iPhone, useful connection results, observed-channel shortcuts, and metadata connection reports. Identity reads finish as soon as the available fields have been read.
 - Integrated browser/Bluefy setup, active-device status, per-profile recent sessions, physical-evidence collection checklist, notification timing, direct offline analysis handoff, and five previous title/note versions.
 - A shared inspection adapter contract used by the web transport, native Core Bluetooth facade, and desktop Bleak helper. Imported profiles never execute or unlock commands.
@@ -48,9 +52,9 @@ The published UUID profile is transcribed from [NonaSuomy's GATT table](https://
 | Synthetic                                      | Software lifecycle and UI behavior only. Never hardware compatibility or successful Elmo authentication.                           |
 | Imported                                       | Source claims are retained and visibly marked as imported; they are not independently verified.                                    |
 
-Original [V4 probe](https://elmo-auth-probe-jimbo.jimmysoto1994.chatgpt.site) recovery was attempted through accessible page resources, connected Sites, and prior context. The URL returned HTTP 403, the connected Sites list was empty, and no original source was recovered. This release contains no reconstructed authentication routine.
+Original [V4 probe](https://elmo-auth-probe-jimbo.jimmysoto1994.chatgpt.site) recovery was attempted through accessible page resources, connected Sites, and prior context. The URL returned HTTP 403, the connected Sites list was empty, and no original V4 source was recovered. The new desktop handshake instead follows directly inspected app-method facts and the newly found community implementation; it is not a recovered V4 routine.
 
-**Authentication, Elmo audio, sensor semantics, motor control, and safe physical limits remain unverified.** The inspection transport has no application characteristic-write calls. Separate control adapters expose only their fixed reviewed queries/alert/LED commands. There is no generic raw transmitter, firmware operation, automatic reconnect or credential input. Notification subscription changes the BLE subscription descriptor.
+**Real-unit Elmo authentication, audio/input behavior, motor control, and physical limits remain unverified.** Inspection transports have no application characteristic-write calls. Separate control adapters expose fixed reviewed commands; the experimental desktop Elmo client privately prompts for an existing password. There is no generic raw transmitter, firmware operation or automatic reconnect. Notification subscription changes the BLE subscription descriptor.
 
 ## Your data
 
@@ -81,7 +85,7 @@ The site serves on port 4173. Live Web Bluetooth requires HTTPS or an eligible l
 
 - [Architecture and module APIs](docs/architecture.md)
 - [Supported control families, real-device check workflow and private Elmo source intake](docs/device-action-validation.md)
-- [Protocol recorder, trace format, and adapter catalog](docs/protocol-recorder.md), [eight-source implementation register](docs/research/adapter-inspirations.md)
+- [Protocol recorder, trace format, and adapter catalog](docs/protocol-recorder.md), [source implementation register](docs/research/adapter-inspirations.md)
 - [October 23 code and reliability audit](docs/audit-2026-10-23.md)
 - [Connected devices and evidence collection](docs/connected-devices.md), [device adapter contract](docs/adapter-contract.md)
 - [Quick connections, model/firmware reads, and reusable setups](docs/quick-connect.md)
