@@ -34,7 +34,9 @@ export function validateInspection(input) {
   return {
     adapterId: INSPECTION_ADAPTER.id,
     transport: input.transport,
-    ...identityOf(input),
+    model: text(input.model, 160, 'device model'),
+    revision: text(input.revision, 60, 'board revision'),
+    firmware: text(input.firmware, 60, 'firmware'),
     service: normalizeUUID(input.service),
     notify: input.notify === '' ? '' : normalizeUUID(input.notify),
     requestedDurationMs: input.requestedDurationMs,

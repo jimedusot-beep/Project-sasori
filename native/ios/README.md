@@ -30,7 +30,7 @@ Generated www, ios, build products, and dependencies are ignored by Git. Make ap
 
 ## Verification limits
 
-The CI job compiles the generated app for the iOS simulator without code signing. JavaScript tests exercise the native facade with synthetic plugin callbacks, including cancellation, background stop, invalid/stale notifications, and listener cleanup. Browser fixtures exercise the shared UI through the same bridge contract.
+The CI job compiles the generated app for the iOS simulator without code signing, installs and launches it, verifies native bridge registration in the system log, and saves a screenshot. JavaScript tests exercise the native facade with synthetic plugin callbacks, including cancellation, background stop, invalid/stale notifications, and listener cleanup. Browser fixtures exercise the shared UI through the same bridge contract.
 
 These checks do not establish iPhone radio permissions, real peripheral compatibility, successful Elmo authentication, or physical control. Run the [real inspection procedure](../../docs/iphone-setup.md) on your exact unit.
 

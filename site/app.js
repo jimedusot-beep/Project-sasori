@@ -581,7 +581,7 @@ function download(name, body, type) {
 }
 function requireToyEditing() {
   if (!ready || running)
-    throw new Error('Wait for storage and stop the inspection before changing toy profiles.');
+    throw new Error('Wait for storage and stop the inspection before changing device profiles.');
 }
 function editToy(toy = null) {
   editingToyId = toy?.id || null;
@@ -593,7 +593,7 @@ function editToy(toy = null) {
   $('toy-service').value = toy?.service || '';
   $('toy-notify').value = toy?.notify || '';
   $('toy-source-note').value = toy?.sourceNote || '';
-  $('toy-form-title').textContent = toy ? 'Edit toy profile' : 'Add a toy';
+  $('toy-form-title').textContent = toy ? 'Edit device profile' : 'Add a device';
 }
 function renderToys() {
   $('toy-list').replaceChildren();
@@ -602,12 +602,12 @@ function renderToys() {
     (store.persistent ? 'Saved on this browser' : 'Temporary memory only; export before closing') +
     ' · ' +
     toys.length +
-    ' / 20 toy profiles';
+    ' / 20 device profiles';
   if (!toys.length)
     $('toy-list').append(
       node(
         'p',
-        'Your saved toy profiles will appear here. The built-in Elmo profile remains in the connection manager.',
+        'Your saved device profiles will appear here. The built-in Elmo profile remains in the connection manager.',
       ),
     );
   for (const toy of toys) {
@@ -727,7 +727,7 @@ $('toy-form').addEventListener(
     renderToys();
     notice(
       store.persistent
-        ? 'Toy profile saved on this browser. Choose Load for inspection when ready.'
+        ? 'Device profile saved on this browser. Choose Load for inspection when ready.'
         : store.warning,
     );
   }),
@@ -788,7 +788,7 @@ $('toy-import').addEventListener(
       requireToyEditing();
       const file = input.files?.[0];
       if (!file) return;
-      if (file.size > MAX_TOY_FILE_BYTES) throw new Error('Toy profile import limit is 128 KB.');
+      if (file.size > MAX_TOY_FILE_BYTES) throw new Error('Device profile import limit is 128 KB.');
       const copies = parseToys(await file.text()).map(createToy);
       await store.saveToys(copies);
       toys = await store.listToys();
@@ -797,7 +797,7 @@ $('toy-import').addEventListener(
       notice(
         'Imported ' +
           copies.length +
-          ' toy profiles as new copies. Review their source notes before inspection.',
+          ' device profiles as new copies. Review their source notes before inspection.',
       );
     } finally {
       input.value = '';

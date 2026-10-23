@@ -107,6 +107,8 @@
 }
 body {
   margin: 0;
+  padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px)
+    env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
   background: var(--bg);
   color: var(--text);
   font-family:
@@ -192,7 +194,8 @@ small,
 .rail {
   width: 232px;
   position: fixed;
-  inset: 0 auto 0 0;
+  inset: env(safe-area-inset-top, 0px) auto env(safe-area-inset-bottom, 0px)
+    env(safe-area-inset-left, 0px);
   background: var(--rail);
   border-right: 1px solid var(--line);
   padding: 35px 20px 24px;

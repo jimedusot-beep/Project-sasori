@@ -34,7 +34,7 @@ test('unsupported browsers get an integrated setup guide; simulation transfers d
   await expect(page.locator('#page-discovery')).toBeVisible();
   await expect(page.locator('#d-evidence')).toHaveValue('synthetic');
   await expect(page.locator('#d-result')).toContainText('SYNTHETIC');
-  await expect(page.locator('#d-source')).toContainText('Local Sasori session');
+  await expect(page.locator('#d-source')).toHaveValue(/Local Sasori session/);
 });
 
 test('native bridge connection, live status, timing, and stop reuse the Sasori workspace', async ({

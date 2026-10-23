@@ -190,7 +190,7 @@
               <div id="live-config">
                 <label class="checkline" for="show-all-devices"
                   ><input type="checkbox" id="show-all-devices" /> Show all Bluetooth devices
-                  <span>Fallback if your toy does not appear</span></label
+                  <span>Fallback if your device does not appear</span></label
                 >
                 <div id="elmo-probe-settings">
                   <div class="profile-action">
@@ -403,14 +403,14 @@
           </section>
           <div class="workspace-grid">
             <section class="panel" aria-labelledby="toy-form-title">
-              <h2 id="toy-form-title">Add or edit a toy</h2>
+              <h2 id="toy-form-title">Add or edit a device</h2>
               <p>
                 Start with the service UUID from a manufacturer, source-backed research, or your own
                 authorized GATT inspection. Leave notifications blank for the first metadata-only
                 session.
               </p>
               <form id="toy-form">
-                <label for="toy-name">Toy name</label
+                <label for="toy-name">Device name</label
                 ><input id="toy-name" maxlength="80" required placeholder="e.g. My dancing robot" />
                 <label for="toy-model">Exact model</label>
                 <input id="toy-model" maxlength="160" placeholder="Defaults to the device name" />
@@ -454,23 +454,23 @@
                 </p>
                 <div class="actions">
                   <button id="toy-save" class="primary" type="submit" disabled>
-                    Save toy profile</button
+                    Save device profile</button
                   ><button id="toy-new" type="button" class="secondary">Clear form</button>
                 </div>
               </form>
             </section>
             <section class="panel" aria-labelledby="saved-toys-title">
-              <h2 id="saved-toys-title">My saved toys</h2>
+              <h2 id="saved-toys-title">Saved device profiles</h2>
               <p id="toy-storage-summary" class="hint"></p>
               <div class="actions">
-                <button id="toy-export" class="secondary">Export toy profiles</button>
+                <button id="toy-export" class="secondary">Export device profiles</button>
               </div>
-              <label for="toy-import">Import toy profiles (JSON)</label
+              <label for="toy-import">Import device profiles (JSON)</label
               ><input id="toy-import" type="file" accept=".json,application/json" />
               <p class="hint">
                 Up to 20 profiles · 128 KB import limit. Imported copies receive new IDs. Profiles
-                include toy names and source notes; review before sharing. Sessions and toy profiles
-                have separate backups.
+                include device names and source notes; review before sharing. Sessions and device
+                profiles have separate backups.
               </p>
               <div id="toy-list" class="toy-list"></div>
             </section>
@@ -478,7 +478,7 @@
           <section class="panel">
             <h2>Your first inspection</h2>
             <ol>
-              <li>Save a toy profile and choose <strong>Load for inspection</strong>.</li>
+              <li>Save a device profile and choose <strong>Load for inspection</strong>.</li>
               <li>
                 Confirm ownership, then inspect the sourced service with notifications left blank.
                 If the name is unknown, explicitly enable Show all Bluetooth devices.
@@ -491,7 +491,7 @@
             </ol>
             <p>
               Web Bluetooth exposes only services granted to the site. This is not an unrestricted
-              service scanner. Bluetooth Classic, USB-only, infrared, and proprietary radio toys
+              service scanner. Bluetooth Classic, USB-only, infrared, and proprietary radio devices
               require different transports. Physical commands remain locked.
             </p>
           </section>
@@ -502,7 +502,7 @@
               <p class="eyebrow">CAPTURE / COMPARE / UNDERSTAND</p>
               <h1 id="discovery-title">Follow the evidence.</h1>
               <p class="lead">
-                Explore the interfaces of your owned toys, one labeled observation at a time.
+                Explore the interfaces of your owned devices, one labeled observation at a time.
               </p>
             </div>
             <span class="badge subtle">OFFLINE ANALYSIS</span>

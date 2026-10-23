@@ -81,6 +81,12 @@ export function validateRecord(input) {
   if (r.importedAt != null && !dateOK(r.importedAt)) throw new Error('Invalid import provenance.');
   if (typeof r.payloadsIncluded !== 'boolean') throw new Error('Missing payload policy.');
   const inspection = r.inspection === undefined ? undefined : validateInspection(r.inspection);
+  if (
+    inspection &&
+    ((r.source === 'simulated' && inspection.transport !== 'simulation') ||
+      (r.source === 'live' && inspection.transport === 'simulation'))
+  )
+    throw new Error('Inspection transport conflicts with session provenance.');
   let noteHistory;
   if (r.noteHistory !== undefined) {
     if (!Array.isArray(r.noteHistory) || r.noteHistory.length > 5)

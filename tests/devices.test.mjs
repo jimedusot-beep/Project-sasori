@@ -55,10 +55,32 @@ test('inspection snapshots preserve exact identity and allow only bounded inspec
     { gattDurationMs: -1 },
     { requestedDurationMs: 60000 },
     { firmware: 'x'.repeat(61) },
+    { model: undefined },
+    { model: 1 },
+    { revision: '' },
+    { revision: 0 },
+    { firmware: undefined },
     { service: 'bad' },
     { notify: null },
   ])
     assert.throws(() => validateInspection({ ...context, ...patch }));
+});
+test('inspection transport must match live or simulated session provenance', () => {
+  const r = live();
+  assert.throws(() => validateRecord({ ...r, source: 'simulated' }), /provenance/);
+  assert.throws(
+    () => validateRecord({ ...r, inspection: { ...r.inspection, transport: 'simulation' } }),
+    /provenance/,
+  );
+  assert.equal(
+    validateRecord({
+      ...r,
+      source: 'simulated',
+      inspection: { ...r.inspection, transport: 'simulation' },
+    }).source,
+    'simulated',
+  );
+  assert.equal(validateRecord({ ...r, source: 'imported' }).source, 'imported');
 });
 test('capture checklist counts unique non-imported live observations of this exact identity only', () => {
   const good = live();
