@@ -156,7 +156,7 @@ function renderProfileOptions(selected = $('profile').value) {
   const templates = node('optgroup', '');
   templates.label = 'Research templates · simulation only';
   for (const profile of allProfiles()) {
-    const option = node('option', (profile.custom ? 'My toy' : profile.id) + ' / ' + profile.label);
+    const option = node('option', (profile.custom ? 'My device · ' : '') + profile.label);
     option.value = profile.id;
     if (profile.service || profile.custom) $('profile').append(option);
     else templates.append(option);
@@ -252,11 +252,26 @@ $('notify-preset').addEventListener('change', () => {
 });
 function updateMode() {
   const simulated = $('simulation').checked;
+  const task = $('connection-task').value;
   $('mode-badge').textContent = simulated ? 'SIMULATION · NO HARDWARE' : 'LIVE · INSPECTION ONLY';
   $('mode-badge').classList.toggle('warm', simulated);
   $('simulation-config').hidden = !simulated;
   $('live-config').hidden = simulated;
-  $('connect').textContent = simulated ? 'Run simulated inspection ↗' : 'Connect & inspect ↗';
+  $('connect').textContent = simulated
+    ? 'Run simulated inspection ↗'
+    : task === 'identify'
+      ? 'Connect & identify ↗'
+      : 'Connect & inspect ↗';
+  $('connection-budget').textContent =
+    task === 'identify' && !simulated
+      ? 'Disconnects when reads finish · 15-second maximum'
+      : '15-second inspection · manual reconnect only';
+  $('connection-explanation').textContent =
+    task === 'identify'
+      ? 'Reads available model and revision fields, then disconnects. No control commands are sent.'
+      : task === 'capture'
+        ? 'Listens to the configured channel. Subscription changes a BLE descriptor. No authentication, audio, or motor commands are sent.'
+        : 'Finds the service and its available channels. No notification subscription or control commands.';
   $('support').textContent = simulated
     ? 'Synthetic fixtures only. Bluetooth permissions and hardware are never accessed.'
     : supportState().detail;
@@ -275,7 +290,6 @@ function updateMode() {
   $('keep-setup').disabled = !ready || running;
   for (const id of ['quick-elmo', 'quick-identify', 'connection-task'])
     $(id).disabled = !ready || running;
-  const task = $('connection-task').value;
   $('connection-task').querySelector('[value="capture"]').disabled = profile.id === 'identify';
   $('connection-task-hint').textContent =
     task === 'identify'
@@ -291,8 +305,7 @@ function updateMode() {
   $('specimen-name').textContent = profile.label;
   $('specimen-model').textContent = profile.id === '001' ? 'HASBRO · B6572' : 'INSPECTION PROFILE';
   $('specimen-number').textContent = profile.custom ? 'MY TOY' : profile.id;
-  $('active-experiment').textContent =
-    'PROJECT SASORI / ' + (profile.custom ? profile.label : 'EXPERIMENT ' + profile.id);
+  $('active-experiment').textContent = 'PROJECT SASORI / ' + profile.label;
   document.querySelector('.specimen-art').hidden = profile.id !== '001';
   $('toy-save').disabled = !ready || running;
   $('toy-import').disabled = !ready || running;
@@ -504,6 +517,10 @@ function handleEvent(event) {
         session.outcome = 'inconclusive-no-notifications';
       lockConnection(false);
       $('next-step').textContent = connectionResult(session).next;
+      if (!$('page-overview').hidden && !document.hidden) {
+        $('connection-result-title').focus({ preventScroll: true });
+        $('connection-result-title').scrollIntoView({ block: 'center', behavior: 'smooth' });
+      }
       saveSession(false).catch(problem);
     }
   } else if (event.type === 'packet') {

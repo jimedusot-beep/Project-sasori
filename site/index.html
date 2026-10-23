@@ -281,7 +281,7 @@
                   ><input type="checkbox" id="consent" /> I own or am authorized to inspect this
                   device.</label
                 >
-                <p class="hint">
+                <p id="connection-explanation" class="hint">
                   Connect inspects the service and subscribes to the configured notification
                   characteristic. Subscription changes a BLE descriptor. No authentication, audio,
                   or motor commands are sent.
@@ -293,7 +293,8 @@
                 ><button id="disconnect" class="secondary" disabled>Stop inspection</button>
               </div>
               <div class="connection-foot">
-                <span class="dot"></span> 15-second inspection · manual reconnect only
+                <span class="dot"></span>
+                <span id="connection-budget">15-second inspection · manual reconnect only</span>
               </div>
               <p id="inspection-stage" class="hint" role="status" aria-live="polite">
                 No inspection started. Stage details will appear here and in session logs.
@@ -302,7 +303,7 @@
             <div class="right-stack">
               <section class="panel connection-result" aria-labelledby="connection-result-title">
                 <p class="eyebrow">YOUR DEVICE / NEXT STEP</p>
-                <h2 id="connection-result-title">Ready to connect</h2>
+                <h2 id="connection-result-title" tabindex="-1">Ready to connect</h2>
                 <p id="connection-result-detail" role="status"></p>
                 <dl id="device-information" class="information-list"></dl>
                 <p id="connection-result-next"></p>

@@ -116,6 +116,8 @@ for (const native of [false, true])
     await page.locator('#consent').check();
     await page.locator('#connect').click();
     await expect(page.locator('#connection-result-title')).toHaveText('Device information read');
+    await expect(page.locator('#connection-result-title')).toBeFocused();
+    await expect(page.locator('#connection-budget')).toContainText('Disconnects when reads finish');
     await expect(page.locator('#device-information')).toContainText('Fixture 100');
     await expect(page.locator('#device-information')).toContainText('1.2');
     await expect(page.locator('#state')).toHaveText('Disconnected');
