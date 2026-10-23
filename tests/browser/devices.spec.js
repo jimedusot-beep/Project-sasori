@@ -80,6 +80,7 @@ test('native bridge connection, live status, timing, and stop reuse the Sasori w
   await page.goto('/');
   await expect(page.locator('#hub-browser-title')).toContainText('Native iPhone Bluetooth ready');
   expect(await page.evaluate(() => window.nativeCalls.length)).toBe(0);
+  await page.locator('#connection-task').selectOption('capture');
   await page.locator('#consent').check();
   await page.locator('#connect').click();
   await expect(page.locator('#state')).toHaveText('Inspecting');

@@ -1,6 +1,11 @@
 import { normalizeUUID } from './profiles.js';
 import { decodePacket } from './protocol.js';
 import { explainError } from './diagnostics.js';
+import {
+  DEVICE_INFORMATION_SERVICE,
+  DEVICE_INFORMATION_FIELDS,
+  decodeInformationString,
+} from './device-information.js';
 
 const ACTIVE = new Set(['selecting', 'connecting', 'discovering', 'inspecting']);
 const transitions = {
@@ -194,6 +199,33 @@ export class BluetoothTransport {
         },
       ];
       this.emit({ type: 'services', services: this.services });
+      if (service === DEVICE_INFORMATION_SERVICE) {
+        this.markStage('device-information');
+        const information = {};
+        for (const field of DEVICE_INFORMATION_FIELDS) {
+          this.check(run);
+          const characteristic = chars.find((c) => c.uuid.toLowerCase() === field.uuid);
+          if (!characteristic?.properties.read) continue;
+          try {
+            const value = await withTimeout(
+              characteristic.readValue(),
+              this.operationMs,
+              'Read ' + field.label,
+            );
+            this.check(run);
+            const text = decodeInformationString(value);
+            if (text) information[field.key] = text;
+          } catch (error) {
+            this.check(run);
+            // A timed-out read may still hold the GATT operation queue. Tear down
+            // rather than starting concurrent reads; never accept its late result.
+            if (error?.name === 'TimeoutError' || !this.server?.connected) throw error;
+            this.emit({ type: 'info', message: field.label + ' was unavailable; continuing.' });
+          }
+          this.emit({ type: 'device-information', information: { ...information } });
+        }
+        this.emit({ type: 'device-information', information });
+      }
       if (notify) {
         const characteristic = chars.find((c) => c.uuid.toLowerCase() === notify);
         if (!characteristic)
@@ -235,6 +267,8 @@ export class BluetoothTransport {
       }
       this.markStage('inspection-ready');
       this.setState('inspecting');
+      if (service === DEVICE_INFORMATION_SERVICE && !notify)
+        this.disconnect('identification-complete');
     } catch (error) {
       if (run !== this.generation) return;
       this.emit({

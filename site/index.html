@@ -90,14 +90,25 @@
           <div class="page-heading">
             <div>
               <p class="eyebrow" id="active-experiment">PROJECT SASORI / EXPERIMENT 001</p>
-              <h1 id="overview-title">Connect. Inspect.<br />Understand.</h1>
+              <h1 id="overview-title">Connect your toys.<br />Make them yours.</h1>
               <p class="lead">
-                Your devices, connections, and research in one workspace.<br />
-                Start with a profile. Build on what you can prove.
+                Choose your toy, connect, and see what it supports.<br />
+                Keep each device's setup for next time.
               </p>
             </div>
             <div class="heading-tag"><span class="dot"></span> OBSERVATION BEFORE CONTROL</div>
           </div>
+          <section class="quick-start" aria-label="Quick device setup">
+            <button id="quick-elmo" class="quick-card" type="button" disabled>
+              <strong>Love2Learn Elmo</strong><span>Connection details · settings included</span>
+            </button>
+            <button id="quick-identify" class="quick-card" type="button" disabled>
+              <strong>Another Bluetooth toy</strong><span>Read its model &amp; firmware</span>
+            </button>
+            <button class="quick-card" data-go="toys" type="button">
+              <strong>My devices</strong><span>Saved setups &amp; custom connections</span>
+            </button>
+          </section>
           <nav class="hub-workflow" aria-label="Experiment workflow">
             <button class="secondary" data-go="overview">1 · Connect</button>
             <button class="secondary" data-go="protocol">2 · Capture</button>
@@ -114,8 +125,8 @@
               ><small id="packet-bytes">0 bytes received</small>
             </div>
             <div>
-              <span>HARDWARE COMMANDS</span><strong class="muted">Locked <em>↗</em></strong
-              ><small>Authentication & motion unverified</small>
+              <span>CONTROL SUPPORT</span><strong class="muted">Adapter needed</strong
+              ><small>Connect first · verify device-specific actions</small>
             </div>
           </div>
           <div class="workspace-grid">
@@ -126,8 +137,15 @@
                 </h2>
                 <span class="badge subtle">BLE / GATT</span>
               </div>
-              <label for="profile">Experiment profile</label
+              <label for="profile">Your device</label
               ><select id="profile"></select>
+              <label for="connection-task">What do you want to do?</label>
+              <select id="connection-task" aria-describedby="connection-task-hint">
+                <option value="metadata">Find connection details</option>
+                <option value="identify">Read model &amp; firmware</option>
+                <option value="capture">Capture notifications</option>
+              </select>
+              <p id="connection-task-hint" class="hint"></p>
               <div class="device-card">
                 <div class="device-icon" aria-hidden="true">
                   <svg viewBox="0 0 50 50">
@@ -151,6 +169,16 @@
                 <p>
                   Sasori handles device selection, inspection, captures, and saved records. On
                   iPhone and iPad, Bluefy supplies the browser's Bluetooth access.
+                </p>
+                <p>
+                  On a Mac or Windows PC, open this address in Chrome with Bluetooth enabled. The
+                  <a
+                    href="https://github.com/jimedusot-beep/Project-sasori/tree/main/desktop"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >desktop helper</a
+                  >
+                  is another connection option.
                 </p>
                 <ol>
                   <li>Open Bluefy and paste the Sasori address below into its address bar.</li>
@@ -188,6 +216,14 @@
                 </select>
               </div>
               <div id="live-config">
+                <label for="name-prefix">Bluetooth name starts with</label>
+                <input
+                  id="name-prefix"
+                  maxlength="60"
+                  value="Elmo"
+                  autocomplete="off"
+                  placeholder="e.g. Elmo, or the name on your toy"
+                />
                 <label class="checkline" for="show-all-devices"
                   ><input type="checkbox" id="show-all-devices" /> Show all Bluetooth devices
                   <span>Fallback if your device does not appear</span></label
@@ -218,14 +254,6 @@
                 <p id="toy-source" class="hint" hidden></p>
                 <details id="uuid-settings">
                   <summary>Service & notification settings</summary>
-                  <label for="name-prefix">Bluetooth name starts with</label>
-                  <input
-                    id="name-prefix"
-                    maxlength="60"
-                    value="Elmo"
-                    autocomplete="off"
-                    placeholder="e.g. Elmo"
-                  />
                   <label for="svc">Custom service UUID</label
                   ><input
                     id="svc"
@@ -241,8 +269,9 @@
                     placeholder="Leave blank to inspect metadata only"
                   />
                   <p class="hint">
-                    Only this service is requested. Other services remain inaccessible unless
-                    separately granted. No firmware services.
+                    Only this service is requested. The model / firmware reader uses the standard
+                    Device Information service and reads five model / revision fields. Other
+                    services need a separate connection.
                   </p>
                 </details>
                 <button id="keep-setup" class="text-button" type="button">
@@ -271,6 +300,25 @@
               </p>
             </section>
             <div class="right-stack">
+              <section class="panel connection-result" aria-labelledby="connection-result-title">
+                <p class="eyebrow">YOUR DEVICE / NEXT STEP</p>
+                <h2 id="connection-result-title">Ready to connect</h2>
+                <p id="connection-result-detail" role="status"></p>
+                <dl id="device-information" class="information-list"></dl>
+                <p id="connection-result-next"></p>
+                <div id="connection-result-channels" class="actions"></div>
+                <div class="actions">
+                  <button id="result-save-device" class="secondary" disabled>
+                    Save device setup
+                  </button>
+                  <button id="result-export" class="secondary" disabled>
+                    Export connection report
+                  </button>
+                </div>
+                <p class="hint">
+                  Control support: no verified physical actions for this device yet.
+                </p>
+              </section>
               <section class="panel hub-current" aria-labelledby="hub-current-title">
                 <div class="panel-head">
                   <h2 id="hub-current-title">No active connection</h2>
@@ -341,13 +389,17 @@
                   inspection.
                 </p>
                 <button class="text-button" data-go="research">Open the testing guide →</button>
-                <h3 id="hub-evidence-count">0 / 5 full-length capture candidates</h3>
-                <ul id="hub-evidence"></ul>
-                <p class="hint">
-                  Counts use locally recorded, non-imported live sessions for this model, board
-                  revision, and firmware. They help collect evidence; owner review on the real unit
-                  is still required. Imported and synthetic sessions cannot satisfy this checklist.
-                </p>
+                <details>
+                  <summary>Connection repeatability checklist</summary>
+                  <h3 id="hub-evidence-count">0 / 5 full-length capture candidates</h3>
+                  <ul id="hub-evidence"></ul>
+                  <p class="hint">
+                    Counts use locally recorded, non-imported live sessions for this model, board
+                    revision, and firmware. They help collect evidence; owner review on the real
+                    unit is still required. Imported and synthetic sessions cannot satisfy this
+                    checklist.
+                  </p>
+                </details>
               </section>
             </div>
           </div>
@@ -402,6 +454,21 @@
             <button class="secondary" data-go="overview">Open Bluetooth connection</button>
           </section>
           <div class="workspace-grid">
+            <section class="panel" aria-labelledby="saved-toys-title">
+              <h2 id="saved-toys-title">Saved device profiles</h2>
+              <p id="toy-storage-summary" class="hint"></p>
+              <div class="actions">
+                <button id="toy-export" class="secondary">Export device profiles</button>
+              </div>
+              <label for="toy-import">Import device profiles (JSON)</label
+              ><input id="toy-import" type="file" accept=".json,application/json" />
+              <p class="hint">
+                Up to 20 profiles · 128 KB import limit. Imported copies receive new IDs. Profiles
+                include device names and source notes; review before sharing. Sessions and device
+                profiles have separate backups.
+              </p>
+              <div id="toy-list" class="toy-list"></div>
+            </section>
             <section class="panel" aria-labelledby="toy-form-title">
               <h2 id="toy-form-title">Add or edit a device</h2>
               <p>
@@ -458,21 +525,6 @@
                   ><button id="toy-new" type="button" class="secondary">Clear form</button>
                 </div>
               </form>
-            </section>
-            <section class="panel" aria-labelledby="saved-toys-title">
-              <h2 id="saved-toys-title">Saved device profiles</h2>
-              <p id="toy-storage-summary" class="hint"></p>
-              <div class="actions">
-                <button id="toy-export" class="secondary">Export device profiles</button>
-              </div>
-              <label for="toy-import">Import device profiles (JSON)</label
-              ><input id="toy-import" type="file" accept=".json,application/json" />
-              <p class="hint">
-                Up to 20 profiles · 128 KB import limit. Imported copies receive new IDs. Profiles
-                include device names and source notes; review before sharing. Sessions and device
-                profiles have separate backups.
-              </p>
-              <div id="toy-list" class="toy-list"></div>
             </section>
           </div>
           <section class="panel">

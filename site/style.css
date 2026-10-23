@@ -1,4 +1,44 @@
 @import url('tokens.css');
+.quick-start {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr));
+  gap: 12px;
+  margin: 0 0 20px;
+}
+.quick-card {
+  text-align: left;
+  white-space: normal;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 18px;
+  color: var(--text);
+}
+.quick-card strong,
+.quick-card span {
+  display: block;
+}
+.quick-card span {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 8px;
+}
+.information-list {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+  gap: 8px 12px;
+  font-size: 13px;
+}
+.information-list dt {
+  color: var(--muted);
+}
+.information-list dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.connection-result {
+  overflow-wrap: anywhere;
+}
 .hub-workflow {
   display: flex;
   flex-wrap: wrap;

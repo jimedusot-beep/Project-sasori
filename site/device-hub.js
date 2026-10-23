@@ -1,6 +1,17 @@
 import { identityOf, inspectionEvidence, packetTimeline } from './lib/devices.js';
+import { connectionResult } from './lib/connection-result.js';
+import { DEVICE_INFORMATION_FIELDS } from './lib/device-information.js';
+import { GATT_REGISTRY } from './lib/profiles.js';
 
-export function mountDeviceHub({ getState, notice, navigate, selectRecord }) {
+export function mountDeviceHub({
+  getState,
+  notice,
+  navigate,
+  selectRecord,
+  prepareEndpoint,
+  saveDevice,
+  exportReport,
+}) {
   const $ = (id) => document.getElementById(id);
   const node = (tag, text, className = '') => {
     const el = document.createElement(tag);
@@ -9,15 +20,25 @@ export function mountDeviceHub({ getState, notice, navigate, selectRecord }) {
     return el;
   };
   let available = null;
+  const lastRecord = () => {
+    const { session, records, profile } = getState();
+    return session?.profileId === profile.id
+      ? session
+      : records.find((r) => r.profileId === profile.id);
+  };
+  $('result-save-device').addEventListener('click', () => saveDevice(lastRecord()));
+  $('result-export').addEventListener('click', () => exportReport(lastRecord()));
   $('hub-url').value = 'https://jimedusot-beep.github.io/Project-sasori/#overview';
   $('hub-copy-url').addEventListener('click', async () => {
     try {
       await navigator.clipboard.writeText($('hub-url').value);
-      notice('Sasori link copied. Open Bluefy and paste it into the address bar.');
+      notice('Sasori link copied. Paste it into your Bluetooth-capable browser.');
     } catch {
       $('hub-url').focus();
       $('hub-url').select();
-      notice('The Sasori address is selected. Use Copy, then paste it into Bluefy.');
+      notice(
+        'The Sasori address is selected. Copy and paste it into your Bluetooth-capable browser.',
+      );
     }
   });
   $('hub-analyze-last').addEventListener('click', () => {
@@ -62,6 +83,35 @@ export function mountDeviceHub({ getState, notice, navigate, selectRecord }) {
       available = support.available;
     }
     $('hub-browser-title').textContent = support.title;
+    const record = lastRecord();
+    const result = connectionResult(record, { running, state });
+    $('connection-result-title').textContent = result.title;
+    $('connection-result-detail').textContent = result.detail;
+    $('connection-result-next').textContent = result.next;
+    $('result-save-device').disabled =
+      running ||
+      !record?.endedAt ||
+      record.source !== 'live' ||
+      !!record.importedAt ||
+      !record.services.length;
+    $('result-export').disabled = running || !record?.endedAt;
+    $('device-information').replaceChildren();
+    for (const field of DEVICE_INFORMATION_FIELDS) {
+      const value = record?.deviceInformation?.[field.key];
+      if (value)
+        $('device-information').append(
+          node('dt', 'Reported ' + field.label.toLowerCase()),
+          node('dd', value),
+        );
+    }
+    $('connection-result-channels').replaceChildren();
+    for (const channel of result.channels) {
+      const label =
+        GATT_REGISTRY.find((entry) => entry.uuid === channel.uuid)?.label || channel.uuid;
+      const button = node('button', 'Capture from ' + label, 'secondary');
+      button.addEventListener('click', () => prepareEndpoint(channel.service, channel.uuid));
+      $('connection-result-channels').append(button);
+    }
     $('devices-active-summary').textContent = running
       ? (session?.source === 'simulated' ? 'SIMULATED · ' : 'LIVE · ') +
         (deviceLabel || profile.label) +

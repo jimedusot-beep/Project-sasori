@@ -2,7 +2,7 @@
 
 A mobile workbench for observing Bluetooth devices, preserving research, and developing animatronic behavior safely. Experiment 001 investigates a user-owned Hasbro Love2Learn Elmo B6572 advertising as Elmo L2L.
 
-The device workspace connects saved identities, active connection status, notification timelines, Discovery analysis, and versioned research notes. Start with [Devices and connections](docs/connected-devices.md). Native access is available as a buildable [iPhone app](native/ios/README.md) and a local [desktop BLE helper](desktop/README.md); real-device validation remains required.
+The device workspace connects saved identities, active connection status, notification timelines, Discovery analysis, and versioned research notes. Start with [Quick connections](docs/quick-connect.md): Elmo settings are included, and another BLE toy can expose its model/firmware without manual UUID entry. Native access is available as a buildable [iPhone app](native/ios/README.md) and a local [desktop BLE helper](desktop/README.md); real-device validation remains required.
 
 **v0.2.0 is an experimental, inspection-only release. Real iPhone/Bluefy/Elmo validation is still required.** Independent fan research; no affiliation with Hasbro or Naruto.
 
@@ -13,8 +13,8 @@ Open the [live laboratory](https://jimedusot-beep.github.io/Project-sasori/). HT
 1. Open the site and turn on **Use simulation** to explore without hardware.
 2. Tap **Run simulated inspection**. Three synthetic notifications appear; the finished session saves locally.
 3. Open **Research records** to edit notes, search, compare captures, import JSON/TXT/CSV, or export a metadata backup.
-4. For real inspection, open the HTTPS site in **Bluefy on iPhone**, turn simulation off, load the published Elmo profile, review its source, confirm authorization, and tap **Connect & inspect**.
-5. For another BLE device you own, open **Devices** to save its model/revision/firmware, a sourced service UUID, and its Bluetooth name prefix. Leave Notify blank for metadata-only inspection, then select an observed notification endpoint in Protocol explorer for the next manual session. See the [multi-toy guide](docs/my-toys.md).
+4. For real inspection, open the HTTPS site in **Bluefy on iPhone** or a Bluetooth-capable desktop browser. Tap **Love2Learn Elmo**, confirm ownership, and **Connect & inspect**. Start with connection details, then choose an observed channel from the result card for a separate notification capture.
+5. For another BLE toy, tap **Another Bluetooth toy**, supply its Bluetooth name or explicitly show all devices, and connect to read available model/firmware fields. **Save device setup** prepares a profile with those observations. **Devices** also accepts sourced custom service/notification UUIDs. See [Quick connections](docs/quick-connect.md) and the [multi-toy guide](docs/my-toys.md).
 6. Open **Discovery workbench** to label and compare offline hex or infrared timing captures, inspect local PCM16 WAV files, and save discovery metadata. See the [Discovery guide](docs/discovery-workbench.md) for retention and evidence limits.
 
 The published UUID profile is transcribed from [NonaSuomy's GATT table](https://github.com/NonaSuomy/Love2LearnElmo/blob/82fa312e06af1d8e549cec588856ebce227b5f77/README.md). It is community-reported evidence, not a recovery of the old V4 source or proof of compatibility with your firmware. If service discovery fails, follow the [iPhone UUID capture guide](experiments/001-elmo-l2l/iphone-uuid-capture-guide.md).
@@ -22,6 +22,7 @@ The published UUID profile is transcribed from [NonaSuomy's GATT table](https://
 ## What works in software
 
 - User-initiated, name-filtered discovery; service/characteristic metadata inspection; optional notification subscription.
+- Quick Elmo/unknown-toy setups, bounded standard model/firmware reads on web and native iPhone, useful connection results, observed-channel shortcuts, and metadata connection reports. Identity reads finish as soon as the available fields have been read.
 - Integrated browser/Bluefy setup, active-device status, per-profile recent sessions, physical-evidence collection checklist, notification timing, direct offline analysis handoff, and five previous title/note versions.
 - A shared inspection adapter contract used by the web transport, native Core Bluetooth facade, and desktop Bleak helper. Imported profiles never execute or unlock commands.
 - Persistent user-defined toy profiles with source notes, isolated name/UUID settings, profile backups/imports, and observed notification endpoint selection. Other built-in experiment slots remain scaffolds.
@@ -76,6 +77,7 @@ The site serves on port 4173. Live Web Bluetooth requires HTTPS or an eligible l
 - [Architecture and module APIs](docs/architecture.md)
 - [October 23 code and reliability audit](docs/audit-2026-10-23.md)
 - [Connected devices and evidence collection](docs/connected-devices.md), [device adapter contract](docs/adapter-contract.md)
+- [Quick connections, model/firmware reads, and reusable setups](docs/quick-connect.md)
 - [Native iPhone build/install](native/ios/README.md) and [desktop helper setup](desktop/README.md)
 - [Discovery workbench: captures, comparisons, sound analysis, and backups](docs/discovery-workbench.md)
 - [Protocol specification and unknowns](docs/protocol.md)

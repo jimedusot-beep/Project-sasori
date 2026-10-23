@@ -29,6 +29,7 @@ async function nativeCapture(page) {
     { service: ELMO_SERVICE, notify: ELMO_NOTIFY },
   );
   await page.goto('/');
+  await page.locator('#connection-task').selectOption('capture');
   await page.locator('#consent').check();
   await page.locator('#connect').click();
   await expect(page.locator('#state')).toHaveText('Inspecting');
