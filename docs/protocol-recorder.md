@@ -1,6 +1,6 @@
 # Protocol recorder and adapter catalog
 
-Open **Protocol recorder** in [Sasori](https://jimedusot-beep.github.io/Project-sasori/#recorder). The page imports normalized bidirectional frames, preserves their declared source, adds timestamped observations, and compares repeat captures. The source cards cite the cited [adapter inspirations](research/adapter-inspirations.md), inspected revisions, reuse decisions, and implementation paths.
+Open **Protocol recorder** in [Sasori](https://jimedusot-beep.github.io/Project-sasori/#recorder). The page imports normalized bidirectional frames, preserves their declared source, adds timestamped observations, and compares repeat captures. The source cards cite [adapter inspirations](research/adapter-inspirations.md), inspected revisions, reuse decisions, and implementation paths.
 
 ## Try it
 
@@ -45,10 +45,10 @@ Raw exchanges may contain credentials, challenges, responses, or other private b
 
 `site/lib/adapters.js` provides a built-in, immutable registry with versioned declarative manifests: exact declared model aliases, transports, decoder identifier, source references, inspection capabilities, command availability, and recovery description. It separates original packet interpretation from raw ingestion and UI. No external executable adapter installation or live-action flag is accepted.
 
-- **Elmo:** existing service inspection and notifications, historical text observation, and an unavailable status query with its missing protocol prerequisites. No authentication bytes are constructed.
+- **Elmo:** browser service inspection, notifications and historical text observation. Its browser status action remains unavailable. A separate [experimental desktop client](../desktop/README.md#experimental-elmo-known-password-check) implements source-derived authentication and input/volume queries; the recorder itself constructs no authentication bytes and cannot run that client.
 - **MiP:** original offline software-version query definition and strict ASCII-hex version-reply decoder. The recorder never transmits. A separately selected [Universal controls family adapter](device-action-validation.md) implements fixed live version/status queries and a timed dim-blue/off chest LED action. Both follow manufacturer facts and synthetic fixtures; real-unit validation remains outstanding. Movement, sound, UART and firmware operations remain excluded.
 - **Generic:** bounded timeline, markers, selected intervals, and same-index comparisons without assigning protocol meaning.
 
 Readiness checks distinguish declared model/firmware and TX/RX presence from independently tested authentication and physical recovery. The latter remain false. Pybricks informs the supported-model/recovery workflow; its firmware is not installed on Elmo. Hacksby and PixMob source cards connect to existing WAV and IR timing analysis; they do not claim implemented Furby/PixMob control.
 
-Before enabling one Elmo action, establish exact source-derived framing/authentication vectors, correlate a status request/response, and run real acceptance tests. The target is ten fresh successful connections/actions with explicit rejection, timeout, disconnect, and recovery results. The [original-BLE source gaps](../experiments/001-elmo-l2l/source-verification.md) and replacement-controller path remain explicit.
+The [recovered-source review](../experiments/001-elmo-l2l/recovered-source.md) now establishes framing/authentication facts and synthetic vectors for the desktop subset. Before enabling Elmo actions in this interface, correlate real request/reply behavior and run owner-device acceptance tests. The target is ten fresh successful connections/actions with explicit rejection, timeout, disconnect, and recovery results. Physical evidence gaps and the replacement-controller path remain explicit.
