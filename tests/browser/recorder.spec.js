@@ -29,7 +29,8 @@ test('source-linked recorder decodes the documented fixture, marks observations,
   await noRadio(page);
   await page.goto('/#recorder');
   await page.locator('#r-example').click();
-  await expect(page.locator('#r-inspirations article')).toHaveCount(8);
+  await expect(page.locator('#r-inspirations article')).toHaveCount(9);
+  await expect(page.locator('#r-inspirations')).toContainText('Elmo pyelmo implementation');
   await expect(page.locator('#r-summary')).toContainText('1 TX / 1 RX');
   await expect(page.locator('#r-timeline')).toContainText('year 14, month 2, day 27, revision 7');
   await page.locator('#r-plan').click();
@@ -92,7 +93,12 @@ test('raw trace retention is explicit; reload and notebook backups preserve meta
   await page.getByRole('button', { name: 'Protocol recorder', exact: true }).click();
   await page.locator('#r-adapter').selectOption('elmo-l2l');
   await expect(page.locator('#r-plan')).toBeDisabled();
-  await expect(page.locator('#r-readiness')).toContainText('Authentication construction');
+  await expect(page.locator('#r-readiness')).toContainText(
+    'Browser/native Elmo writes remain unavailable',
+  );
+  await expect(page.locator('#r-readiness')).toContainText(
+    'source-derived known-password desktop client exists',
+  );
   expect(await page.evaluate(() => window.radioCalls)).toBe(0);
 });
 test('invalid and inert imports cannot overwrite a loaded trace or enable hardware', async ({

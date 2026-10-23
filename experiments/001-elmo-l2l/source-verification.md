@@ -2,7 +2,9 @@
 
 Reviewed October 21, 2026 (America/New_York). Independent original-controller research track. **Application protocol verification is incomplete; live authentication and application writes remain unavailable.**
 
-**October 23 follow-up:** rechecked the community README at the same pinned revision, available private-file search and prior project context. No original APK, managed assembly or independently reproduced handshake was recovered. A fresh bounded request to the reported S17 APK URL again returned HTTP 403. The new [private source-intake tool and review procedure](../../docs/device-action-validation.md#finish-elmo-authentication) can hash a legitimately supplied archive and optionally extract its managed assembly outside the repository. Its marker counts and prior-hash comparison do not verify methods, publisher provenance or authentication. G1–G8 below remain open. The new shared real-device trial log supplies a future validation workflow, not missing Elmo captures or acceptance results.
+**Current October 23 result:** a broader public-community search recovered the exact previously reported APK through Aptoide and found a newer standalone `pyelmo` implementation. Relevant managed methods were independently inspected and an original bounded desktop known-password client was added. See [recovered source, hashes, method tokens and current gap status](recovered-source.md). This supersedes the missing-artifact/method status in the original review below. The earlier S17 request did return HTTP 403, but that did not establish that no usable public archive or implementation existed. Hasbro publisher identity and real-unit authentication/physical effects remain unverified; web/native inspection remains unchanged.
+
+The remainder of this document preserves the **October 21 historical review**. Its original G1–G8 table is not the current acquisition or implementation status.
 
 ## Evidence inspected in this review
 

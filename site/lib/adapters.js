@@ -13,14 +13,14 @@ const manifests = [
     transports: ['ble'],
     liveCapabilities: ['service-inspection', 'notification-capture'],
     decoder: 'elmo-historical-text',
-    sources: ['elmo', 'bluefluff', 'homeassistant', 'pybricks'],
+    sources: ['elmo-pyelmo', 'elmo', 'bluefluff', 'homeassistant', 'pybricks'],
     commands: [
       {
         id: 'status',
         label: 'Status query',
         availability: 'unavailable',
         reason:
-          'Authentication construction, framing, and correlated response vectors are missing.',
+          'Browser/native Elmo writes remain unavailable. A source-derived known-password desktop client exists; real-unit validation is missing.',
       },
     ],
     recovery:
@@ -39,11 +39,12 @@ const manifests = [
         id: 'software-version',
         label: 'Software version query',
         availability: 'offline-only',
-        reason: 'Manufacturer-documented bytes; no live MiP sender or hardware acceptance test.',
+        reason:
+          'Manufacturer-documented bytes. The recorder is offline; a separate MiP sender exists in Universal controls. Hardware acceptance remains unverified.',
       },
     ],
     recovery:
-      'No live MiP connection or firmware installer is provided. Physical command recovery remains untested.',
+      'Universal controls separately offers MiP connection and a timed LED-off request. Physical recovery remains untested; no firmware installer is provided.',
   },
   {
     id: 'generic-trace',

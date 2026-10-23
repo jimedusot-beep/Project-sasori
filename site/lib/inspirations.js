@@ -1,6 +1,22 @@
 // Source receipts for original Sasori implementations. No upstream runtime is bundled.
 export const INSPIRATIONS = Object.freeze([
   {
+    id: 'elmo-pyelmo',
+    name: 'Elmo pyelmo implementation',
+    url: 'https://github.com/jesserockz/love2learn-elmo',
+    revision: 'd397a7fb094079f6b1cac5605e95f74d1cb8d4b3',
+    reference:
+      'https://github.com/jesserockz/love2learn-elmo/blob/d397a7fb094079f6b1cac5605e95f74d1cb8d4b3/custom_components/love2learn_elmo/pyelmo/README.md',
+    license: 'Apache-2.0',
+    licenseReference:
+      'https://github.com/jesserockz/love2learn-elmo/blob/d397a7fb094079f6b1cac5605e95f74d1cb8d4b3/LICENSE',
+    reuse: 'Protocol-fact reference; original Sasori client, checked against the acquired app',
+    aspect:
+      'Known-password handshake, explicit hardware claims, fixed greeting and strict reply handling',
+    implementation: 'desktop/sasori_elmo.py',
+    reviewed: '2026-10-23',
+  },
+  {
     id: 'elmo',
     name: 'Elmo research',
     url: 'https://github.com/NonaSuomy/Love2LearnElmo',
