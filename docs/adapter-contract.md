@@ -4,7 +4,7 @@ The original built-in [analysis adapter registry](../site/lib/adapters.js) now d
 
 The inspection adapter is **ble-inspection/v1**. A separate [ble-standard/v1 control adapter](universal-controls.md) maps shared Identify/Status/Find/Stop intents to observed SIG Device Information, Battery and Immediate Alert services; it does not provide custom toy commands.
 
-**ble-inspection/v1** It supports service inspection and notification capture over Web Bluetooth, the native Core Bluetooth facade, and the desktop Bleak helper. Authentication and physical-action verification are false. A profile is configuration and evidence provenance; it is never executable adapter code.
+**ble-inspection/v1** supports service inspection and notification capture over Web Bluetooth, the native Core Bluetooth facade, and the desktop Bleak helper. Authentication and physical-action verification are false. A profile is configuration and evidence provenance; it is never executable adapter code.
 
 ## Identity and provenance
 
