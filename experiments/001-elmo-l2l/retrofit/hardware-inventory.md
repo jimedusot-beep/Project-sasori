@@ -1,6 +1,6 @@
 # Elmo hardware inventory and selection requirements
 
-Reviewed October 22, 2026. Ownership, presence inside a toy, component identity, and compatibility are distinct claims. `UNKNOWN` means the available evidence cannot decide. No part below is electrically approved by this document.
+Reviewed October 22, 2026. Ownership, presence inside a toy, component identity, and compatibility are distinct claims. `UNKNOWN` means the available evidence cannot decide. No part below is electrically approved by this document. This inventory operationalizes the existing [replacement-controller research gates](../../../docs/replacement-controller-research.md); that document retains the upstream tool/license catalog.
 
 ## Reported owned equipment
 

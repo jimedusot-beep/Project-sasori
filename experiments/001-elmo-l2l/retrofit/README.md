@@ -17,7 +17,7 @@ Factory authentication is a prerequisite only for commands that require it on th
 
 ## Work already in the repository
 
-At base commit `debf53704c13b1df714f9e47e741e6574f1d7fa6`, PRs #11 and #12 are merged. Use the existing [app leads](../app-protocol-leads.md), [source verification](../source-verification.md), [offline review](../offline-review.md), and [gated live experiment](../live-experiment.md). Do not recreate them or treat the historical captures as fresh observations. PR #15, the private REA handoff, was open at review time and is separate work, not a dependency or a merged feature.
+At starting base commit `debf53704c13b1df714f9e47e741e6574f1d7fa6`, PRs #11 and #12 were merged. Use the existing [app leads](../app-protocol-leads.md), [source verification](../source-verification.md), [offline review](../offline-review.md), and [gated live experiment](../live-experiment.md). Do not recreate them or treat the historical captures as fresh observations. During this work PR #15 merged as `e4e8893cd5c5eb7925d1de3a81343ea1c81e43e6`; its [private REA handoff](../../../docs/rea-handoff.md) and [replacement-controller research](../../../docs/replacement-controller-research.md) are retained. This conversion package adds the actionable inventory, worksheet and proposed software contract to that existing research rather than copying its upstream catalog.
 
 The application already provides BLE inspection, persistent My toys profiles, research records, a synthetic transport, synthetic authentication fixtures, visual motion previews, and computer/phone-local audio previews. These do not implement the replacement-controller protocol proposed below.
 
