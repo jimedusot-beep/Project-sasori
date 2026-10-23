@@ -1,4 +1,5 @@
-// Web-Bluetooth-shaped inspection facade. No command-write surface.
+import { STANDARD_SERVICES, ALERT_SERVICE, ALERT_LEVEL } from './standard-controls.js';
+// Inspection facade plus a separate, fixed SIG standard-control mode.
 export function createNativeBluetooth(plugin) {
   const errorNames = new Set([
     'AbortError',
@@ -47,6 +48,14 @@ export function createNativeBluetooth(plugin) {
     },
     async requestDevice(options) {
       const run = ++generation;
+      const standard = options.sasoriStandardControls === true;
+      if (
+        standard &&
+        (!Array.isArray(options.optionalServices) ||
+          options.optionalServices.length !== STANDARD_SERVICES.length ||
+          !STANDARD_SERVICES.every((uuid) => options.optionalServices.includes(uuid)))
+      )
+        throw new Error('Standard controls require the fixed service allowlist.');
       if (device?.gatt.connected) throw new Error('A native inspection is already active.');
       cleanup();
       const registered = await Promise.allSettled([
@@ -98,6 +107,9 @@ export function createNativeBluetooth(plugin) {
           service: options.optionalServices[0],
           namePrefix: options.filters?.[0]?.namePrefix || '',
           showAllDevices: options.acceptAllDevices === true,
+          ...(standard
+            ? { standardControls: true, rememberedId: options.sasoriRememberedId || '' }
+            : {}),
         });
         if (run !== generation) throw unavailable();
         const current = new EventTarget();
@@ -147,9 +159,10 @@ export function createNativeBluetooth(plugin) {
                   };
                   characteristic.readValue = async () => {
                     guard();
-                    const result = await invoke('readInformation', {
+                    const result = await invoke(standard ? 'readStandard' : 'readInformation', {
                       id: current.id,
                       uuid: item.uuid,
+                      ...(standard ? { service: service.uuid } : {}),
                     });
                     guard();
                     if (
@@ -163,6 +176,21 @@ export function createNativeBluetooth(plugin) {
                     );
                     return new DataView(bytes.buffer);
                   };
+                  if (standard && service.uuid === ALERT_SERVICE && item.uuid === ALERT_LEVEL) {
+                    characteristic.writeValueWithoutResponse = async (value) => {
+                      guard();
+                      if (
+                        !(value instanceof Uint8Array) ||
+                        value.length !== 1 ||
+                        ![0, 1].includes(value[0])
+                      )
+                        throw new Error(
+                          'Only the standard no-alert / mild-alert levels are available.',
+                        );
+                      await invoke('alertStandard', { id: current.id, level: value[0] });
+                      guard();
+                    };
+                  }
                   characteristics.set(item.uuid, characteristic);
                   return characteristic;
                 });

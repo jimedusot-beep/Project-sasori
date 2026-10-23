@@ -2,7 +2,9 @@
 
 The original built-in [analysis adapter registry](../site/lib/adapters.js) now declares model aliases, source IDs, decoder, inspection capabilities, command availability, and recovery notes. [Protocol recorder](protocol-recorder.md) supplies normalized trace import, observation markers, comparisons, and an offline manufacturer-documented MiP version codec. These manifests cannot install executable code, enable physical actions, or promote imported evidence. Elmo's status query remains unavailable until the source/evidence gaps below are closed. [Eight inspirations and exact reuse decisions](research/adapter-inspirations.md) document the implementation's provenance.
 
-The implemented adapter is **ble-inspection/v1**. It supports service inspection and notification capture over Web Bluetooth, the native Core Bluetooth facade, and the desktop Bleak helper. Authentication and physical-action verification are false. A profile is configuration and evidence provenance; it is never executable adapter code.
+The inspection adapter is **ble-inspection/v1**. A separate [ble-standard/v1 control adapter](universal-controls.md) maps shared Identify/Status/Find/Stop intents to observed SIG Device Information, Battery and Immediate Alert services; it does not provide custom toy commands.
+
+**ble-inspection/v1** It supports service inspection and notification capture over Web Bluetooth, the native Core Bluetooth facade, and the desktop Bleak helper. Authentication and physical-action verification are false. A profile is configuration and evidence provenance; it is never executable adapter code.
 
 ## Identity and provenance
 

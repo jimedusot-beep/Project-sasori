@@ -48,3 +48,7 @@ The preserved [reuse matrix](reuse-matrix.md) includes related toy/robotics proj
 ## October 21 independent original-BLE review
 
 See the [source-verification register](../../experiments/001-elmo-l2l/source-verification.md) for fresh direct inspection of the pinned community README and V5 project source, the original teardown report's bibliographic provenance, PR #11's exact revision, the reported APK's failed retrieval, and explicit Hasbro/community licensing restrictions. Reading a prior report does not reproduce its static-analysis claims. No unlicensed implementation or private authentication material was imported. The new local capture-review script is original code and is not shipped with the website.
+
+## Shared standard controls
+
+The [Universal controls protocol register](../universal-controls.md#primary-protocol-sources-and-reuse) attributes Device Information 1.2, Battery Service 1.1, Immediate Alert 1.0, assigned UUIDs and Silicon Labs numeric alert-level documentation. Original `ble-standard/v1` code adopts those exact standard semantics without importing upstream implementation. It does not generalize those bytes to Elmo or proprietary devices.

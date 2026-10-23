@@ -6,6 +6,7 @@ import {
   MAX_TOTAL_BYTES,
 } from './records.js';
 import { validateToy, MAX_TOYS } from './toys.js';
+import { emptyControlSetups, validateControlSetups } from './control-setups.js';
 import { validateDiscovery, MAX_DISCOVERIES, MAX_DISCOVERY_BYTES } from './discovery.js';
 const request = (req) =>
   new Promise((resolve, reject) => {
@@ -26,6 +27,7 @@ export class ResearchStore {
     this.toys = new Map();
     this.discoveries = new Map();
     this.settings = {};
+    this.controlSetups = emptyControlSetups();
     this.persistent = false;
     this.warning = '';
     this.corrupt = [];
@@ -208,6 +210,39 @@ export class ResearchStore {
     const done = completed(tx);
     tx.objectStore('settings').put(value, 'preferences');
     await done;
+  }
+  async getControlSetups() {
+    if (this.closed) throw new Error(this.warning);
+    if (!this.persistent) return structuredClone(this.controlSetups);
+    const value = await request(
+      this.db.transaction('settings', 'readonly').objectStore('settings').get('standard-controls'),
+    );
+    return value ? validateControlSetups(value) : emptyControlSetups();
+  }
+  async setControlSetups(value) {
+    if (this.closed) throw new Error(this.warning);
+    const clean = validateControlSetups(value);
+    const next = { ...clean, revision: clean.revision + 1 };
+    if (!this.persistent) {
+      if (this.controlSetups.revision !== clean.revision)
+        throw new Error('Saved controls changed in another window. Reload before saving.');
+      this.controlSetups = structuredClone(next);
+      return next;
+    }
+    const tx = this.db.transaction('settings', 'readwrite');
+    const done = completed(tx);
+    // Attach the rejection handler before a revision conflict can abort this transaction.
+    done.catch(() => {});
+    const target = tx.objectStore('settings');
+    const existing = await request(target.get('standard-controls'));
+    if ((existing?.revision ?? 0) !== clean.revision) {
+      tx.abort();
+      await done.catch(() => {});
+      throw new Error('Saved controls changed in another window. Reload before saving.');
+    }
+    target.put(next, 'standard-controls');
+    await done;
+    return next;
   }
   async listToys() {
     if (this.closed) throw new Error(this.warning);
