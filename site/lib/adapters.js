@@ -20,7 +20,7 @@ const manifests = [
         label: 'Status query',
         availability: 'unavailable',
         reason:
-          'Browser/native Elmo writes remain unavailable. A source-derived known-password desktop client exists; real-unit validation is missing.',
+          'This recorder stays offline. Separate Elmo browser and desktop remotes implement the known-password subset; real-unit validation is missing.',
       },
     ],
     recovery:

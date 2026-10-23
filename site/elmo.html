@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+    <meta name="theme-color" content="#111918" />
+    <meta
+      name="description"
+      content="Sasori's simple Bluetooth remote for your Love2Learn Elmo. Connect, check touch sensors and request one greeting."
+    />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"
+    />
+    <meta name="referrer" content="no-referrer" />
+    <title>Elmo Remote · Project Sasori</title>
+    <link rel="icon" href="icon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="tokens.css" />
+    <link rel="stylesheet" href="elmo.css" />
+    <script type="module" src="elmo-ui.js"></script>
+  </head>
+  <body>
+    <a class="skip" href="#remote">Skip to remote</a>
+    <header class="app-header">
+      <a class="brand" href="./"
+        ><img src="icon.svg" alt="" width="38" height="38" /><span
+          >SASORI<small>YOUR TOYS. YOUR CONTROLS.</small></span
+        ></a
+      >
+      <a class="lab-link" href="./">Full laboratory ↗</a>
+    </header>
+    <main id="remote">
+      <div class="intro">
+        <div>
+          <p class="eyebrow">LOVE2LEARN ELMO / B6572 FAMILY</p>
+          <h1>Say hello, <span>Elmo.</span></h1>
+          <p class="lead">Connect your toy. Try one familiar greeting.</p>
+        </div>
+        <div class="intro-note">
+          <span class="status-dot" aria-hidden="true"></span>
+          <p>One toy. One connection.<br /><strong>Ready when you are.</strong></p>
+        </div>
+      </div>
+      <div class="browser-note" id="browser-note">
+        <strong id="browser-title">Checking your browser…</strong>
+        <p id="browser-help">The demo works without a Bluetooth connection.</p>
+        <div id="browser-links" hidden>
+          <a href="https://www.google.com/chrome/" target="_blank" rel="noopener noreferrer"
+            >Chrome for your computer ↗</a
+          ><a
+            href="https://pnnsoft.com/portfolio/detail/bluefy-web-bluetooth-api-solution-for-ios-devices"
+            target="_blank"
+            rel="noopener noreferrer"
+            >Bluefy for iPhone / iPad ↗</a
+          >
+        </div>
+      </div>
+      <div class="remote-grid">
+        <section class="card setup-card" aria-labelledby="setup-title">
+          <div class="card-top">
+            <span class="step-label">01 / CONNECT</span><span id="mode" class="pill">LIVE</span>
+          </div>
+          <h2 id="setup-title">Meet your Elmo.</h2>
+          <p class="muted">
+            Turn on your toy, keep it nearby, and close any other app connected to it.
+          </p>
+          <label for="elmo-password">Elmo password</label>
+          <input
+            id="elmo-password"
+            type="password"
+            minlength="4"
+            maxlength="128"
+            autocomplete="off"
+            autocapitalize="off"
+            spellcheck="false"
+            aria-describedby="password-help"
+            placeholder="The password set for your toy"
+          />
+          <p id="password-help" class="hint">Entered here, used locally, never saved.</p>
+          <label class="check"
+            ><input id="show-all" type="checkbox" /><span
+              >Show all Bluetooth devices if Elmo is missing</span
+            ></label
+          >
+          <button id="elmo-connect" class="primary" type="button" disabled>
+            Connect Elmo <span aria-hidden="true">→</span>
+          </button>
+          <div class="setup-secondary">
+            <button id="elmo-demo" class="text-button" type="button" disabled>
+              Try the demo first</button
+            ><button id="elmo-choose" class="text-button" type="button" hidden>
+              Choose another Elmo
+            </button>
+          </div>
+          <details>
+            <summary>I don’t know Elmo’s password</summary>
+            <p>
+              This remote needs the existing toy password. Password recovery and first-time password
+              setup are not available here. You can still
+              <a href="./#overview">inspect the Bluetooth connection</a> in the laboratory.
+            </p>
+          </details>
+        </section>
+        <section class="card controls-card" aria-labelledby="controls-title">
+          <div class="card-top">
+            <span class="step-label">02 / PLAY</span><span id="remaining" class="hint"></span>
+          </div>
+          <div class="connection-display">
+            <div class="connection-orbit" aria-hidden="true"><span>↔</span></div>
+            <p id="elmo-device" class="eyebrow">YOUR ELMO</p>
+            <h2 id="controls-title">Let’s connect.</h2>
+          </div>
+          <ol class="progress" aria-label="Connection progress">
+            <li id="step-device">Device</li>
+            <li id="step-password">Password</li>
+            <li id="step-ready">Ready</li>
+          </ol>
+          <p id="elmo-message" class="message" role="status" aria-live="polite">
+            Enter your toy’s password, then choose Connect Elmo.
+          </p>
+          <p id="demo-note" class="demo-note" hidden>
+            DEMO · These responses are simulated. No Bluetooth device is connected.
+          </p>
+          <button id="elmo-greet" class="greeting" type="button" disabled>
+            <span aria-hidden="true">♫</span
+            ><span>Play greeting<small>One built-in hello</small></span
+            ><span aria-hidden="true">↗</span>
+          </button>
+          <div class="action-row">
+            <button id="elmo-status" class="secondary" type="button" disabled>Read status</button
+            ><button id="elmo-disconnect" class="secondary" type="button" disabled>
+              Disconnect
+            </button>
+          </div>
+          <p id="playback-note" class="hint" hidden>
+            A request is not proof of playback. Listen to your toy. Disconnecting does not guarantee
+            a sound stops.
+          </p>
+          <div class="readings">
+            <div><span>LAST REPORTED VOLUME</span><strong id="elmo-volume">Unknown</strong></div>
+            <div><span>CONNECTION</span><strong id="elmo-state">Not connected</strong></div>
+          </div>
+          <h3>Touch &amp; sound inputs</h3>
+          <p class="hint">
+            Updates while connected. Highlighted inputs were reported active by the toy.
+          </p>
+          <ul id="elmo-inputs" class="sensor-list" aria-label="Reported toy inputs"></ul>
+          <button id="elmo-save" class="text-button save-button" type="button" disabled>
+            Save connection result ↓
+          </button>
+        </section>
+      </div>
+      <p class="experiment-note">
+        Experimental Elmo support · Software-tested; real-toy acceptance, greeting and recovery
+        still need testing. Use with your own Love2Learn Elmo. Each connection lasts up to 30
+        seconds.
+      </p>
+    </main>
+    <footer>
+      <span>PROJECT SASORI / ELMO REMOTE</span
+      ><a
+        href="https://github.com/jimedusot-beep/Project-sasori/blob/main/experiments/001-elmo-l2l/recovered-source.md"
+        target="_blank"
+        rel="noopener noreferrer"
+        >Protocol sources &amp; test status ↗</a
+      >
+    </footer>
+    <noscript
+      ><p>Enable JavaScript to use this remote. Bluetooth will not start without it.</p></noscript
+    >
+  </body>
+</html>

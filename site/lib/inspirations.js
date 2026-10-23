@@ -13,7 +13,7 @@ export const INSPIRATIONS = Object.freeze([
     reuse: 'Protocol-fact reference; original Sasori client, checked against the acquired app',
     aspect:
       'Known-password handshake, explicit hardware claims, fixed greeting and strict reply handling',
-    implementation: 'desktop/sasori_elmo.py',
+    implementation: 'site/lib/elmo-remote.js',
     reviewed: '2026-10-23',
   },
   {

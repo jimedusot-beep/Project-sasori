@@ -4,11 +4,13 @@ A mobile workbench for observing Bluetooth devices, preserving research, and dev
 
 The device workspace connects saved identities, active connection status, notification timelines, Discovery analysis, and versioned research notes. Start with [Quick connections](docs/quick-connect.md): Elmo settings are included, and another BLE toy can expose its model/firmware without manual UUID entry. Native access is available as a buildable [iPhone app](native/ios/README.md) and a local [desktop BLE helper](desktop/README.md); real-device validation remains required.
 
-**v0.2.0 is experimental. Elmo's web/native path remains inspection-only; a separate source-derived desktop known-password client now offers authentication, input/volume queries and one optional greeting. Shared standard BLE controls and an original MiP version/status/timed-LED adapter are also available. Real-device validation is still required.** Independent fan research; no affiliation with Hasbro or Naruto.
+**Open the [Elmo Remote](https://jimedusot-beep.github.io/Project-sasori/elmo.html) for a button-based connection, status and greeting trial. No Python or Terminal is required.** Use Chrome on a Bluetooth-equipped computer, or Bluefy on iPhone/iPad. See the [simple remote guide](docs/elmo-remote.md).
+
+**v0.2.0 is experimental. The separate browser and desktop Elmo remotes implement a known-password handshake, input/volume queries and one greeting request. Native Elmo inspection remains separate. Shared standard BLE controls and an original MiP version/status/timed-LED adapter are also available. Real-device validation is still required.** Independent fan research; no affiliation with Hasbro or Naruto.
 
 [Universal controls](docs/universal-controls.md) provides one connection-and-action workspace, remembered local device references, and reusable setup backups across supported families. Select the protocol/model, try its offline demo, then connect your matching device. **Run connection check** records a repeatable Identify → Status → Find/LED trial with physical-effect/recovery observations. The [adapter and validation guide](docs/device-action-validation.md) explains exact MiP bytes, evidence limits, and private Elmo app-source intake. Custom Elmo authentication, movement and playback remain unverified.
 
-The broader [community scan](docs/research/community-scan-2026-10-23.md) recovered the previously missing Elmo APK and found a newer standalone community client. [Direct method review](experiments/001-elmo-l2l/recovered-source.md) now establishes the implemented handshake subset. Use the [experimental desktop Elmo procedure](desktop/README.md#experimental-elmo-known-password-check) with your known password; source-backed software and synthetic tests do not establish acceptance or physical effects on your particular unit.
+The broader [community scan](docs/research/community-scan-2026-10-23.md) recovered the previously missing Elmo APK and found a newer standalone community client. [Direct method review](experiments/001-elmo-l2l/recovered-source.md) now establishes the implemented handshake subset. Use the [browser remote](docs/elmo-remote.md) or [experimental desktop Elmo procedure](desktop/README.md#experimental-elmo-known-password-check) with your known password; source-backed software and synthetic tests do not establish acceptance or physical effects on your particular unit.
 
 ## Try the laboratory
 
@@ -24,6 +26,8 @@ Open the [live laboratory](https://jimedusot-beep.github.io/Project-sasori/). HT
 The published UUID profile is transcribed from [NonaSuomy's GATT table](https://github.com/NonaSuomy/Love2LearnElmo/blob/82fa312e06af1d8e549cec588856ebce227b5f77/README.md). It is community-reported evidence, not a recovery of the old V4 source or proof of compatibility with your firmware. If service discovery fails, follow the [iPhone UUID capture guide](experiments/001-elmo-l2l/iphone-uuid-capture-guide.md).
 
 ## What works in software
+
+- [Elmo Remote](docs/elmo-remote.md): a standalone responsive HTML app with Connect, Read status, Play greeting, Disconnect, an isolated demo and private result download. Existing-password authentication runs in browser Bluetooth; secrets are never saved. Native Elmo writes and independent physical validation remain unavailable.
 
 - [Experimental Elmo desktop client](desktop/README.md#experimental-elmo-known-password-check): privately prompted existing password, one bounded challenge/response, strict acceptance/rejection, volume/input queries, touch monitoring and an opt-in single greeting. No automatic enrollment, reset, raw commands or credential logging. The original inspection helper remains separate.
 

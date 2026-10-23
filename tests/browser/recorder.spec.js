@@ -93,11 +93,9 @@ test('raw trace retention is explicit; reload and notebook backups preserve meta
   await page.getByRole('button', { name: 'Protocol recorder', exact: true }).click();
   await page.locator('#r-adapter').selectOption('elmo-l2l');
   await expect(page.locator('#r-plan')).toBeDisabled();
+  await expect(page.locator('#r-readiness')).toContainText('This recorder stays offline');
   await expect(page.locator('#r-readiness')).toContainText(
-    'Browser/native Elmo writes remain unavailable',
-  );
-  await expect(page.locator('#r-readiness')).toContainText(
-    'source-derived known-password desktop client exists',
+    'Separate Elmo browser and desktop remotes',
   );
   expect(await page.evaluate(() => window.radioCalls)).toBe(0);
 });
