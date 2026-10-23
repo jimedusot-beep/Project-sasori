@@ -215,6 +215,23 @@ test('Stop interrupts the shared recipe and stale receipts cannot overwrite a fr
   assert.equal(runner.state, 'connected');
   runner.stop();
 });
+test('shared effect receipt distinguishes a failed off write from owner cancellation', async () => {
+  const f = await fixture();
+  const runner = new DeviceControls({
+    adapterId: MIP_ADAPTER.id,
+    bluetooth: f.bluetooth,
+    alertMs: 8,
+    operationMs: 50,
+  });
+  await runner.connect();
+  f.tx.writeValueWithoutResponse = async (bytes) => {
+    if (bytes[0] === 0x84 && bytes[3] === 0) throw new Error('Synthetic off queue failure');
+  };
+  await assert.rejects(runner.dispatch('alert'), { name: 'NetworkError' });
+  assert.equal(runner.lastAction.outcome, 'failed');
+  assert.equal(runner.lastAction.cleanup, 'failed');
+  assert.equal(f.device.gatt.connected, false);
+});
 test('native MiP mode accepts semantic fixed commands and rejects arbitrary byte writes', async () => {
   const listeners = new Map(),
     calls = [];

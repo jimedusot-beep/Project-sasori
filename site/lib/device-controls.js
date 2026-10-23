@@ -36,7 +36,12 @@ export class DeviceControls {
           if (event.state === 'connected' && event.effect === 'cleared') waiter.resolve();
           else
             waiter.reject(
-              new DOMException('Effect ended by disconnection or failed cleanup.', 'AbortError'),
+              new DOMException(
+                event.effect === 'failed'
+                  ? 'Effect cleanup failed; disconnected.'
+                  : 'Effect ended by disconnection.',
+                event.effect === 'failed' ? 'NetworkError' : 'AbortError',
+              ),
             );
         }
         this.emit({
