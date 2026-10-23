@@ -8,18 +8,20 @@ async function webMiP(page) {
     window.mipCalls = [];
     let devicePromise;
     const get = () =>
-      (devicePromise ||= import('/lib/mip-controls.js').then(async (module) => {
-        const device = await module.createMiPDemo().requestDevice();
-        const tx = (
-          await (await device.gatt.getPrimaryService(module.MIP_TX_SERVICE)).getCharacteristics()
-        )[0];
-        const write = tx.writeValueWithoutResponse;
-        tx.writeValueWithoutResponse = async (bytes) => {
-          window.mipCalls.push(['write', [...bytes]]);
-          return write(bytes);
-        };
-        return device;
-      }));
+      (devicePromise ||= import(new URL('/lib/mip-controls.js', location.href).href).then(
+        async (module) => {
+          const device = await module.createMiPDemo().requestDevice();
+          const tx = (
+            await (await device.gatt.getPrimaryService(module.MIP_TX_SERVICE)).getCharacteristics()
+          )[0];
+          const write = tx.writeValueWithoutResponse;
+          tx.writeValueWithoutResponse = async (bytes) => {
+            window.mipCalls.push(['write', [...bytes]]);
+            return write(bytes);
+          };
+          return device;
+        },
+      ));
     Object.defineProperty(navigator, 'bluetooth', {
       configurable: true,
       value: {
@@ -57,7 +59,10 @@ test('MiP offline recipe records synthetic trials, preserves observations, and e
     true,
   );
   await page.locator('#u-trials-title').scrollIntoViewIfNeeded();
-  await page.screenshot({ path: info.outputPath('mip-trial-workspace.png') });
+  await page
+    .locator('#u-trials-title')
+    .locator('..')
+    .screenshot({ path: info.outputPath('mip-trial-workspace.png') });
   const downloading = page.waitForEvent('download');
   await page.locator('#u-trials-export').click();
   const text = await readFile(await (await downloading).path(), 'utf8');

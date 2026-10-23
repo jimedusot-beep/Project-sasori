@@ -646,24 +646,33 @@
                 A connection check runs available Identify, Status and Find / LED actions. Record
                 what you observe on the physical device below.
               </p>
-              <p class="hint">
-                Controls become available only when the selected protocol family finds its matching
-                channels. Find sends a standard mild alert or the MiP blue-light command, then
-                requests clear/off. These writes have no physical acknowledgment. Stop disconnects;
-                verify the device has stopped. Sessions end after five minutes or when Sasori is
-                hidden.
-              </p>
+              <details>
+                <summary>Command and session limits</summary>
+                <p class="hint">
+                  Available controls depend on the device’s channels. Find requests a mild alert or
+                  MiP blue light, then clear/off. Queued writes do not confirm a physical effect.
+                  Stop disconnects; check the device. Sessions end after five minutes or when Sasori
+                  is hidden.
+                </p>
+              </details>
             </section>
           </div>
           <section class="panel" aria-labelledby="u-trials-title">
-            <h2 id="u-trials-title">3 / Record real-device checks</h2>
+            <h2 id="u-trials-title">3 / Test on your toy</h2>
             <p id="u-trial-summary" role="status">Choose a saved device to review checks.</p>
             <p class="hint">
-              Connect afresh, run a connection check, and record the physical effect and recovery.
-              Ten separate successful sessions with the same reported model/firmware form a
-              reviewable owner-observed report. Demo and imported trials do not count; this does not
-              independently certify hardware or authentication.
+              Run a connection check, then record what happened on your toy. Reconnect before the
+              next check.
             </p>
+            <details>
+              <summary>What counts toward ten checks?</summary>
+              <p class="hint">
+                Ten fresh successful sessions with the same model/firmware and observed
+                effect/recovery form a report ready for review. Failed, untested or changed-identity
+                checks restart the count. Demo/imported trials never count. Owner observations do
+                not independently verify hardware or authentication.
+              </p>
+            </details>
             <div class="form-row">
               <label><input id="u-trials-all" type="checkbox" /> Show all saved trials</label>
             </div>
