@@ -1,6 +1,10 @@
 import { recordId } from './records.js';
-import { StandardControls, CONTROL_ADAPTER, createControlDemo } from './standard-controls.js';
-import { MiPControls, MIP_ADAPTER, createMiPDemo } from './mip-controls.js';
+import {
+  StandardControls,
+  CONTROL_ADAPTER,
+  createControlDemo,
+} from './standard-controls.js?v=recognition-20261024';
+import { MiPControls, MIP_ADAPTER, createMiPDemo } from './mip-controls.js?v=recognition-20261024';
 import { FurbyControls, FURBY_ADAPTER, createFurbyDemo } from './furby-controls.js';
 export const CONTROL_FAMILIES = Object.freeze([CONTROL_ADAPTER, MIP_ADAPTER, FURBY_ADAPTER]);
 export function controlFamily(id = CONTROL_ADAPTER.id) {

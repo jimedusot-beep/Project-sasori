@@ -1,4 +1,4 @@
-import { StandardControls } from './standard-controls.js';
+import { StandardControls } from './standard-controls.js?v=recognition-20261024';
 import { SUPPORTED_BLE_SERVICES, matchSupportedDevices } from './supported-devices.js';
 
 // Metadata only: no characteristic reads, application writes, or notification subscriptions.
@@ -48,7 +48,8 @@ export class KnownDeviceProbe extends StandardControls {
       const connecting = device.gatt.connect();
       Promise.resolve(connecting).then(
         () => {
-          if (run !== this.generation && this.device !== device) device.gatt.disconnect();
+          if (run !== this.generation && (this.device !== device || this.state === 'disconnected'))
+            device.gatt.disconnect();
         },
         () => {},
       );

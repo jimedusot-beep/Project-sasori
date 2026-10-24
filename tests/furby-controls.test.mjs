@@ -8,6 +8,8 @@ import {
   furbyCommand,
   decodeFurbyReply,
 } from '../site/lib/furby-codec.js';
+import { StandardControls } from '../site/lib/standard-controls.js';
+import { MiPControls } from '../site/lib/mip-controls.js';
 import { DeviceControls } from '../site/lib/device-controls.js';
 import { HubSession } from '../site/lib/hub-session.js';
 import { RoutineRunner } from '../site/lib/routines.js';
@@ -206,3 +208,33 @@ test('session deadline and Stop during a light request perform only best-effort 
     [0x14, 0, 0, 0],
   ]);
 });
+
+for (const Backend of [StandardControls, MiPControls, FurbyControls]) {
+  test(Backend.name + ' closes GATT connections completed after Stop', async () => {
+    const f = await fixture();
+    const runner = new Backend({ bluetooth: f.runner.bluetooth, operationMs: 50, sessionMs: 2000 });
+    let release, entered;
+    const started = new Promise((resolve) => {
+      entered = resolve;
+    });
+    f.device.gatt.connect = () => {
+      entered();
+      return new Promise((resolve) => {
+        release = () => {
+          f.device.gatt.connected = true;
+          resolve(f.device.gatt);
+        };
+      });
+    };
+    const pending = runner.connect();
+    const rejected = assert.rejects(pending, { name: 'AbortError' });
+    await started;
+    runner.stop();
+    release();
+    await rejected;
+    await Promise.resolve();
+    assert.equal(f.device.gatt.connected, false);
+    assert.equal(runner.pending.size, 0);
+    assert.equal(f.calls.length, 0);
+  });
+}

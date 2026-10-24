@@ -1,5 +1,5 @@
 import { ELMO_SERVICE, ELMO_NOTIFY } from './profiles.js';
-import { MIP_SERVICES, MIP_RX, MIP_TX } from './mip-controls.js';
+import { MIP_SERVICES, MIP_RX, MIP_TX } from './mip-controls.js?v=recognition-20261024';
 import { FURBY_SERVICE, FURBY_RX, FURBY_TX } from './furby-codec.js';
 import {
   STANDARD_SERVICES,
@@ -7,7 +7,7 @@ import {
   BATTERY_LEVEL,
   ALERT_SERVICE,
   ALERT_LEVEL,
-} from './standard-controls.js';
+} from './standard-controls.js?v=recognition-20261024';
 import { DEVICE_INFORMATION_SERVICE, DEVICE_INFORMATION_FIELDS } from './device-information.js';
 
 export const SUPPORTED_BLE_SERVICES = Object.freeze([

@@ -184,3 +184,25 @@ test('Universal controls offers the same Furby demo and explains the adapter sco
   await expect(page.locator('#u-sources a')).toHaveCount(2);
   await page.locator('#u-stop').click();
 });
+
+test('hiding the page discards pending identification and its late service result', async ({
+  page,
+}) => {
+  await radio(page, 'hang');
+  await page.goto('/hub.html');
+  await page.locator('#hub-detect').click();
+  await expect.poll(() => page.evaluate(() => typeof window.releaseFurbyService)).toBe('function');
+  await page.evaluate(() => {
+    window.dispatchEvent(new Event('pagehide'));
+    window.releaseFurbyService({
+      uuid: 'dab91435-b5a1-e29c-b041-bcd562613bde',
+      getCharacteristics: async () => [],
+    });
+  });
+  await expect(page.locator('#recognition-status')).toContainText(
+    'cleared when the page was hidden',
+  );
+  await expect(page.locator('#recognition-matches button')).toHaveCount(0);
+  await expect(page.locator('#hub-detect')).toBeEnabled();
+  expect(await page.evaluate(() => window.furbyCalls.some(([k]) => k === 'write'))).toBe(false);
+});

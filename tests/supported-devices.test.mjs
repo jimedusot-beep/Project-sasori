@@ -165,3 +165,30 @@ test('oversized or mismatched GATT inventories abort without yielding a candidat
     assert.equal(f.device.gatt.connected, false);
   }
 });
+
+test('recognition closes a GATT connection that completes after Stop', async () => {
+  const f = radio();
+  let release, entered;
+  const started = new Promise((resolve) => {
+    entered = resolve;
+  });
+  f.device.gatt.connect = () => {
+    entered();
+    return new Promise((resolve) => {
+      release = () => {
+        f.device.gatt.connected = true;
+        resolve(f.device.gatt);
+      };
+    });
+  };
+  const probe = new KnownDeviceProbe({ bluetooth: f.bluetooth });
+  const pending = probe.inspect();
+  const rejected = assert.rejects(pending, { name: 'AbortError' });
+  await started;
+  probe.stop();
+  release();
+  await rejected;
+  await Promise.resolve();
+  assert.equal(f.device.gatt.connected, false);
+  assert.equal(probe.pending.size, 0);
+});

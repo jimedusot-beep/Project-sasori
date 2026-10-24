@@ -1,4 +1,4 @@
-import { StandardControls } from './standard-controls.js';
+import { StandardControls } from './standard-controls.js?v=recognition-20261024';
 import {
   FURBY_SERVICE,
   FURBY_RX,
@@ -101,7 +101,11 @@ export class FurbyControls extends StandardControls {
       const connecting = candidate.gatt.connect();
       Promise.resolve(connecting).then(
         () => {
-          if (run !== this.generation && this.device !== candidate) candidate.gatt.disconnect();
+          if (
+            run !== this.generation &&
+            (this.device !== candidate || this.state === 'disconnected')
+          )
+            candidate.gatt.disconnect();
         },
         () => {},
       );
