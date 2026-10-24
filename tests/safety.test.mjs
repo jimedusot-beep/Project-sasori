@@ -46,6 +46,7 @@ test('inspection scripts have no write API and shipped scripts use no raw remote
       ![
         'site/lib/standard-controls.js',
         'site/lib/mip-controls.js',
+        'site/lib/furby-controls.js', // reviewed fixed Furby Connect queries and antenna LED only
         'site/lib/elmo-remote.js',
         'site/lib/pocket-ir.js', // audited fixed-protocol consumer IR sender
       ].includes(p),

@@ -5,10 +5,11 @@ import {
   ELMO_INPUTS,
   ELMO_SOUNDS,
   actionLabel,
-} from './lib/hub-catalog.js';
-import { HubSession } from './lib/hub-session.js';
-import { RoutineRunner, validateRoutine } from './lib/routines.js';
-import { ResearchStore } from './lib/storage.js';
+} from './lib/hub-catalog.js?v=recognition-20261024';
+import { HubSession } from './lib/hub-session.js?v=recognition-20261024';
+import { KnownDeviceProbe } from './lib/known-device-probe.js';
+import { RoutineRunner, validateRoutine } from './lib/routines.js?v=recognition-20261024';
+import { ResearchStore } from './lib/storage.js?v=recognition-20261024';
 import { recordId } from './lib/records.js';
 import {
   emptyHubData,
@@ -17,7 +18,7 @@ import {
   parseHubBackup,
   hubFailure,
   localCompanionURL,
-} from './lib/hub-records.js';
+} from './lib/hub-records.js?v=recognition-20261024';
 import { TVRemote } from './lib/tv-remote.js';
 import { TouchReactions, validateReactions } from './lib/reactions.js';
 
@@ -47,6 +48,9 @@ let current = null,
   cachedDevice = null;
 let reactionDraft = [],
   reactionReport = null;
+let detector = null,
+  detecting = false,
+  detectionSequence = 0;
 const reactions = new TouchReactions({
   emit: (report) => {
     reactionReport = report;
@@ -83,7 +87,7 @@ const selected = () => data.setups.find((s) => s.id === $('saved-setup').value);
 const connected = () => snapshot?.state === 'connected';
 const active = () => ['connecting', 'connected'].includes(snapshot?.state);
 const running = () => routine?.active === true;
-const locked = () => active() || running();
+const locked = () => active() || running() || detecting;
 function notice(message) {
   $('storage-notice').hidden = !message;
   $('storage-notice').textContent = message || '';
@@ -169,7 +173,9 @@ function setFamily(id) {
   $('elmo-controls').hidden = id !== 'elmo-l2l/v1';
   $('tv-options').hidden = id !== 'tv-local/v1';
   $('tv-controls').hidden = id !== 'tv-local/v1';
-  $('generic-actions').hidden = !['ble-standard/v1', 'wowwee-mip/v1'].includes(id);
+  $('generic-actions').hidden = !['ble-standard/v1', 'wowwee-mip/v1', 'furby-connect/v1'].includes(
+    id,
+  );
   $('tv-hosted').hidden = companion;
   $('tv-local').hidden = !companion;
   $('browser-help').textContent = bluetoothAvailable
@@ -177,7 +183,10 @@ function setFamily(id) {
     : companion
       ? 'Bluetooth requires a secure browser context. Use the hosted Sasori hub in Bluefy or compatible Chrome for Bluetooth; local TV controls work here.'
       : 'Use Bluefy on iPhone/iPad or compatible Chrome for Bluetooth. The offline demo works here.';
-  $('hub-alert').textContent = id === 'wowwee-mip/v1' ? 'Blue chest light' : 'Find / mild alert';
+  $('hub-alert').textContent = actionLabel(
+    id === 'elmo-l2l/v1' || id === 'tv-local/v1' ? 'ble-standard/v1' : id,
+    'alert',
+  );
   draft = [];
   $('routine-name').value = 'My routine';
   buildStepOptions();
@@ -284,6 +293,68 @@ function receive(session, value) {
     );
   }
 }
+function cancelDetection(message = 'Identification cancelled. No adapter was selected.') {
+  ++detectionSequence;
+  detector?.stop();
+  detector = null;
+  detecting = false;
+  $('recognition-matches').replaceChildren();
+  $('recognition-status').textContent = message;
+  render();
+}
+async function detectDevice() {
+  if (!ready || locked() || !bluetoothAvailable) return;
+  const sequence = ++detectionSequence;
+  detecting = true;
+  cachedDevice = null;
+  $('recognition-matches').replaceChildren();
+  $('recognition-status').textContent = 'Select a device. Checking known service metadata…';
+  const probe = new KnownDeviceProbe({ bluetooth: navigator.bluetooth });
+  detector = probe;
+  try {
+    const pending = probe.inspect();
+    render();
+    const result = await pending;
+    if (sequence !== detectionSequence) return;
+    $('recognition-status').textContent = result.matches.length
+      ? 'Disconnected. Choose a matching adapter, confirm the toy model, then press Connect.'
+      : 'Disconnected. No supported service/channel combination matched. Use the full laboratory to inspect it; no commands were attempted.';
+    for (const match of result.matches) {
+      const button = node('button', 'Use ' + hubFamily(match.familyId).name, 'secondary');
+      button.type = 'button';
+      button.title = match.detail;
+      button.addEventListener('click', () => {
+        if (locked() || sequence !== detectionSequence) return;
+        data.selectedId = '';
+        $('saved-setup').value = '';
+        familyId = match.familyId;
+        loadSetup(null);
+        cachedDevice = result.device;
+        $('device-prefix').value = '';
+        $('recognition-status').textContent =
+          match.detail + ' Confirm your model before connecting. Nothing has been commanded.';
+        $('recognition-matches').replaceChildren();
+        render();
+      });
+      $('recognition-matches').append(button);
+    }
+  } catch (error) {
+    if (sequence === detectionSequence) {
+      $('recognition-status').textContent =
+        error.name === 'NotFoundError'
+          ? 'No device selected. Your saved setups are kept.'
+          : error.name === 'AbortError'
+            ? 'Identification ended or reached its deadline. No commands were sent. Try again.'
+            : 'Identification failed. No commands were sent. Check Bluetooth and try again.';
+    }
+  } finally {
+    if (sequence === detectionSequence) {
+      detector = null;
+      detecting = false;
+      render();
+    }
+  }
+}
 async function connect(demo = false) {
   if (!ready || locked()) return;
   let setup;
@@ -381,6 +452,10 @@ function render() {
   const s = snapshot,
     lockedNow = locked(),
     busy = actionBusy || running() || reactions.active || !!s?.busy;
+  $('hub-detect').disabled = !ready || lockedNow || !bluetoothAvailable;
+  $('cancel-detect').hidden = !detecting;
+  for (const button of $('recognition-matches').querySelectorAll('button'))
+    button.disabled = lockedNow;
   for (const button of familyButtons.values()) button.disabled = lockedNow;
   for (const id of [
     'saved-setup',
@@ -486,7 +561,7 @@ function render() {
     $(id).disabled = busy || !current?.can(intent);
   for (const button of document.querySelectorAll('[data-tv-key]'))
     button.disabled = busy || !current?.can('key', { key: button.dataset.tvKey });
-  $('hub-stop').disabled = !active() && !running();
+  $('hub-stop').disabled = !active() && !running() && !detecting;
   $('hub-result').disabled = !current || active() || running();
   $('owner-observation').disabled = !s || s.synthetic || !s.lastAction;
   $('simulate-touch').hidden = !s?.synthetic || familyId !== 'elmo-l2l/v1' || !connected();
@@ -622,7 +697,7 @@ function buildStepOptions() {
         : [
             ['identify', 'Read device information'],
             ['status', 'Read status'],
-            ['alert', familyId === 'wowwee-mip/v1' ? 'Blue chest light' : 'Mild alert'],
+            ['alert', actionLabel(familyId, 'alert')],
           ];
   for (const [value, label] of [...actions, ['wait', 'Wait briefly']])
     $('routine-step').append(option(value, label));
@@ -736,6 +811,8 @@ $('hub-connect').addEventListener(
   'click',
   handle(() => connect(false)),
 );
+$('hub-detect').addEventListener('click', handle(detectDevice));
+$('cancel-detect').addEventListener('click', () => cancelDetection());
 $('hub-demo').addEventListener(
   'click',
   handle(() => connect(true)),
@@ -747,6 +824,7 @@ $('hub-password').addEventListener('keydown', (event) => {
   }
 });
 $('hub-stop').addEventListener('click', () => {
+  if (detecting) cancelDetection();
   reactions.disarm();
   routine?.cancel();
   current?.stop();
@@ -1042,6 +1120,9 @@ $('run-routine').addEventListener(
   }),
 );
 function hide() {
+  cancelDetection(
+    'Identification cleared when the page was hidden. Press Identify to check again.',
+  );
   reactions.disarm('page-hidden');
   $('hub-password').value = '';
   $('companion-pin').value = '';

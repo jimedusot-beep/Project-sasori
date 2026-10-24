@@ -1,8 +1,8 @@
 import { ElmoRemote, createElmoDemo } from './elmo-remote.js';
-import { DeviceControls } from './device-controls.js';
+import { DeviceControls } from './device-controls.js?v=recognition-20261024';
 import { TVRemote } from './tv-remote.js';
-import { hubFamily, hubAction, ELMO_INPUTS } from './hub-catalog.js';
-import { hubFailure } from './hub-records.js';
+import { hubFamily, hubAction, ELMO_INPUTS } from './hub-catalog.js?v=recognition-20261024';
+import { hubFailure } from './hub-records.js?v=recognition-20261024';
 import { recordId } from './records.js';
 
 export class HubSession {
@@ -64,7 +64,7 @@ export class HubSession {
             ? 'connecting'
             : raw.state
         : raw.state,
-      busy: !!raw.busy,
+      busy: !!raw.busy || !!raw.alerting,
       deviceName: raw.deviceName || raw.label || raw.information?.label || this.family.name,
       information: { ...(raw.information || {}) },
       battery: raw.battery ?? null,

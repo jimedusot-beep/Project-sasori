@@ -40,3 +40,7 @@ The implementation paths above are original Sasori code. “Adopted” means the
 Use [Protocol recorder](../protocol-recorder.md) to preserve TX/RX, identity, source method, and action markers. A measured selected interval is not automatically an acknowledgment or authentication success. Source claims, imported records, source-reported checksums, and synthetic fixtures do not promote an adapter to hardware-verified.
 
 The next Elmo deliverable needs exact message framing, authentication construction/order, a correlated status request/response, and real unit tests. See [source verification](../../experiments/001-elmo-l2l/source-verification.md). The replacement-controller track remains independent: [adapter contract](../adapter-contract.md).
+
+## Bluefluff method implemented as a control adapter
+
+The October 24 [Furby Connect adapter](../furby-connect.md) now uses pinned Bluefluff protocol facts for GeneralPlus firmware/presence queries and a bounded antenna LED action. This extends the original methodology-only adoption above. An original metadata-only matcher distinguishes Furby’s `3bde` service from Elmo’s `3bdf` service and suggests supported adapters without command traffic. No upstream code/assets or DLC/firmware are imported; the MIT license, exact sources, implementation paths and unperformed physical acceptance are recorded in the adapter guide.

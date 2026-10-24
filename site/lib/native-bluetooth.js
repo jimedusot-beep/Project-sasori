@@ -51,6 +51,11 @@ export function createNativeBluetooth(plugin) {
       const run = ++generation;
       const standard = options.sasoriStandardControls === true;
       const mip = options.sasoriControlAdapter === MIP_ADAPTER.id;
+      if (options.sasoriControlAdapter && !mip)
+        throw new DOMException(
+          'This adapter requires a Web Bluetooth browser; native controls are unavailable.',
+          'NotSupportedError',
+        );
       if (standard && mip) throw new Error('Choose one control adapter.');
       if (
         mip &&

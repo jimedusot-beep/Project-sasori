@@ -12,12 +12,12 @@ import {
 } from './lib/profiles.js';
 import { CAPABILITIES, validateCommand, virtualPosition } from './lib/safety.js';
 import { Diagnostics, explainError } from './lib/diagnostics.js';
-import { ResearchStore } from './lib/storage.js';
+import { ResearchStore } from './lib/storage.js?v=recognition-20261024';
 import { mountDiscovery } from './discovery-ui.js';
 import { mountRecorder } from './recorder-ui.js';
-import { mountControls } from './controls-ui.js';
+import { mountControls } from './controls-ui.js?v=recognition-20261024';
 import { mountDeviceHub } from './device-hub.js';
-import { createNativeBluetooth } from './lib/native-bluetooth.js';
+import { createNativeBluetooth } from './lib/native-bluetooth.js?v=recognition-20261024';
 import { bluetoothSupport, makeInspection, identityOf } from './lib/devices.js';
 import { connectionResult } from './lib/connection-result.js';
 import { DEVICE_INFORMATION_SERVICE, DEVICE_INFORMATION_SOURCE } from './lib/device-information.js';

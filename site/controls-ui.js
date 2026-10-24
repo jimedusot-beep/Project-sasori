@@ -1,5 +1,9 @@
 import { CONTROL_ADAPTER } from './lib/standard-controls.js';
-import { DeviceControls, CONTROL_FAMILIES, controlFamily } from './lib/device-controls.js';
+import {
+  DeviceControls,
+  CONTROL_FAMILIES,
+  controlFamily,
+} from './lib/device-controls.js?v=recognition-20261024';
 import {
   trialFromAction,
   observeActionTrial,
@@ -7,7 +11,7 @@ import {
   portableTrials,
   parseTrials,
   MAX_TRIAL_BYTES,
-} from './lib/action-trials.js';
+} from './lib/action-trials.js?v=recognition-20261024';
 import {
   emptyControlSetups,
   rememberControlDevice,
@@ -15,7 +19,7 @@ import {
   parseControlSetups,
   mergeControlSetups,
   MAX_CONTROL_SETUP_BYTES,
-} from './lib/control-setups.js';
+} from './lib/control-setups.js?v=recognition-20261024';
 
 export async function mountControls({
   store,
@@ -100,15 +104,26 @@ export async function mountControls({
   }
   function render() {
     const target = selected();
+    const platformUnsupported = native && family().nativeSupported === false;
     $('u-state').textContent = (demo ? 'DEMO · ' : '') + snapshot.state;
     $('u-device-name').textContent = active()
       ? snapshot.label || 'Bluetooth device'
       : target?.label || 'No device selected';
     $('u-connect').disabled =
-      active() || saving || actionRunning || !secure || !bluetooth?.requestDevice;
+      active() ||
+      saving ||
+      actionRunning ||
+      !secure ||
+      !bluetooth?.requestDevice ||
+      platformUnsupported;
     $('u-connect').textContent = target ? 'Reconnect saved device' : 'Connect device';
     $('u-choose').disabled =
-      active() || saving || actionRunning || !secure || !bluetooth?.requestDevice;
+      active() ||
+      saving ||
+      actionRunning ||
+      !secure ||
+      !bluetooth?.requestDevice ||
+      platformUnsupported;
     $('u-demo').disabled = active() || saving || actionRunning;
     $('u-stop').disabled = !active();
     for (const intent of ['identify', 'status', 'alert'])
@@ -142,8 +157,15 @@ export async function mountControls({
     $('u-capabilities').replaceChildren();
     for (const [intent, label] of [
       ['identify', 'Model / firmware'],
-      ['status', 'Battery status'],
-      ['alert', family().id === CONTROL_ADAPTER.id ? 'Find / mild alert' : 'Blue chest LED'],
+      ['status', family().id === CONTROL_ADAPTER.id ? 'Battery status' : 'Protocol status'],
+      [
+        'alert',
+        family().id === 'furby-connect/v1'
+          ? 'Blue antenna LED'
+          : family().id === CONTROL_ADAPTER.id
+            ? 'Find / mild alert'
+            : 'Blue chest LED',
+      ],
     ])
       $('u-capabilities').append(
         node(
@@ -157,7 +179,10 @@ export async function mountControls({
                 : 'check after connecting'),
         ),
       );
-    if (!bluetooth?.requestDevice || !secure)
+    if (platformUnsupported)
+      $('u-platform').textContent =
+        'Furby Connect live controls require Bluefy or another Web Bluetooth browser. The offline demo works here.';
+    else if (!bluetooth?.requestDevice || !secure)
       $('u-platform').textContent =
         'Live controls need the native iPhone app or a secure Web Bluetooth browser. The demo works here.';
     else
@@ -177,7 +202,9 @@ export async function mountControls({
     $('u-family-help').textContent =
       family().id === CONTROL_ADAPTER.id
         ? 'Standard identity, battery and mild-alert services; availability varies.'
-        : 'Original WowWee MiP protocol only. Status/version queries and a dim blue LED action; no motion or sound commands. Selecting a model does not establish hardware verification.';
+        : family().id === 'furby-connect/v1'
+          ? 'Furby Connect (2016) only: GeneralPlus firmware byte, undecoded presence reply and dim antenna light. No speech, movement or firmware writes. Physical behavior remains unverified.'
+          : 'Original WowWee MiP protocol only. Status/version queries and a dim blue LED action; no motion or sound commands. Selecting a model does not establish hardware verification.';
     if (sourcesId !== family().id) {
       sourcesId = family().id;
       $('u-sources').replaceChildren();
@@ -191,7 +218,9 @@ export async function mountControls({
                 'Assigned UUIDs',
                 'Find Me alert levels',
               ][index]
-            : ['MiP transport / ASCII framing', 'MiP command table'][index];
+            : family().id === 'furby-connect/v1'
+              ? ['Bluefluff Bluetooth channels', 'Bluefluff GeneralPlus commands'][index]
+              : ['MiP transport / ASCII framing', 'MiP command table'][index];
         const link = node('a', label);
         link.href = href;
         link.target = '_blank';
@@ -264,6 +293,11 @@ export async function mountControls({
   }
   async function connect(isDemo, forceChooser = false) {
     if (active() || saving || actionRunning) return;
+    if (!isDemo && native && family().nativeSupported === false)
+      throw new DOMException(
+        'Use Bluefy or another Web Bluetooth browser for this adapter.',
+        'NotSupportedError',
+      );
     if (!canStart())
       throw new Error('Stop the current inspection before opening another connection.');
     const target = selected(),

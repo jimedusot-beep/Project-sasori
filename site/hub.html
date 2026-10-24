@@ -16,8 +16,8 @@
     <meta name="referrer" content="no-referrer" />
     <title>Device Hub · Project Sasori</title>
     <link rel="icon" href="icon.svg" type="image/svg+xml" />
-    <link rel="stylesheet" href="hub.css" />
-    <script type="module" src="hub-ui.js"></script>
+    <link rel="stylesheet" href="hub.css?v=recognition-20261024" />
+    <script type="module" src="hub-ui.js?v=recognition-20261024"></script>
   </head>
   <body>
     <a class="skip" href="#workspace">Skip to controls</a>
@@ -40,6 +40,22 @@
       </div>
       <div class="family-grid" id="families" role="group" aria-label="Device families"></div>
       <p class="hint" id="family-hint"></p>
+      <div class="notice" aria-label="Find a supported Bluetooth adapter">
+        <div class="action-row">
+          <button id="hub-detect" class="secondary" type="button">Identify a Bluetooth toy</button>
+          <button id="cancel-detect" class="quiet" type="button" hidden>
+            Cancel identification
+          </button>
+        </div>
+        <p id="recognition-status" role="status" aria-live="polite">
+          Unsure which family to choose? Check its known Bluetooth services first.
+        </p>
+        <div id="recognition-matches" class="action-row"></div>
+        <p class="hint">
+          Checks metadata, then disconnects. No toy commands are sent. A matching service suggests
+          an adapter; it does not authenticate the model.
+        </p>
+      </div>
       <div id="storage-notice" class="notice" role="status" hidden></div>
       <div class="hub-grid">
         <section class="panel setup-panel" aria-labelledby="setup-title">

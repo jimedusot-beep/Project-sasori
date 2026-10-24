@@ -20,6 +20,12 @@ export const HUB_FAMILIES = Object.freeze([
     hint: '2014 protocol · version, status and blue chest light',
   }),
   Object.freeze({
+    id: 'furby-connect/v1',
+    name: 'Furby Connect',
+    kind: 'bluetooth',
+    hint: '2016 BLE model · firmware, presence reply and blue antenna light',
+  }),
+  Object.freeze({
     id: 'tv-local/v1',
     name: 'TV & universal remote',
     kind: 'local-helper',
@@ -80,7 +86,12 @@ export function actionLabel(familyId, intent, args = {}) {
     return 'Play ' + ELMO_SOUNDS.find((s) => s.id === clean.args.id).label.toLowerCase();
   if (intent === 'volume') return 'Request volume ' + clean.args.level + ' / 15';
   if (intent === 'key') return TV_KEYS[clean.args.key];
-  if (intent === 'alert') return familyId === 'wowwee-mip/v1' ? 'Blue chest light' : 'Mild alert';
+  if (intent === 'alert')
+    return familyId === 'furby-connect/v1'
+      ? 'Blue antenna light'
+      : familyId === 'wowwee-mip/v1'
+        ? 'Blue chest light'
+        : 'Mild alert';
   return intent === 'identify' ? 'Read device information' : 'Read status';
 }
 export { ELMO_INPUTS, ELMO_SOUNDS };

@@ -1,7 +1,12 @@
 import { recordId } from './records.js';
-import { StandardControls, CONTROL_ADAPTER, createControlDemo } from './standard-controls.js';
-import { MiPControls, MIP_ADAPTER, createMiPDemo } from './mip-controls.js';
-export const CONTROL_FAMILIES = Object.freeze([CONTROL_ADAPTER, MIP_ADAPTER]);
+import {
+  StandardControls,
+  CONTROL_ADAPTER,
+  createControlDemo,
+} from './standard-controls.js?v=recognition-20261024';
+import { MiPControls, MIP_ADAPTER, createMiPDemo } from './mip-controls.js?v=recognition-20261024';
+import { FurbyControls, FURBY_ADAPTER, createFurbyDemo } from './furby-controls.js';
+export const CONTROL_FAMILIES = Object.freeze([CONTROL_ADAPTER, MIP_ADAPTER, FURBY_ADAPTER]);
 export function controlFamily(id = CONTROL_ADAPTER.id) {
   const family = CONTROL_FAMILIES.find((f) => f.id === id);
   if (!family) throw new Error('Unsupported control adapter family.');
@@ -21,13 +26,20 @@ export class DeviceControls {
     this.lastAction = null;
     this.effectWaiter = null;
     this.sequence = 0;
-    const Backend = adapterId === MIP_ADAPTER.id ? MiPControls : StandardControls;
+    const Backend =
+      adapterId === FURBY_ADAPTER.id
+        ? FurbyControls
+        : adapterId === MIP_ADAPTER.id
+          ? MiPControls
+          : StandardControls;
     this.backend = new Backend({
       ...options,
       bluetooth: synthetic
-        ? adapterId === MIP_ADAPTER.id
-          ? createMiPDemo()
-          : createControlDemo()
+        ? adapterId === FURBY_ADAPTER.id
+          ? createFurbyDemo()
+          : adapterId === MIP_ADAPTER.id
+            ? createMiPDemo()
+            : createControlDemo()
         : options.bluetooth,
       emit: (event) => {
         if (this.effectWaiter && (!event.alerting || event.state !== 'connected')) {

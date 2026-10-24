@@ -6,10 +6,13 @@ import {
   MAX_TOTAL_BYTES,
 } from './records.js';
 import { validateToy, MAX_TOYS } from './toys.js';
-import { emptyControlSetups, validateControlSetups } from './control-setups.js';
-import { validateTrials } from './action-trials.js';
+import {
+  emptyControlSetups,
+  validateControlSetups,
+} from './control-setups.js?v=recognition-20261024';
+import { validateTrials } from './action-trials.js?v=recognition-20261024';
 import { validateDiscovery, MAX_DISCOVERIES, MAX_DISCOVERY_BYTES } from './discovery.js';
-import { emptyHubData, validateHubData } from './hub-records.js';
+import { emptyHubData, validateHubData } from './hub-records.js?v=recognition-20261024';
 import { emptyPocketData, validatePocketData } from './pocket-ir-setups.js';
 const request = (req) =>
   new Promise((resolve, reject) => {

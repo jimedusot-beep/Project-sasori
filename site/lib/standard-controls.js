@@ -183,7 +183,11 @@ export class StandardControls {
       const connection = candidate.gatt.connect();
       Promise.resolve(connection).then(
         () => {
-          if (run !== this.generation && this.device !== candidate) candidate.gatt.disconnect();
+          if (
+            run !== this.generation &&
+            (this.device !== candidate || this.state === 'disconnected')
+          )
+            candidate.gatt.disconnect();
         },
         () => {},
       );
