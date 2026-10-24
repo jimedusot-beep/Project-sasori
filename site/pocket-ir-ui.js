@@ -1,4 +1,4 @@
-import { setupIRImport } from './pocket-ir-import-ui.js';
+import { setupIRImport } from './pocket-ir-import-ui.js?v=ir-import-20261024';
 import { PocketIRSession, createPocketDemo } from './lib/pocket-ir.js';
 import { POCKET_PROFILES } from './lib/pocket-ir-profiles.js';
 import {
