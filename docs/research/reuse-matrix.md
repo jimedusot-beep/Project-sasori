@@ -1,5 +1,7 @@
 # Reuse Matrix — Source Code and Research Tools
 
+The [October 23 implementation register](adapter-inspirations.md) pins all eight toy-adapter inspirations and maps each adopted aspect to working Sasori code. See [Protocol recorder](../protocol-recorder.md) for implemented features and the remaining live-control gaps. Earlier tiers below describe historical planning, not newly verified device support.
+
 ## Tier 1: Immediate direct reuse of methods, not copied source
 
 | Project/source                                                                                                  | License or standing                                        | Technical asset                                                                   | Sasori application                                  | Compatibility gate                                              |

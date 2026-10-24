@@ -136,7 +136,15 @@ test('invalid packet flags reject a whole backup without saving partial records'
   await expect(page.locator('.record-row')).toHaveCount(0);
 });
 test('all primary screens meet axe accessibility checks and fit the viewport', async ({ page }) => {
-  for (const section of ['overview', 'protocol', 'toys', 'sessions', 'controls', 'research']) {
+  for (const section of [
+    'overview',
+    'protocol',
+    'toys',
+    'discovery',
+    'sessions',
+    'controls',
+    'research',
+  ]) {
     await page.goto('/#' + section);
     await expect(page.locator('#storage-summary')).toContainText('IndexedDB', { visible: false });
     const result = await new AxeBuilder({ page })
@@ -168,6 +176,7 @@ test('manual Elmo probes change only the selected candidate UUID; never start ha
   page,
 }) => {
   await page.goto('/');
+  await page.locator('#connection-task').selectOption('capture');
   await page.locator('#load-profile').click();
   await expect(page.locator('#notify-preset')).toHaveValue('data');
   await page.locator('#notify-preset').selectOption('control');

@@ -1,0 +1,30 @@
+{
+  "format": "sasori.elmo-protocol-vectors",
+  "schemaVersion": 1,
+  "source": "synthetic",
+  "hardwareVerified": false,
+  "note": "Source-derived calculations; not captured toy traffic or original-method execution.",
+  "vectors": [
+    {
+      "password": "Lab-Only-42",
+      "passwordBytesHex": "4c61622d4f6e6c792d3432",
+      "md5Hex": "04b4068ed0fc749f57ad1d95f201120b",
+      "challengeHex": "10203040",
+      "responseHex": "410a8e12ec"
+    },
+    {
+      "password": "Spaces Stay  ",
+      "passwordBytesHex": "53706163657320537461792020",
+      "md5Hex": "c5036a1bf12c70aeefb8ae1ed5053c6b",
+      "challengeHex": "0001020304050607",
+      "responseHex": "414c53ae35"
+    },
+    {
+      "password": "A😀éB",
+      "passwordBytesHex": "413d00e942",
+      "md5Hex": "efd7e8ea4ea76c39356e97572e1dd2bc",
+      "challengeHex": "11223344",
+      "responseHex": "41a5a9b4fc"
+    }
+  ]
+}

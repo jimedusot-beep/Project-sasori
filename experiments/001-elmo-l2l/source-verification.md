@@ -2,6 +2,10 @@
 
 Reviewed October 21, 2026 (America/New_York). Independent original-controller research track. **Application protocol verification is incomplete; live authentication and application writes remain unavailable.**
 
+**Current October 23 result:** a broader public-community search recovered the exact previously reported APK through Aptoide and found a newer standalone `pyelmo` implementation. Relevant managed methods were independently inspected and an original bounded desktop known-password client was added. See [recovered source, hashes, method tokens and current gap status](recovered-source.md). This supersedes the missing-artifact/method status in the original review below. The earlier S17 request did return HTTP 403, but that did not establish that no usable public archive or implementation existed. Hasbro publisher identity and real-unit authentication/physical effects remain unverified; web/native inspection remains unchanged.
+
+The remainder of this document preserves the **October 21 historical review**. Its original G1–G8 table is not the current acquisition or implementation status.
+
 ## Evidence inspected in this review
 
 | ID  | Artifact and exact provenance                                                                                                                                                                                                                                                                                             | What was directly inspected                                                                                              | What it establishes / does not establish                                                                                                                                                                                                                                                            |

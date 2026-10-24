@@ -27,9 +27,29 @@ flowchart TD
 | site/lib/safety.js      | All physical capabilities are unverified and blocked. Simulated actions require explicit consent.                                               |
 | site/lib/diagnostics.js | Ring-buffer logs, recognized secret-pattern redaction, and actionable error interpretation.                                                     |
 | site/lib/records.js     | Versioned envelope, migrations, validation, limits, metadata-only portable records, imports, comparisons.                                       |
-| site/lib/storage.js     | IndexedDB v2, atomic capacity checks and writes, corruption detection, temporary memory fallback.                                               |
+| site/lib/storage.js     | IndexedDB v4, atomic capacity checks and writes, corruption detection, temporary memory fallback.                                               |
+| site/lib/discovery.js   | Versioned discovery captures, bounded parsers, model/method-separated comparisons, metadata backups, and offline PCM16 WAV/FFT analysis.        |
+| site/discovery-ui.js    | Discovery form, saved captures, same-index diff table, and accessible audio plots. No transport or hardware API.                                |
 | site/lib/simulation.js  | Finite synthetic fixture playback with synthetic service UUIDs. Never references navigator.bluetooth.                                           |
 | site/lib/types.d.ts     | Public packet, evidence, profile, capability, and transport type declarations. Core protocol/profile/guard modules are checked with TypeScript. |
+
+## Device workspace and native hosts
+
+The Protocol recorder (`site/recorder-ui.js`) imports only offline normalized data. `site/lib/traces.js` validates bounded TX/RX frames, timing, markers, metadata/raw policies, selected intervals, and same-index comparisons. `site/lib/adapters.js` contains an immutable source-linked analysis registry, a manufacturer-documented MiP offline version codec, and explicit Elmo protocol gaps. `site/lib/inspirations.js` supplies pinned source/license receipts to the UI. Optional `protocolTrace` in session v2 uses the existing v4 record store, shares its budgets, and is excluded from live inspection evidence. Ordinary portable exports/backups strip trace bytes; keeping them requires an explicit raw export/save. No trace import, manifest flag, decoder result, or command definition invokes a hardware sender. See [Protocol recorder](protocol-recorder.md) and [source-to-implementation mapping](research/adapter-inspirations.md).
+
+The device hub presents actual connection state separately from saved configuration. Device identities and inspection measurements are snapshotted into session v2's optional inspection field; five prior title/note versions are retained in optional noteHistory. The schema remains compatible with older records without these fields. Imported contexts never complete the physical-evidence checklist.
+
+| Module                         | Contract                                                                                                                                    |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| site/device-hub.js             | Active-device status, per-profile evidence collection, recent sessions, timing table, and offline analysis handoff.                         |
+| site/lib/devices.js            | Identity snapshots, shared inspection contract, browser support detection, and evidence candidate assessment.                               |
+| site/lib/device-information.js | Standard Device Information UUID/field allowlist, bounded UTF-8 decoding, and imported-field validation.                                    |
+| site/lib/connection-result.js  | Connection outcomes and useful next steps; imported/simulated records never supply live channel shortcuts.                                  |
+| site/lib/native-bluetooth.js   | Inspection-only facade over the native Capacitor plugin; reuses BluetoothTransport lifecycle and decoding.                                  |
+| native/ios                     | Reproducible Capacitor build/generator and Swift Core Bluetooth chooser, scoped discovery, notifications, cancellation, and export sharing. |
+| desktop/sasori_ble.py          | Owner-run Bleak inspection and private portable session handoff. No local server or application writes.                                     |
+
+Native assets are bundled locally; no remote web application or browser token is introduced. The iOS native plugin has its own bounded watchdog and background cancellation. The desktop helper uses a local command-line/file handoff instead of opening a web-accessible daemon.
 
 ## Live transport state machine
 
@@ -56,7 +76,7 @@ Each run has a generation counter. A cancelled chooser cannot initiate GATT late
 
 The inspection deadline begins at GATT connection and is armed before discovery. Closing/backgrounding the page stops the inspection. Browser/OS scheduling and power loss still require real-device validation; browser timers are not physical emergency stops.
 
-Events: state, services, packet, info, warning, error. State events include a disconnect reason. Observed metadata is labeled observed-this-session; synthetic metadata is labeled synthetic.
+Events: state, services, device-information, packet, info, warning, error. State events include a disconnect reason. Observed metadata is labeled observed-this-session; synthetic metadata is labeled synthetic. Standard identification requests use only the Device Information service, read five non-unique fields sequentially, emit partial results, then disconnect with identification-complete. The native read API independently restricts access to the same service and field allowlist; it is not a generic characteristic reader.
 
 ## Adding a profile or transport
 
@@ -70,6 +90,12 @@ The [virtual Elmo design](superpowers/specs/2026-10-22-custom-controller-design.
 
 ## Storage lifecycle
 
-IndexedDB uses records and settings stores. A v1 sessions store is copied through migration without deleting the original store. A blocked/open failure produces a visible temporary-memory warning. A version change closes the old connection and requires reload instead of silently losing saved records. Invalid records are skipped and counted; valid records remain available.
+IndexedDB uses records, settings, toys, and discoveries stores. Version 4 adds discoveries without rewriting existing data. A v1 sessions store is copied through migration without deleting the original store. A blocked/open failure produces a visible temporary-memory warning. A version change closes the old connection and requires reload instead of silently losing saved records. Invalid session records are skipped and counted; valid sessions remain available. Invalid discovery records surface a validation error rather than being silently deleted.
 
 Writes enforce capacity and record size without evicting experiments. Import validates the whole batch, creates fresh IDs, and marks imported provenance. The UI never automatically sends or replays imported bytes.
+
+## Shared device controls
+
+[Universal controls](universal-controls.md) uses `site/lib/device-controls.js` to select reviewed built-in protocol families behind shared intents. `standard-controls.js` negotiates fixed SIG identity/battery/mild-alert capabilities. `mip-controls.js` implements strict ASCII-hex notification decoding, two fixed queries and a bounded dim-blue/off LED action for the original MiP protocol. `site/controls-ui.js` provides saved connections and the common check recipe. Elmo authentication and application writes remain excluded. Web and native controls share the runner; Swift independently enforces fixed read/alert/semantic-MiP allowlists.
+
+`control-setups.js` validates family-bound private references and portable backups. Its revision-checked settings key preserves IndexedDB v4 and inspection preferences. `action-trials.js` separates automated command receipts from owner observations and counts distinct live sessions with unchanged identity toward a review target. Trial storage validates whole batches in a serialized read/write transaction under another settings key; imported/synthetic claims cannot qualify, and verification flags remain false. Stop cancels recipes and stale replies/receipts cannot affect a replacement connection. See [adapter and real-device validation details](device-action-validation.md).

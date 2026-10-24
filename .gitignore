@@ -9,3 +9,9 @@ coverage/
 .DS_Store
 secrets/
 private-logs/
+native/ios/www/
+native/ios/ios/
+native/ios/build/
+__pycache__/
+*.pyc
+.venv/

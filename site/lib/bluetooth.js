@@ -1,6 +1,11 @@
 import { normalizeUUID } from './profiles.js';
 import { decodePacket } from './protocol.js';
 import { explainError } from './diagnostics.js';
+import {
+  DEVICE_INFORMATION_SERVICE,
+  DEVICE_INFORMATION_FIELDS,
+  decodeInformationString,
+} from './device-information.js';
 
 const ACTIVE = new Set(['selecting', 'connecting', 'discovering', 'inspecting']);
 const transitions = {
@@ -45,6 +50,7 @@ export class BluetoothTransport {
     this.busy = false;
     this.startedAt = 0;
     this.currentStage = null;
+    this.connectedAt = null;
   }
   markStage(stage) {
     this.currentStage = stage;
@@ -90,6 +96,7 @@ export class BluetoothTransport {
     this.busy = true;
     this.services = [];
     this.packetCount = 0;
+    this.connectedAt = null;
     const run = ++this.generation;
     this.startedAt = Date.now();
     this.setState('selecting');
@@ -107,18 +114,46 @@ export class BluetoothTransport {
       const selected = await withTimeout(chooser, this.chooserMs, 'Device selection');
       this.check(run);
       this.device = selected;
-      this.onDisconnect = () => {
+      this.emit({ type: 'device', label: selected.name || namePrefix || 'Selected BLE device' });
+      this.onDisconnect = (event) => {
         if (
           run !== this.generation ||
           this.state === 'disconnecting' ||
           this.state === 'disconnected'
         )
           return;
+        const reason = [
+          'page-hidden',
+          'native-deadline',
+          'packet-limit',
+          'services-changed',
+          'bluetooth-unavailable',
+          'invalid-notification',
+          'operation-timeout',
+          'connection-failed',
+          'service-not-found',
+          'characteristic-discovery-failed',
+          'subscription-failed',
+        ].includes(event.reason)
+          ? event.reason
+          : 'unexpected';
+        if (event.error)
+          this.emit({
+            type: 'error',
+            error: {
+              ...explainError(event.error),
+              stage: this.currentStage,
+              elapsedMs: Math.max(0, Date.now() - this.startedAt),
+            },
+          });
         this.emit({
-          type: 'warning',
-          message: 'Unexpected Bluetooth disconnect. No automatic reconnect will occur.',
+          type: reason === 'unexpected' ? 'warning' : 'info',
+          message:
+            reason === 'unexpected'
+              ? 'Unexpected Bluetooth disconnect. No automatic reconnect will occur.'
+              : 'Bluetooth inspection ended: ' + reason + '. No automatic reconnect will occur.',
         });
-        this.disconnect('unexpected');
+        this.disconnect(reason);
       };
       selected.addEventListener('gattserverdisconnected', this.onDisconnect);
       this.setState('connecting');
@@ -133,6 +168,7 @@ export class BluetoothTransport {
       );
       this.server = await withTimeout(attempt, this.operationMs, 'GATT connection');
       this.check(run);
+      this.connectedAt = performance.now();
       this.timer = setTimeout(() => this.disconnect('inspection-complete'), durationMs);
       this.setState('discovering');
       this.markStage('service-discovery');
@@ -163,6 +199,33 @@ export class BluetoothTransport {
         },
       ];
       this.emit({ type: 'services', services: this.services });
+      if (service === DEVICE_INFORMATION_SERVICE) {
+        this.markStage('device-information');
+        const information = {};
+        for (const field of DEVICE_INFORMATION_FIELDS) {
+          this.check(run);
+          const characteristic = chars.find((c) => c.uuid.toLowerCase() === field.uuid);
+          if (!characteristic?.properties.read) continue;
+          try {
+            const value = await withTimeout(
+              characteristic.readValue(),
+              this.operationMs,
+              'Read ' + field.label,
+            );
+            this.check(run);
+            const text = decodeInformationString(value);
+            if (text) information[field.key] = text;
+          } catch (error) {
+            this.check(run);
+            // A timed-out read may still hold the GATT operation queue. Tear down
+            // rather than starting concurrent reads; never accept its late result.
+            if (error?.name === 'TimeoutError' || !this.server?.connected) throw error;
+            this.emit({ type: 'info', message: field.label + ' was unavailable; continuing.' });
+          }
+          this.emit({ type: 'device-information', information: { ...information } });
+        }
+        this.emit({ type: 'device-information', information });
+      }
       if (notify) {
         const characteristic = chars.find((c) => c.uuid.toLowerCase() === notify);
         if (!characteristic)
@@ -204,6 +267,8 @@ export class BluetoothTransport {
       }
       this.markStage('inspection-ready');
       this.setState('inspecting');
+      if (service === DEVICE_INFORMATION_SERVICE && !notify)
+        this.disconnect('identification-complete');
     } catch (error) {
       if (run !== this.generation) return;
       this.emit({
@@ -216,7 +281,9 @@ export class BluetoothTransport {
       });
       this.setState('error');
       this.disconnect(
-        error?.name === 'NotFoundError' && !this.device ? 'selection-cancelled' : 'operation-error',
+        ['NotFoundError', 'AbortError'].includes(error?.name) && !this.device
+          ? 'selection-cancelled'
+          : 'operation-error',
       );
     } finally {
       if (run === this.generation) this.busy = false;
@@ -225,6 +292,7 @@ export class BluetoothTransport {
   disconnect(reason = 'user') {
     if (!ACTIVE.has(this.state) && this.state !== 'error') return;
     ++this.generation;
+    this.bluetooth?.cancelRequest?.();
     clearTimeout(this.timer);
     this.timer = null;
     this.markStage('teardown');
@@ -240,6 +308,13 @@ export class BluetoothTransport {
     this.device = null;
     this.onDisconnect = null;
     this.busy = false;
-    this.setState('disconnected', { reason });
+    this.setState('disconnected', {
+      reason,
+      gattDurationMs:
+        this.connectedAt === null
+          ? 0
+          : Math.max(0, Math.round(performance.now() - this.connectedAt)),
+    });
+    this.connectedAt = null;
   }
 }

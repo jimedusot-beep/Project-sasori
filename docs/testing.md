@@ -8,7 +8,7 @@ npm run check
 npm audit --audit-level=high
 ```
 
-The check script runs ESLint, Prettier verification, TypeScript checking for the typed core boundary, Node tests, and recognized credential-pattern scanning. Browser-runtime source has no third-party dependencies.
+The check script runs ESLint, Prettier verification, TypeScript checking for the typed core boundary, Node tests, Python standard-library tests, and recognized credential-pattern scanning. Use Python 3.9 or later. Browser-runtime source has no third-party dependencies.
 
 Node tests exercise chooser gesture ordering, duplicate connects, cancelled selection, late GATT completion, operation deadlines, discovery/subscription failure, explicit/unexpected disconnects, listener cleanup, reconnects, the 500-notification budget, and malformed DataViews.
 
@@ -18,6 +18,8 @@ Storage tests use fake-indexeddb to test actual object-store transactions, reloa
 
 Synthetic authentication tests cover success, rejection, timeout, cancellation, inconclusive results, duplicate runs, explicit consent, and packet/time budget limits. These fixtures implement no Elmo handshake.
 
+Control-family tests cover strict MiP ASCII-hex replies and binary queries, wrong/unsolicited/malformed response rejection, pending-query cancellation across reconnect, fixed blue/off writes and failed cleanup receipts. Trial tests exercise distinct-session counting, changed/unknown identity, failures, synthetic/imported exclusions, atomic storage limits and deletion. Python tests use synthetic APK ZIPs to check source-intake bounds, hashes, private exclusive outputs and explicit unverified provenance; simulator-smoke tests require render proof after a launch timeout.
+
 ## Browser checks
 
 ```sh
@@ -26,6 +28,8 @@ npm run test:browser
 ```
 
 The same suite runs in desktop Chromium and iPhone 13-sized WebKit. Tests exercise synthetic session completion and persistence after reload, local note editing/search, downloads/imports, inert imported markup, invalid JSON, authentication fixtures, virtual controls, offline analysis, accessibility via axe, and horizontal-overflow checks across all five primary screens.
+
+MiP fixtures exercise selected-family persistence, saved reconnects, the complete shared check recipe on web/native facades, observation editing/reload, export/import provenance, trial removal and responsive accessible UI. They use synthetic radio callbacks, including tests labeled live within their isolated test database; no fixture output is physical-device evidence.
 
 For an already-running server, set SASORI_TEST_URL to its base URL. Remote Pages paths must retain the repository prefix. Test artifacts and traces are retained for seven days in GitHub Actions; fixtures contain no live hardware identifiers.
 
@@ -48,10 +52,18 @@ Then test one deliberate manual stop and one page-background stop. Do not induce
 
 Passing Node, Chromium, or emulated WebKit does **not** prove the native Bluefy Bluetooth bridge, real radio reliability, Elmo authentication, or any physical command.
 
+For supported controls use the [real-device trial procedure](device-action-validation.md#record-an-actual-check). Its ten fresh-connection review target adds owner-observed effect/recovery results; it does not replace Elmo's five inspection baselines or independently verify hardware.
+
 ## Original-BLE offline evidence checks
 
 Packet-flag regressions reject strings, numbers, nulls, arrays and objects for optional `truncated`/`malformed` fields. Tests retain valid booleans and missing fields across v1/v2 imports and verify raw/metadata-only offline review rejects invalid flags. A browser regression imports a mixed backup with one invalid flag and confirms no record is saved, including after reload.
 
 The [capture reviewer](../experiments/001-elmo-l2l/offline-review.md) runs locally with `npm run review:elmo -- /absolute/path/to/private-session.json`. Its count-only report does not echo private filenames, free text, arbitrary identifiers or payloads. Tests check metadata-only and deliberately raw exports, partial/contradictory retention, forged outcome/kind claims, unrelated service inventories, invalid envelopes, private error handling and CLI behavior. Synthetic session envelopes stay synthetic even when they contain historical example bytes.
 
-The provenance-linked historical corpus has three RX vectors. Tests check byte lengths, SHA-256 integrity, exact text views and DataView offsets against the existing conservative decoder. No password/challenge construction tests exist because independent app-method evidence and exact expected vectors are missing. These checks require no hardware, source archive or credentials and do not gate replacement-controller hardware development.
+The provenance-linked historical corpus has three RX vectors. Tests check byte lengths, SHA-256 integrity, exact text views and DataView offsets against the existing conservative decoder. These checks require no hardware, source archive or credentials and do not gate replacement-controller hardware development.
+
+Following the October 23 source recovery, `desktop/tests/test_elmo_client.py` tests source-derived credential bytes/checksum/response vectors, explicit acceptance after a current response, malformed/unknown/early status rejection, no enrollment, no retries, channel/property checks, bounded operations, stop/disconnect cleanup, private diagnostics and an opt-in single greeting. CLI simulation requires no Bleak import or radio. Tests use synthetic credentials and fake notifications; they do not establish actual hardware acceptance or observed playback. See [the recovered-source record](../experiments/001-elmo-l2l/recovered-source.md).
+
+## Browser Elmo remote
+
+`tests/elmo-remote.test.mjs` compares original JavaScript MD5 with Node’s standard implementation and checks all shared source-derived authentication vectors. Fake-radio tests cover current-response acceptance, exact channels, malformed/unknown/unset/rejected statuses, changed challenges, deadlines, late chooser/connect results, reconnect generations, fixed greeting limits and private receipts. Password-setup tests compare the 17-byte frame against independently computed MD5, require literal opt-in and the exact unset report, prohibit rejected-password overwrites/repeated writes, check cancellation and late acknowledgments, and model a fresh existing-password connection after setup. `tests/browser/elmo-remote.spec.js` exercises UI controls using synthetic radio fixtures, a Bluetooth-free demo, credential clearing, downloads, reconnects, explicit setup, manufacturer-linked recovery instructions, page-hiding cleanup, accessibility and responsive layout in Chromium and iPhone WebKit. These checks do not access a physical toy, prove retained credentials, or verify Bluefy’s real Bluetooth bridge.

@@ -4,3 +4,6 @@ playwright-report
 test-results
 coverage
 docs/archived-tests/
+native/ios/www/
+native/ios/ios/
+native/ios/build/

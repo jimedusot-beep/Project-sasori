@@ -1,5 +1,13 @@
 # Source, license, and reuse register
 
+**Current Elmo update, October 23:** a broader public-community scan recovered the exact previously reported APK, found a newer standalone community implementation, and supported an original bounded desktop known-password client. [Recovered-source provenance and method facts](../../experiments/001-elmo-l2l/recovered-source.md) supersede earlier missing-artifact/construction statements. [Community scan results](community-scan-2026-10-23.md) add FurBLE, PyFluff, LEGO, Sphero, DroidX and Bumble leads. Real-device compatibility/effects remain unverified; no proprietary app code or assets are bundled.
+
+## October 23 adapter and recorder implementation
+
+The [source implementation register](adapter-inspirations.md) cites NonaSuomy/Love2LearnElmo, Bluefluff, the official WowWee MiP protocol, Hacksby, PixMob reverse engineering, PulseView/sigrok, Pybricks, and Home Assistant at inspected revisions. It records file-level license limits, reference-only decisions, and the original Sasori module using each aspect. The [Protocol recorder](../protocol-recorder.md) now implements normalized TX/RX ingestion, markers, timelines, comparisons, optional private raw retention, an immutable adapter registry, and a documented offline MiP version codec. No upstream runtime or live Elmo authentication implementation was copied.
+
+## Earlier source register
+
 Reviewed October 20, 2026 (America/New_York). Primary sources are preferred for API behavior. Community experiments remain claims pending reproduction. No upstream code, firmware, app binary, audio, or credentials were copied into the laboratory.
 
 | Source                                                                                                                          | License / standing                                                                                  | Relevance and intended use                                                | Compatibility limit                                                         |
@@ -42,3 +50,9 @@ The preserved [reuse matrix](reuse-matrix.md) includes related toy/robotics proj
 ## October 21 independent original-BLE review
 
 See the [source-verification register](../../experiments/001-elmo-l2l/source-verification.md) for fresh direct inspection of the pinned community README and V5 project source, the original teardown report's bibliographic provenance, PR #11's exact revision, the reported APK's failed retrieval, and explicit Hasbro/community licensing restrictions. Reading a prior report does not reproduce its static-analysis claims. No unlicensed implementation or private authentication material was imported. The new local capture-review script is original code and is not shipped with the website.
+
+## Shared standard controls
+
+The [Universal controls protocol register](../universal-controls.md#primary-protocol-sources-and-reuse) attributes Device Information 1.2, Battery Service 1.1, Immediate Alert 1.0, assigned UUIDs and Silicon Labs numeric alert-level documentation. Original `ble-standard/v1` code adopts those exact standard semantics without importing upstream implementation. It does not generalize those bytes to Elmo or proprietary devices.
+
+The [original MiP adapter and trial workflow](../device-action-validation.md) extends those shared intents using only manufacturer-documented version/status and chest-LED facts from pinned commit `6123d0250f9b0bb6513d31eb6fbdc8213b5268a4`. Implementation is original; no upstream code/assets are imported. Real-device compatibility/effects remain unverified. The private Elmo source-intake script records actual supplied artifact hashes and evidence gaps, without asserting publisher identity or recovering authentication by name/marker alone.

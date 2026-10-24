@@ -21,7 +21,7 @@
   <body>
     <a class="skip" href="#workspace">Skip to laboratory</a>
     <aside class="rail">
-      <a class="brand" href="#overview" aria-label="Sasori laboratory home">
+      <a class="brand" href="#overview">
         <svg viewBox="0 0 40 40" aria-hidden="true">
           <path
             d="M20 3 35 12v16L20 37 5 28V12Z"
@@ -46,7 +46,16 @@
         <button class="nav" data-page="protocol">
           <span aria-hidden="true">⌁</span> Protocol explorer
         </button>
-        <button class="nav" data-page="toys"><span aria-hidden="true">▧</span> My toys</button>
+        <button class="nav" data-page="universal">
+          <span aria-hidden="true">⌁</span> Universal controls
+        </button>
+        <button class="nav" data-page="toys"><span aria-hidden="true">▧</span> Devices</button>
+        <button class="nav" data-page="discovery">
+          <span aria-hidden="true">⌕</span> Discovery workbench
+        </button>
+        <button class="nav" data-page="recorder">
+          <span aria-hidden="true">⇄</span> Protocol recorder
+        </button>
         <button class="nav" data-page="sessions">
           <span aria-hidden="true">▤</span> Research records
           <span id="record-count" class="count">0</span>
@@ -87,14 +96,38 @@
           <div class="page-heading">
             <div>
               <p class="eyebrow" id="active-experiment">PROJECT SASORI / EXPERIMENT 001</p>
-              <h1 id="overview-title">A little curiosity.<br />A lot of possibility.</h1>
+              <h1 id="overview-title">Connect your toys.<br />Make them yours.</h1>
               <p class="lead">
-                Your workbench for understanding animatronics.<br />Observe, capture, and build on
-                what you can prove.
+                Choose your toy, connect, and see what it supports.<br />
+                Keep each device's setup for next time.
               </p>
             </div>
             <div class="heading-tag"><span class="dot"></span> OBSERVATION BEFORE CONTROL</div>
           </div>
+          <section class="quick-start" aria-label="Quick device setup">
+            <a class="quick-card" href="elmo.html">
+              <strong>Elmo remote ↗</strong><span>Connect · check status · request a greeting</span>
+            </a>
+            <button class="quick-card" data-go="universal">
+              <strong>Universal controls</strong
+              ><span>Saved connections · shared device actions</span>
+            </button>
+            <button id="quick-elmo" class="quick-card" type="button" disabled>
+              <strong>Love2Learn Elmo</strong><span>Connection details · settings included</span>
+            </button>
+            <button id="quick-identify" class="quick-card" type="button" disabled>
+              <strong>Another Bluetooth toy</strong><span>Read its model &amp; firmware</span>
+            </button>
+            <button class="quick-card" data-go="toys" type="button">
+              <strong>My devices</strong><span>Saved setups &amp; custom connections</span>
+            </button>
+          </section>
+          <nav class="hub-workflow" aria-label="Experiment workflow">
+            <button class="secondary" data-go="overview">1 · Connect</button>
+            <button class="secondary" data-go="protocol">2 · Capture</button>
+            <button class="secondary" data-go="discovery">3 · Analyze</button>
+            <button class="secondary" data-go="sessions">4 · Save &amp; review</button>
+          </nav>
           <div class="metrics">
             <div>
               <span>TRANSPORT</span><strong id="state" aria-live="polite">Idle</strong
@@ -105,20 +138,27 @@
               ><small id="packet-bytes">0 bytes received</small>
             </div>
             <div>
-              <span>HARDWARE COMMANDS</span><strong class="muted">Locked <em>↗</em></strong
-              ><small>Authentication & motion unverified</small>
+              <span>CONTROL SUPPORT</span><strong class="muted">Adapter needed</strong
+              ><small>Connect first · verify device-specific actions</small>
             </div>
           </div>
           <div class="workspace-grid">
             <section class="panel connection" aria-labelledby="connection-title">
               <div class="panel-head">
                 <h2 id="connection-title">
-                  <span class="section-number">01</span> Connection manager
+                  <span class="section-number">01</span> Bluetooth connection
                 </h2>
                 <span class="badge subtle">BLE / GATT</span>
               </div>
-              <label for="profile">Experiment profile</label
+              <label for="profile">Your device</label
               ><select id="profile"></select>
+              <label for="connection-task">What do you want to do?</label>
+              <select id="connection-task" aria-describedby="connection-task-hint">
+                <option value="metadata">Find connection details</option>
+                <option value="identify">Read model &amp; firmware</option>
+                <option value="capture">Capture notifications</option>
+              </select>
+              <p id="connection-task-hint" class="hint"></p>
               <div class="device-card">
                 <div class="device-icon" aria-hidden="true">
                   <svg viewBox="0 0 50 50">
@@ -137,6 +177,45 @@
                 <span class="badge warm">RESEARCH</span>
               </div>
               <p id="support" class="support">Checking Bluetooth support…</p>
+              <details id="hub-browser-help" class="hub-browser-help">
+                <summary id="hub-browser-title">Bluetooth setup</summary>
+                <p>
+                  Sasori handles device selection, inspection, captures, and saved records. On
+                  iPhone and iPad, Bluefy supplies the browser's Bluetooth access.
+                </p>
+                <p>
+                  On a Mac or Windows PC, open this address in Chrome with Bluetooth enabled. The
+                  <a
+                    href="https://github.com/jimedusot-beep/Project-sasori/tree/main/desktop"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >desktop helper</a
+                  >
+                  is another connection option.
+                </p>
+                <ol>
+                  <li>Open Bluefy and paste the Sasori address below into its address bar.</li>
+                  <li>
+                    Select your device profile here, confirm ownership, then tap Connect &amp;
+                    inspect.
+                  </li>
+                  <li>Choose your nearby device and keep the app visible during the capture.</li>
+                </ol>
+                <a
+                  class="file-button"
+                  href="https://apps.apple.com/us/app/bluefy-web-ble-browser/id1492822055"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  >Get Bluefy for iPhone / iPad ↗</a
+                >
+                <label for="hub-url">Sasori address</label>
+                <input id="hub-url" readonly />
+                <button id="hub-copy-url" class="secondary" type="button">Copy Sasori link</button>
+                <p class="hint">
+                  A compatible browser or the native Sasori app provides the connection layer.
+                  Hardware authentication and actions still require a verified device adapter.
+                </p>
+              </details>
               <label class="checkline" for="simulation"
                 ><input type="checkbox" id="simulation" /> Use simulation
                 <span>No hardware connection</span></label
@@ -150,9 +229,17 @@
                 </select>
               </div>
               <div id="live-config">
+                <label for="name-prefix">Bluetooth name starts with</label>
+                <input
+                  id="name-prefix"
+                  maxlength="60"
+                  value="Elmo"
+                  autocomplete="off"
+                  placeholder="e.g. Elmo, or the name on your toy"
+                />
                 <label class="checkline" for="show-all-devices"
                   ><input type="checkbox" id="show-all-devices" /> Show all Bluetooth devices
-                  <span>Fallback if your toy does not appear</span></label
+                  <span>Fallback if your device does not appear</span></label
                 >
                 <div id="elmo-probe-settings">
                   <div class="profile-action">
@@ -180,14 +267,6 @@
                 <p id="toy-source" class="hint" hidden></p>
                 <details id="uuid-settings">
                   <summary>Service & notification settings</summary>
-                  <label for="name-prefix">Bluetooth name starts with</label>
-                  <input
-                    id="name-prefix"
-                    maxlength="60"
-                    value="Elmo"
-                    autocomplete="off"
-                    placeholder="e.g. Elmo"
-                  />
                   <label for="svc">Custom service UUID</label
                   ><input
                     id="svc"
@@ -203,18 +282,19 @@
                     placeholder="Leave blank to inspect metadata only"
                   />
                   <p class="hint">
-                    Only this service is requested. Other services remain inaccessible unless
-                    separately granted. No firmware services.
+                    Only this service is requested. The model / firmware reader uses the standard
+                    Device Information service and reads five model / revision fields. Other
+                    services need a separate connection.
                   </p>
                 </details>
                 <button id="keep-setup" class="text-button" type="button">
-                  Save this setup to My toys →
+                  Save this setup to Devices →
                 </button>
                 <label class="checkline" for="consent"
                   ><input type="checkbox" id="consent" /> I own or am authorized to inspect this
                   device.</label
                 >
-                <p class="hint">
+                <p id="connection-explanation" class="hint">
                   Connect inspects the service and subscribes to the configured notification
                   characteristic. Subscription changes a BLE descriptor. No authentication, audio,
                   or motor commands are sent.
@@ -226,13 +306,53 @@
                 ><button id="disconnect" class="secondary" disabled>Stop inspection</button>
               </div>
               <div class="connection-foot">
-                <span class="dot"></span> 15-second inspection · manual reconnect only
+                <span class="dot"></span>
+                <span id="connection-budget">15-second inspection · manual reconnect only</span>
               </div>
               <p id="inspection-stage" class="hint" role="status" aria-live="polite">
                 No inspection started. Stage details will appear here and in session logs.
               </p>
             </section>
             <div class="right-stack">
+              <section class="panel connection-result" aria-labelledby="connection-result-title">
+                <p class="eyebrow">YOUR DEVICE / NEXT STEP</p>
+                <h2 id="connection-result-title" tabindex="-1">Ready to connect</h2>
+                <p id="connection-result-detail" role="status"></p>
+                <dl id="device-information" class="information-list"></dl>
+                <p id="connection-result-next"></p>
+                <div id="connection-result-channels" class="actions"></div>
+                <div class="actions">
+                  <button id="result-save-device" class="secondary" disabled>
+                    Save device setup
+                  </button>
+                  <button id="result-export" class="secondary" disabled>
+                    Export connection report
+                  </button>
+                </div>
+                <p class="hint">
+                  Control support: no verified physical actions for this device yet.
+                </p>
+              </section>
+              <section class="panel hub-current" aria-labelledby="hub-current-title">
+                <div class="panel-head">
+                  <h2 id="hub-current-title">No active connection</h2>
+                  <span id="hub-current-state" class="badge subtle">Disconnected</span>
+                </div>
+                <p id="hub-current-source">Manual connection · one device at a time</p>
+                <p id="hub-current-model" class="hint"></p>
+                <p id="hub-current-result" role="status"></p>
+                <div class="actions">
+                  <button class="secondary" data-go="toys">Manage device profiles</button>
+                  <button class="secondary" data-go="protocol">View capture</button>
+                  <button id="hub-analyze-last" class="secondary" disabled>
+                    Analyze latest notification
+                  </button>
+                </div>
+                <details>
+                  <summary>Recent sessions for this profile</summary>
+                  <div id="hub-history"></div>
+                </details>
+              </section>
               <section class="panel specimen" aria-labelledby="specimen-title">
                 <div class="panel-head">
                   <h2 id="specimen-title">The current specimen</h2>
@@ -283,6 +403,17 @@
                   inspection.
                 </p>
                 <button class="text-button" data-go="research">Open the testing guide →</button>
+                <details>
+                  <summary>Connection repeatability checklist</summary>
+                  <h3 id="hub-evidence-count">0 / 5 full-length capture candidates</h3>
+                  <ul id="hub-evidence"></ul>
+                  <p class="hint">
+                    Counts use locally recorded, non-imported live sessions for this model, board
+                    revision, and firmware. They help collect evidence; owner review on the real
+                    unit is still required. Imported and synthetic sessions cannot satisfy this
+                    checklist.
+                  </p>
+                </details>
               </section>
             </div>
           </div>
@@ -324,21 +455,54 @@
           <div class="page-heading">
             <div>
               <p class="eyebrow">YOUR ANIMATRONICS WORKBENCH</p>
-              <h1 id="toys-title">Every toy has a story.</h1>
-              <p class="lead">Keep a separate inspection profile for each toy you own.</p>
+              <h1 id="toys-title">Your device workspace.</h1>
+              <p class="lead">
+                Save each device's identity and sourced connection settings. Active connection
+                status appears on Overview.
+              </p>
             </div>
           </div>
+          <section class="panel" aria-labelledby="devices-active-title">
+            <h2 id="devices-active-title">Connection status</h2>
+            <p id="devices-active-summary">No active connection.</p>
+            <button class="secondary" data-go="overview">Open Bluetooth connection</button>
+          </section>
           <div class="workspace-grid">
+            <section class="panel" aria-labelledby="saved-toys-title">
+              <h2 id="saved-toys-title">Saved device profiles</h2>
+              <p id="toy-storage-summary" class="hint"></p>
+              <div class="actions">
+                <button id="toy-export" class="secondary">Export device profiles</button>
+              </div>
+              <label for="toy-import">Import device profiles (JSON)</label
+              ><input id="toy-import" type="file" accept=".json,application/json" />
+              <p class="hint">
+                Up to 20 profiles · 128 KB import limit. Imported copies receive new IDs. Profiles
+                include device names and source notes; review before sharing. Sessions and device
+                profiles have separate backups.
+              </p>
+              <div id="toy-list" class="toy-list"></div>
+            </section>
             <section class="panel" aria-labelledby="toy-form-title">
-              <h2 id="toy-form-title">Add or edit a toy</h2>
+              <h2 id="toy-form-title">Add or edit a device</h2>
               <p>
                 Start with the service UUID from a manufacturer, source-backed research, or your own
                 authorized GATT inspection. Leave notifications blank for the first metadata-only
                 session.
               </p>
               <form id="toy-form">
-                <label for="toy-name">Toy name</label
+                <label for="toy-name">Device name</label
                 ><input id="toy-name" maxlength="80" required placeholder="e.g. My dancing robot" />
+                <label for="toy-model">Exact model</label>
+                <input id="toy-model" maxlength="160" placeholder="Defaults to the device name" />
+                <div class="form-row">
+                  <label for="toy-revision"
+                    >Board revision<input id="toy-revision" maxlength="60" value="unknown"
+                  /></label>
+                  <label for="toy-firmware"
+                    >Firmware version<input id="toy-firmware" maxlength="60" value="unknown"
+                  /></label>
+                </div>
                 <label for="toy-prefix">Bluetooth name starts with</label
                 ><input id="toy-prefix" maxlength="60" placeholder="Leave blank if unknown" />
                 <label for="toy-service">Service UUID</label
@@ -371,31 +535,16 @@
                 </p>
                 <div class="actions">
                   <button id="toy-save" class="primary" type="submit" disabled>
-                    Save toy profile</button
+                    Save device profile</button
                   ><button id="toy-new" type="button" class="secondary">Clear form</button>
                 </div>
               </form>
-            </section>
-            <section class="panel" aria-labelledby="saved-toys-title">
-              <h2 id="saved-toys-title">My saved toys</h2>
-              <p id="toy-storage-summary" class="hint"></p>
-              <div class="actions">
-                <button id="toy-export" class="secondary">Export toy profiles</button>
-              </div>
-              <label for="toy-import">Import toy profiles (JSON)</label
-              ><input id="toy-import" type="file" accept=".json,application/json" />
-              <p class="hint">
-                Up to 20 profiles · 128 KB import limit. Imported copies receive new IDs. Profiles
-                include toy names and source notes; review before sharing. Sessions and toy profiles
-                have separate backups.
-              </p>
-              <div id="toy-list" class="toy-list"></div>
             </section>
           </div>
           <section class="panel">
             <h2>Your first inspection</h2>
             <ol>
-              <li>Save a toy profile and choose <strong>Load for inspection</strong>.</li>
+              <li>Save a device profile and choose <strong>Load for inspection</strong>.</li>
               <li>
                 Confirm ownership, then inspect the sourced service with notifications left blank.
                 If the name is unknown, explicitly enable Show all Bluetooth devices.
@@ -408,9 +557,543 @@
             </ol>
             <p>
               Web Bluetooth exposes only services granted to the site. This is not an unrestricted
-              service scanner. Bluetooth Classic, USB-only, infrared, and proprietary radio toys
+              service scanner. Bluetooth Classic, USB-only, infrared, and proprietary radio devices
               require different transports. Physical commands remain locked.
             </p>
+          </section>
+        </section>
+        <section id="page-universal" class="page" hidden aria-labelledby="universal-title">
+          <div class="page-heading">
+            <div>
+              <p class="eyebrow">CONNECT ONCE · REUSE YOUR SETUP</p>
+              <h1 id="universal-title">One place for your devices.</h1>
+              <p>
+                Connect, check available features, and use the same controls across compatible
+                Bluetooth devices.
+              </p>
+            </div>
+          </div>
+          <div class="workspace-grid">
+            <section class="panel" aria-labelledby="u-connection-title">
+              <h2 id="u-connection-title">1 / Connect or reconnect</h2>
+              <p id="u-platform"></p>
+              <label for="u-family">Device protocol / model</label
+              ><select id="u-family"></select>
+              <p id="u-family-help" class="hint"></p>
+              <label for="u-device">Saved device</label
+              ><select id="u-device">
+                <option value="">Choose a new Bluetooth device</option>
+              </select>
+              <p id="u-binding" class="hint"></p>
+              <details>
+                <summary>Device name and connection filter</summary>
+                <label for="u-label">Your name for this device</label
+                ><input id="u-label" maxlength="80" placeholder="e.g. Desk gadget" />
+                <label for="u-prefix">Bluetooth name starts with (optional)</label
+                ><input
+                  id="u-prefix"
+                  maxlength="60"
+                  placeholder="Blank shows all Bluetooth devices"
+                />
+                <div class="actions">
+                  <button id="u-save-name" class="secondary">Save name / filter</button
+                  ><button id="u-forget" class="text-button">Forget saved setup</button>
+                </div>
+              </details>
+              <p>
+                Choose a device you own or are authorized to control. Find / alert can make a sound,
+                light, or movement depending on the device.
+              </p>
+              <div class="actions">
+                <button id="u-connect" class="primary" disabled>Connect device</button
+                ><button id="u-choose" class="secondary" disabled>Choose another device</button
+                ><button id="u-demo" class="secondary">Try offline demo</button>
+              </div>
+              <p id="u-storage" class="hint"></p>
+              <div class="actions">
+                <button id="u-export" class="secondary">Export setups</button
+                ><label class="file-button" for="u-import"
+                  >Import setups<input id="u-import" type="file" accept=".json,application/json"
+                /></label>
+              </div>
+              <p class="hint">
+                Setups stay after a disconnect. Backups omit private device references; select the
+                device once after importing.
+              </p>
+            </section>
+            <section class="panel" aria-labelledby="u-actions-title">
+              <div class="panel-head">
+                <h2 id="u-actions-title">2 / Use available controls</h2>
+                <span id="u-state" class="badge">idle</span>
+              </div>
+              <h3 id="u-device-name">No device selected</h3>
+              <p id="u-message" role="status">
+                Select a saved device or connect a new one. No connection starts automatically.
+              </p>
+              <div class="actions">
+                <button id="u-identify" class="secondary" disabled>Identify</button
+                ><button id="u-status" class="secondary" disabled>Status</button
+                ><button id="u-alert" class="secondary" disabled>Find / alert (1.5 s)</button
+                ><button id="u-stop" class="danger" disabled>Stop &amp; disconnect</button>
+              </div>
+              <p id="u-demo-effect" class="badge" hidden>DEMO · the desk gadget is waving hello</p>
+              <ul id="u-capabilities"></ul>
+              <p id="u-battery">Battery: not read</p>
+              <dl id="u-values" class="control-values"></dl>
+              <p id="u-read-time" class="hint"></p>
+              <div class="actions">
+                <button id="u-check" class="primary" disabled>Run connection check</button
+                ><button id="u-report" class="secondary">Export result</button>
+              </div>
+              <p class="hint">
+                A connection check runs available Identify, Status and Find / LED actions. Record
+                what you observe on the physical device below.
+              </p>
+              <details>
+                <summary>Command and session limits</summary>
+                <p class="hint">
+                  Available controls depend on the device’s channels. Find requests a mild alert or
+                  MiP blue light, then clear/off. Queued writes do not confirm a physical effect.
+                  Stop disconnects; check the device. Sessions end after five minutes or when Sasori
+                  is hidden.
+                </p>
+              </details>
+            </section>
+          </div>
+          <section class="panel" aria-labelledby="u-trials-title">
+            <h2 id="u-trials-title">3 / Test on your toy</h2>
+            <p id="u-trial-summary" role="status">Choose a saved device to review checks.</p>
+            <p class="hint">
+              Run a connection check, then record what happened on your toy. Reconnect before the
+              next check.
+            </p>
+            <details>
+              <summary>What counts toward ten checks?</summary>
+              <p class="hint">
+                Ten fresh successful sessions with the same model/firmware and observed
+                effect/recovery form a report ready for review. Failed, untested or changed-identity
+                checks restart the count. Demo/imported trials never count. Owner observations do
+                not independently verify hardware or authentication.
+              </p>
+            </details>
+            <div class="form-row">
+              <label><input id="u-trials-all" type="checkbox" /> Show all saved trials</label>
+            </div>
+            <div
+              id="u-trial-list"
+              class="trial-list"
+              aria-label="Recorded action trials"
+              role="group"
+            ></div>
+            <p id="u-trial-detail"></p>
+            <div class="form-row">
+              <label for="u-observed"
+                >Did the expected light / alert occur?<select id="u-observed">
+                  <option value="not-tested">Not checked</option>
+                  <option value="yes">Yes, I observed it</option>
+                  <option value="no">No</option>
+                </select></label
+              >
+              <label for="u-recovered"
+                >Did it stop and remain usable?<select id="u-recovered">
+                  <option value="not-tested">Not checked</option>
+                  <option value="yes">Yes, I checked recovery</option>
+                  <option value="no">No</option>
+                </select></label
+              >
+            </div>
+            <label for="u-trial-notes">What happened?</label
+            ><textarea
+              id="u-trial-notes"
+              maxlength="500"
+              placeholder="Describe the real effect, timing, disconnect behavior, and recovery."
+            ></textarea>
+            <div class="actions">
+              <button id="u-observation-save" class="secondary" disabled>Save observation</button
+              ><button id="u-trial-remove" class="secondary" disabled>Remove selected trial</button
+              ><button id="u-trials-export" class="secondary" disabled>Export trial report</button
+              ><label class="file-button" for="u-trials-import"
+                >Import trial report<input
+                  id="u-trials-import"
+                  type="file"
+                  accept=".json,application/json"
+              /></label>
+            </div>
+          </section>
+          <section class="panel" aria-labelledby="u-compatibility-title">
+            <h2 id="u-compatibility-title">Shared commands, matching adapters</h2>
+            <p>
+              Standard Bluetooth devices share identity, battery and mild-alert controls where
+              exposed. The original WowWee MiP family has a source-cited proprietary version/status
+              and timed LED adapter. Shared action names let each supported family use this
+              workspace; adding another physical unit does not require reimplementing its family
+              protocol. Motion, audio, TV control and firmware commands are not included.
+            </p>
+            <p>
+              The <a href="elmo.html">Elmo remote</a> provides an experimental browser
+              known-password handshake, input/volume queries and one greeting request. Native
+              inspection remains separate; real-unit testing is pending.
+              <a
+                href="https://github.com/jimedusot-beep/Project-sasori/blob/main/docs/device-action-validation.md#finish-elmo-authentication"
+                target="_blank"
+                rel="noopener noreferrer"
+                >Elmo source evidence and next steps</a
+              >.
+            </p>
+            <div class="actions">
+              <button class="secondary" data-go="toys">Saved inspection setups</button
+              ><button class="secondary" data-go="recorder">Protocol recorder</button>
+            </div>
+            <details>
+              <summary>Selected adapter protocol references</summary>
+              <ul id="u-sources"></ul>
+            </details>
+          </section>
+        </section>
+        <section id="page-recorder" class="page" hidden aria-labelledby="recorder-title">
+          <div class="page-heading">
+            <div>
+              <p class="eyebrow">CAPTURE / DECODE / BUILD SUPPORT</p>
+              <h1 id="recorder-title">Understand the conversation.</h1>
+              <p class="lead">
+                Compare what an app sends with what your toy returns. Keep the evidence, labels, and
+                next steps together.
+              </p>
+            </div>
+            <span class="badge subtle">OFFLINE · NO TRANSMISSION</span>
+          </div>
+          <p id="r-status" class="notice" role="status">
+            Import normalized TX/RX JSON or CSV. Binary HCI/btsnoop/PCAP extraction is not
+            implemented here. Current Sasori sessions provide RX only.
+          </p>
+          <div class="workspace-grid">
+            <section class="panel" aria-labelledby="r-import-title">
+              <h2 id="r-import-title">1 / Load a conversation</h2>
+              <label for="r-adapter">Analysis adapter</label
+              ><select id="r-adapter"></select>
+              <details>
+                <summary>CSV capture identity (JSON carries its own identity)</summary>
+                <label for="r-label">Capture label</label
+                ><input id="r-label" maxlength="120" value="First app exchange" />
+                <label for="r-model">Exact model</label
+                ><input id="r-model" maxlength="160" value="Love2Learn Elmo B6572" />
+                <label for="r-firmware">Firmware</label
+                ><input id="r-firmware" maxlength="60" value="unknown" />
+                <label for="r-transport">Transport</label
+                ><select id="r-transport">
+                  <option value="ble">Bluetooth LE</option>
+                  <option value="serial">Serial / internal bus</option>
+                  <option value="audio">Audio</option>
+                  <option value="infrared">Infrared</option>
+                  <option value="other">Other</option>
+                </select>
+                <label for="r-evidence">Source claim</label
+                ><select id="r-evidence">
+                  <option value="owner-observed">Owner-observed · imported claim</option>
+                  <option value="community-reported">Community-reported</option>
+                  <option value="synthetic">Synthetic</option>
+                </select>
+                <label for="r-source">Capture source and settings</label
+                ><textarea id="r-source" maxlength="2000">
+Record the app version, capture method, before/after state, and your normal action. Keep credentials out of public reports.</textarea>
+              </details>
+              <label for="r-file">Import trace JSON / normalized CSV · 512 KiB maximum</label
+              ><input id="r-file" type="file" accept=".json,.csv,application/json,text/csv" />
+              <label for="r-input">Or paste normalized trace data</label
+              ><textarea
+                id="r-input"
+                maxlength="524288"
+                spellcheck="false"
+                placeholder="time_ms,direction,endpoint,hex&#10;0,tx,handle:0x0012,14&#10;85,rx,handle:0x0015,31 34 30 45 30 32 31 42 30 37"
+              ></textarea>
+              <div class="actions">
+                <button id="r-import" class="primary">Load pasted trace</button
+                ><button id="r-example" class="secondary">Try synthetic MiP example</button
+                ><button id="r-current-session" class="secondary">
+                  Copy current Sasori RX capture
+                </button>
+              </div>
+              <p class="hint">
+                256 frames · 1,024 bytes per frame · 40 KiB retained raw bytes · 100 markers.
+                Imported bytes are analyzed, never replayed to a toy.
+              </p>
+            </section>
+            <section class="panel" aria-labelledby="r-adapter-title">
+              <h2 id="r-adapter-title">2 / Adapter support</h2>
+              <p>
+                One interface for device-specific evidence, decoders, command definitions, and
+                recovery. The Elmo adapter has inspection and historical text analysis; live
+                authentication and physical actions remain unavailable.
+              </p>
+              <div id="r-readiness"></div>
+              <button id="r-plan" class="secondary" disabled>
+                Inspect documented MiP query bytes
+              </button>
+              <pre id="r-plan-output" role="region" aria-label="Offline command definition"></pre>
+              <p class="hint">
+                Query definitions are offline data. No imported manifest or source claim can enable
+                a sender. Physical acceptance target: ten successful fresh connections and actions,
+                with rejection, timeout, and recovery tests.
+              </p>
+            </section>
+          </div>
+          <section class="panel" aria-labelledby="r-timeline-title">
+            <h2 id="r-timeline-title">3 / Frames and observations</h2>
+            <p id="r-summary" role="status"></p>
+            <div
+              id="r-timeline"
+              class="discovery-diff"
+              role="region"
+              tabindex="0"
+              aria-label="Protocol frames, scroll horizontally on narrow screens"
+            ></div>
+            <div class="form-row">
+              <label for="r-marker-time"
+                >Marker time (ms)<input
+                  id="r-marker-time"
+                  type="number"
+                  min="0"
+                  max="86400000"
+                  step="any"
+                  value="0"
+              /></label>
+              <label for="r-marker-label"
+                >What happened?<input
+                  id="r-marker-label"
+                  maxlength="120"
+                  placeholder="e.g. Pressed normal play button" /></label
+              ><button id="r-add-marker" class="secondary" disabled>Add observation marker</button>
+            </div>
+            <ul id="r-markers"></ul>
+            <div class="form-row">
+              <label for="r-tx">Selected TX frame<select id="r-tx"></select></label
+              ><label for="r-rx">Selected RX frame<select id="r-rx"></select></label
+              ><button id="r-interval" class="secondary" disabled>Measure selected interval</button>
+            </div>
+            <p id="r-interval-output" role="status"></p>
+            <label class="checkline" for="r-keep-raw"
+              ><input id="r-keep-raw" type="checkbox" /> Include raw frame bytes when saving or
+              exporting</label
+            >
+            <p class="hint">
+              Off by default. Metadata saves keep frame timings, direction, endpoints, lengths, and
+              markers, but cannot reconstruct the bytes. Raw data can contain authentication
+              material; review privately.
+            </p>
+            <div class="actions">
+              <button id="r-save" class="primary" disabled>Save trace to Research records</button
+              ><button id="r-export" class="secondary" disabled>Export trace JSON</button
+              ><button id="r-use-a" class="secondary" disabled>Use trace as A</button
+              ><button id="r-use-b" class="secondary" disabled>Use trace as B</button
+              ><button id="r-compare" class="secondary" disabled>Compare A and B</button>
+            </div>
+            <pre id="r-comparison" aria-label="Trace comparison"></pre>
+          </section>
+          <section class="panel">
+            <h2>Saved protocol traces</h2>
+            <div id="r-saved"></div>
+            <p class="hint">
+              Delete traces or export a full metadata backup in Research records. Raw retention
+              applies to each trace save; ordinary notebook backups omit bytes.
+            </p>
+          </section>
+          <section class="panel" aria-labelledby="r-sources-title">
+            <h2 id="r-sources-title">Sources behind these tools</h2>
+            <p>
+              Cited protocol sources, with inspected revisions and reuse decisions. These are
+              original Sasori implementations; upstream code, audio, firmware, and credentials are
+              not bundled.
+            </p>
+            <div id="r-inspirations" class="discovery-methods"></div>
+            <a
+              href="https://github.com/jimedusot-beep/Project-sasori/blob/main/docs/research/adapter-inspirations.md"
+              target="_blank"
+              rel="noopener noreferrer"
+              >Read the source-to-implementation register ↗</a
+            >
+          </section>
+        </section>
+        <section id="page-discovery" class="page" hidden aria-labelledby="discovery-title">
+          <div class="page-heading">
+            <div>
+              <p class="eyebrow">CAPTURE / COMPARE / UNDERSTAND</p>
+              <h1 id="discovery-title">Follow the evidence.</h1>
+              <p class="lead">
+                Explore the interfaces of your owned devices, one labeled observation at a time.
+              </p>
+            </div>
+            <span class="badge subtle">OFFLINE ANALYSIS</span>
+          </div>
+          <p id="discovery-status" class="notice" role="status">
+            Work locally with byte captures, infrared timings, and audio. No hardware connection
+            starts here.
+          </p>
+          <div class="workspace-grid">
+            <section class="panel" aria-labelledby="d-capture-title">
+              <h2 id="d-capture-title">01 / Label a capture</h2>
+              <form id="d-form">
+                <label for="d-device">Exact device model / revision</label>
+                <input
+                  id="d-device"
+                  maxlength="160"
+                  required
+                  placeholder="e.g. Love2Learn Elmo B6572 · revision unknown"
+                />
+                <label for="d-label">Capture label</label>
+                <input
+                  id="d-label"
+                  maxlength="120"
+                  required
+                  placeholder="e.g. Baseline · normal startup · run 1"
+                />
+                <label for="d-method">Discovery method</label>
+                <select id="d-method" aria-describedby="d-method-hint"></select>
+                <p id="d-method-hint" class="hint"></p>
+                <label for="d-evidence">Evidence class (your source claim)</label>
+                <select id="d-evidence">
+                  <option value="synthetic">Synthetic / software fixture</option>
+                  <option value="owner-observed">
+                    Observed by owner · independently unverified
+                  </option>
+                  <option value="community-reported">
+                    Community-reported · unverified on this unit
+                  </option>
+                </select>
+                <label for="d-source">Source, settings &amp; before/after state</label>
+                <textarea
+                  id="d-source"
+                  maxlength="2000"
+                  required
+                  placeholder="Source reference, date, settings, known state, and what changed. Keep credentials and identifiers out."
+                ></textarea>
+                <label for="d-kind">Capture representation</label>
+                <select id="d-kind">
+                  <option value="bytes">Hex bytes</option>
+                  <option value="pulses">Alternating mark/space timings (µs)</option>
+                </select>
+                <label for="d-values">Capture values</label>
+                <textarea
+                  id="d-values"
+                  maxlength="32768"
+                  required
+                  spellcheck="false"
+                  placeholder="Hex: 60 4e 65 … or timings: 9000, 4500, 560, 560"
+                ></textarea>
+                <p class="hint">
+                  Up to 4,096 bytes or 2,048 positive integer pulse timings. Pulses start with a
+                  mark. No code or commands are executed.
+                </p>
+                <button class="primary" type="submit" id="d-analyze">Analyze capture</button>
+              </form>
+              <p id="d-result" class="hint" role="status">
+                Analyze the current form to prepare a capture.
+              </p>
+              <div class="actions">
+                <button id="d-use-first" class="secondary" disabled>Use current as A</button>
+                <button id="d-use-second" class="secondary" disabled>Use current as B</button>
+              </div>
+              <label class="checkline" for="d-keep-values">
+                <input type="checkbox" id="d-keep-values" /> Keep raw byte / pulse values on this
+                browser
+              </label>
+              <p class="hint">
+                Off by default. Raw bytes may contain private information. Metadata-only saves
+                cannot reconstruct a capture for later comparison.
+              </p>
+              <button id="d-save" class="secondary" disabled>Save capture</button>
+            </section>
+            <div>
+              <section class="panel" aria-labelledby="d-compare-title">
+                <h2 id="d-compare-title">02 / Compare two observations</h2>
+                <p>
+                  Use the same exact model, method, and representation. Select a current analysis or
+                  a saved capture with retained values.
+                </p>
+                <p id="d-first-label">A: no capture selected</p>
+                <p id="d-second-label">B: no capture selected</p>
+                <label for="d-tolerance">Pulse tolerance (µs; ignored for bytes)</label>
+                <input id="d-tolerance" type="number" min="0" max="1000000" step="1" value="100" />
+                <div class="actions">
+                  <button id="d-compare" class="primary" disabled>Compare A and B</button>
+                  <button id="d-clear-comparison" class="secondary">Clear comparison</button>
+                </div>
+                <div id="d-comparison" class="discovery-diff" aria-live="polite"></div>
+                <p class="hint">
+                  Comparison is by position, without alignment. Repeated or changed values do not
+                  prove command meaning, compatibility, or authentication.
+                </p>
+              </section>
+              <section class="panel" aria-labelledby="d-audio-title">
+                <h2 id="d-audio-title">03 / Inspect a local sound recording</h2>
+                <p>
+                  Use the label, exact model, and source above with the Sound method. The first
+                  channel is analyzed; the file is never played or uploaded.
+                </p>
+                <label for="d-wav">Uncompressed PCM16 WAV</label>
+                <input id="d-wav" type="file" accept=".wav,audio/wav" />
+                <p class="hint">
+                  Mono or stereo · 8–192 kHz · up to 30 seconds and 10 MB. Convert other formats
+                  privately before import. Frequencies above half the sample rate are unavailable.
+                </p>
+                <button id="d-inspect-wav" class="secondary">Inspect WAV</button>
+                <p id="d-audio-result" role="status">
+                  Choose a PCM16 WAV and inspect it locally. Select Sound as the method first.
+                </p>
+                <figure class="discovery-chart">
+                  <figcaption>Waveform · start → end · amplitude −1 to +1</figcaption>
+                  <canvas
+                    id="d-waveform"
+                    width="640"
+                    height="120"
+                    hidden
+                    role="img"
+                    aria-label="First-channel waveform. Numerical statistics appear above."
+                  ></canvas>
+                </figure>
+                <figure class="discovery-chart">
+                  <figcaption>
+                    Spectrum · 0 → sample rate / 2 · relative power 0 to −80 dB
+                  </figcaption>
+                  <canvas
+                    id="d-spectrum"
+                    width="640"
+                    height="120"
+                    hidden
+                    role="img"
+                    aria-label="Average first-channel spectrum. Dominant frequency and bin width appear above."
+                  ></canvas>
+                </figure>
+                <p class="hint">
+                  Up to eight 2,048-sample Hann windows, averaged across the recording. A peak alone
+                  does not decode an acoustic protocol.
+                </p>
+                <button id="d-save-audio" class="secondary" disabled>Save audio summary</button>
+              </section>
+            </div>
+          </div>
+          <section class="panel" aria-labelledby="d-notebook-title">
+            <h2 id="d-notebook-title">Discovery notebook</h2>
+            <p id="d-storage" class="hint">Opening local discovery storage…</p>
+            <div class="actions">
+              <button id="d-export" class="secondary" disabled>Export discovery metadata</button>
+            </div>
+            <label for="d-import">Import discovery backup (JSON · up to 1 MB)</label>
+            <input id="d-import" type="file" accept=".json,application/json" />
+            <p class="hint">
+              Saved only in this browser and site origin; no device sync. Discovery, session, and
+              toy backups are separate. Discovery exports omit all raw values and audio, even when
+              byte or pulse values were saved locally. Review labels and source notes before
+              sharing. Imported records receive fresh IDs and retain an imported-claim label.
+            </p>
+            <div id="d-list" class="discovery-list"></div>
+          </section>
+          <section class="panel" aria-labelledby="d-methods-title">
+            <h2 id="d-methods-title">Nine routes to investigate</h2>
+            <p>
+              Research plans for independently identified interfaces. An interface documented on one
+              toy does not establish that Elmo or another model uses it.
+            </p>
+            <div id="d-methods" class="discovery-methods"></div>
           </section>
         </section>
         <section id="page-protocol" class="page" hidden aria-labelledby="protocol-title">
@@ -479,6 +1162,10 @@ No packet analyzed yet.</pre>
             </section>
           </div>
           <section class="panel">
+            <h2>Notification timeline</h2>
+            <div id="hub-timeline" class="discovery-diff" aria-live="off"></div>
+          </section>
+          <section class="panel">
             <h2>Evidence-backed protocol registry</h2>
             <p>
               UUIDs below are reported by an independent researcher. Observed characteristic
@@ -499,9 +1186,9 @@ No packet analyzed yet.</pre>
               <span class="badge warm">SYNTHETIC ONLY</span>
             </div>
             <p>
-              Live authentication is unavailable. No Elmo challenge-response protocol has been
-              independently validated here. These fixtures test application outcomes and budgets;
-              they implement no Elmo handshake.
+              These fixtures test synthetic application outcomes and budgets; they implement no Elmo
+              handshake. The separate <a href="elmo.html">Elmo remote</a> runs the source-derived
+              known-password protocol. Independent real-toy validation is pending.
             </p>
             <div class="form-row">
               <label for="auth-scenario"
@@ -542,7 +1229,7 @@ No packet analyzed yet.</pre>
               <button id="recover-corrupt" class="danger" hidden>Remove invalid records</button>
             </div>
             <p class="hint">
-              JSON sessions/backups or TXT/CSV notes · 2 MB file limit · text notes up to 20,000
+              JSON sessions/backups or TXT/CSV notes · 13 MB file limit · text notes up to 20,000
               characters
             </p>
           </div>
@@ -570,11 +1257,25 @@ No packet analyzed yet.</pre>
               <div class="actions">
                 <button id="update-record" class="primary" disabled>Save notes</button
                 ><button id="export-record" class="secondary" disabled>Export record</button
-                ><button id="delete-record" class="danger" disabled>Delete record</button>
+                ><button
+                  id="delete-record"
+                  class="danger"
+                  aria-describedby="record-delete-help"
+                  disabled
+                >
+                  Delete record
+                </button>
               </div>
               <p class="hint">
-                Deletion requires a second click. Export a backup first if this record matters.
+                <span id="record-delete-help"
+                  >Deletion requires a second click. Export a backup first if this record
+                  matters.</span
+                >
               </p>
+              <details>
+                <summary>Previous note versions (last five)</summary>
+                <div id="record-history"></div>
+              </details>
             </section>
           </div>
           <section class="panel">

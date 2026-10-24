@@ -4,7 +4,7 @@ import { ELMO_SERVICE, ELMO_NOTIFY } from '../../site/lib/profiles.js';
 import { createToy, exportToys } from '../../site/lib/toys.js';
 
 async function addToy(page) {
-  await page.getByRole('button', { name: 'My toys', exact: true }).click();
+  await page.getByRole('button', { name: 'Devices', exact: true }).click();
   await page.locator('#toy-name').fill('Synthetic dancing robot');
   await page.locator('#toy-prefix').fill('Robo');
   await page.locator('#toy-service').fill(ELMO_SERVICE);
@@ -29,7 +29,7 @@ test('toy profiles persist, load, export, import as copies, and keep sessions af
   await expect(page.locator('#session-title')).toHaveValue(
     'Synthetic dancing robot · simulated inspection',
   );
-  await page.getByRole('button', { name: 'My toys', exact: true }).click();
+  await page.getByRole('button', { name: 'Devices', exact: true }).click();
   await page.locator('.toy-profile').getByRole('button', { name: 'Edit', exact: true }).click();
   await page.locator('#toy-prefix').fill('RoboNew');
   await page.locator('#toy-save').click();

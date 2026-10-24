@@ -13,6 +13,14 @@ import {
 import { CAPABILITIES, validateCommand, virtualPosition } from './lib/safety.js';
 import { Diagnostics, explainError } from './lib/diagnostics.js';
 import { ResearchStore } from './lib/storage.js';
+import { mountDiscovery } from './discovery-ui.js';
+import { mountRecorder } from './recorder-ui.js';
+import { mountControls } from './controls-ui.js';
+import { mountDeviceHub } from './device-hub.js';
+import { createNativeBluetooth } from './lib/native-bluetooth.js';
+import { bluetoothSupport, makeInspection, identityOf } from './lib/devices.js';
+import { connectionResult } from './lib/connection-result.js';
+import { DEVICE_INFORMATION_SERVICE, DEVICE_INFORMATION_SOURCE } from './lib/device-information.js';
 import {
   createToy,
   validateToy,
@@ -25,9 +33,10 @@ import {
   createSession,
   portableRecord,
   parseImport,
-  backup,
+  serializeBackup,
   compareSessions,
   sessionText,
+  reviseNotes,
   MAX_FILE_BYTES,
 } from './lib/records.js';
 
@@ -41,9 +50,12 @@ const node = (tag, text, className = '') => {
 const labels = {
   overview: 'Overview',
   protocol: 'Protocol explorer',
-  toys: 'My toys',
+  toys: 'Devices',
+  discovery: 'Discovery workbench',
+  recorder: 'Protocol recorder',
   sessions: 'Research records',
   controls: 'Control laboratory',
+  universal: 'Universal controls',
   research: 'Evidence & guides',
 };
 function analyzeOfflinePacket() {
@@ -70,6 +82,7 @@ let diagnostics = new Diagnostics(),
   ready = false;
 let records = [],
   selectedId = null,
+  noteSavePending = false,
   deleteArmed = null,
   deleteTimer,
   settingsTimer,
@@ -79,6 +92,23 @@ let records = [],
 let settings = {};
 let toys = [],
   editingToyId = null;
+let recorder = null;
+let controlsHub = null,
+  controlsActive = false,
+  controlsSynthetic = false;
+let deviceHub = null,
+  deviceLabel = '';
+const nativePlugin = globalThis.SasoriNativeBluetooth;
+const nativeBluetooth = nativePlugin ? createNativeBluetooth(nativePlugin) : null;
+const currentBluetooth = () => nativeBluetooth || navigator.bluetooth;
+const connectionSecure = () => !!nativeBluetooth || window.isSecureContext;
+const supportState = () =>
+  bluetoothSupport({
+    secure: connectionSecure(),
+    bluetooth: currentBluetooth(),
+    native: !!nativeBluetooth,
+  });
+const refreshHub = () => deviceHub?.render();
 const allProfiles = () => [...PROFILES, ...toys.map(asDeviceProfile)];
 const currentProfile = () => allProfiles().find((p) => p.id === $('profile').value) || PROFILES[0];
 function notice(message) {
@@ -123,6 +153,7 @@ function navigate(page) {
   history.replaceState(null, '', '#' + page);
   window.scrollTo(0, 0);
   if (page === 'sessions') refreshRecords().catch(problem);
+  if (page === 'recorder') recorder?.refresh().catch(problem);
 }
 document
   .querySelectorAll('[data-page], [data-go]')
@@ -131,18 +162,23 @@ window.addEventListener('hashchange', () => navigate(location.hash.slice(1)));
 
 function renderProfileOptions(selected = $('profile').value) {
   $('profile').replaceChildren();
+  const templates = node('optgroup', '');
+  templates.label = 'Research templates · simulation only';
   for (const profile of allProfiles()) {
-    const option = node('option', (profile.custom ? 'My toy' : profile.id) + ' / ' + profile.label);
+    const option = node('option', (profile.custom ? 'My device · ' : '') + profile.label);
     option.value = profile.id;
-    $('profile').append(option);
+    if (profile.service || profile.custom) $('profile').append(option);
+    else templates.append(option);
   }
+  $('profile').append(templates);
   $('profile').value = allProfiles().some((p) => p.id === selected) ? selected : '001';
 }
 renderProfileOptions();
 function applyProfile() {
   const profile = currentProfile();
   $('svc').value = profile.service || '';
-  $('notify').value = profile.notify || '';
+  // First-time Elmo setup starts with metadata, without subscribing to a hypothesis.
+  $('notify').value = profile.id === '001' ? '' : profile.notify || '';
   $('name-prefix').value = profile.custom ? profile.namePrefix : profile.id === '001' ? 'Elmo' : '';
   $('consent').checked = false;
   $('show-all-devices').checked = false;
@@ -161,7 +197,49 @@ function syncProbeSelection() {
   const uuid = $('notify').value.trim().toLowerCase();
   const matching = ELMO_NOTIFY_PROBES.find((probe) => probe.uuid === uuid);
   $('notify-preset').value = matching?.id || 'custom';
+  $('connection-task').value =
+    $('svc').value.trim().toLowerCase() === DEVICE_INFORMATION_SERVICE
+      ? 'identify'
+      : uuid
+        ? 'capture'
+        : 'metadata';
 }
+$('connection-task').addEventListener('change', () => {
+  const task = $('connection-task').value;
+  const profile = currentProfile();
+  const previousNotify = $('svc').value === profile.service ? $('notify').value : '';
+  $('svc').value = task === 'identify' ? DEVICE_INFORMATION_SERVICE : profile.service || '';
+  $('notify').value = task === 'capture' ? previousNotify || profile.notify || '' : '';
+  $('consent').checked = false;
+  syncProbeSelection();
+  $('connection-task').value = task;
+  if (task === 'capture' && !$('notify').value) {
+    $('uuid-settings').open = true;
+    notice(
+      'Choose an observed notification channel after a metadata inspection, or enter its sourced UUID.',
+    );
+  }
+  updateMode();
+  saveSettings();
+});
+for (const [id, profileId] of [
+  ['quick-elmo', '001'],
+  ['quick-identify', 'identify'],
+])
+  $(id).addEventListener('click', () => {
+    if (!ready || running) return;
+    $('profile').value = profileId;
+    $('simulation').checked = false;
+    applyProfile();
+    saveSettings();
+    $('connection-title').scrollIntoView({ block: 'start', behavior: 'smooth' });
+    $(profileId === 'identify' ? 'name-prefix' : 'consent').focus({ preventScroll: true });
+    notice(
+      profileId === 'identify'
+        ? 'Enter the toy’s Bluetooth name, or enable Show all Bluetooth devices. Sasori will read available model / revision fields.'
+        : 'Elmo connection details selected. Power it on, close its other app, confirm ownership, and connect.',
+    );
+  });
 $('notify-preset').addEventListener('change', () => {
   const probe = ELMO_NOTIFY_PROBES.find((entry) => entry.id === $('notify-preset').value);
   if (!probe) {
@@ -170,6 +248,8 @@ $('notify-preset').addEventListener('change', () => {
     return;
   }
   $('notify').value = probe.uuid;
+  syncProbeSelection();
+  updateMode();
   saveSettings();
   if (probe.id === 'metadata') {
     notice('Metadata-only inspection selected. No characteristic subscription will occur.');
@@ -181,18 +261,36 @@ $('notify-preset').addEventListener('change', () => {
 });
 function updateMode() {
   const simulated = $('simulation').checked;
-  $('mode-badge').textContent = simulated ? 'SIMULATION · NO HARDWARE' : 'LIVE · INSPECTION ONLY';
-  $('mode-badge').classList.toggle('warm', simulated);
+  const task = $('connection-task').value;
+  $('mode-badge').textContent = controlsActive
+    ? controlsSynthetic
+      ? 'DEMO · STANDARD CONTROLS'
+      : 'LIVE · STANDARD CONTROLS'
+    : simulated
+      ? 'SIMULATION · NO HARDWARE'
+      : 'LIVE · INSPECTION ONLY';
+  $('mode-badge').classList.toggle('warm', controlsActive ? controlsSynthetic : simulated);
   $('simulation-config').hidden = !simulated;
   $('live-config').hidden = simulated;
-  $('connect').textContent = simulated ? 'Run simulated inspection ↗' : 'Connect & inspect ↗';
+  $('connect').textContent = simulated
+    ? 'Run simulated inspection ↗'
+    : task === 'identify'
+      ? 'Connect & identify ↗'
+      : 'Connect & inspect ↗';
+  $('connection-budget').textContent =
+    task === 'identify' && !simulated
+      ? 'Disconnects when reads finish · 15-second maximum'
+      : '15-second inspection · manual reconnect only';
+  $('connection-explanation').textContent =
+    task === 'identify'
+      ? 'Reads available model and revision fields, then disconnects. No control commands are sent.'
+      : task === 'capture'
+        ? 'Listens to the configured channel. Subscription changes a BLE descriptor. No authentication, audio, or motor commands are sent.'
+        : 'Finds the service and its available channels. No notification subscription or control commands.';
   $('support').textContent = simulated
     ? 'Synthetic fixtures only. Bluetooth permissions and hardware are never accessed.'
-    : !window.isSecureContext
-      ? 'HTTPS is required for Bluetooth access. Open the published secure URL.'
-      : navigator.bluetooth?.requestDevice
-        ? 'Web Bluetooth detected. Device compatibility still requires physical testing.'
-        : 'Web Bluetooth unavailable. On iPhone, open this HTTPS page in Bluefy. Simulation works here.';
+    : supportState().detail;
+  $('hub-browser-help').hidden = simulated;
   const profile = currentProfile();
   $('device-title').textContent = profile.label;
   $('profile-status').textContent = profile.status;
@@ -200,12 +298,21 @@ function updateMode() {
     !ready ||
     running ||
     (!simulated &&
-      (!navigator.bluetooth?.requestDevice ||
-        !window.isSecureContext ||
-        (profile.id !== '001' && !profile.custom)));
+      (!currentBluetooth()?.requestDevice ||
+        !connectionSecure() ||
+        (!profile.service && !profile.custom)));
   $('load-profile').disabled = profile.id !== '001' || running;
   $('keep-setup').disabled = !ready || running;
-  $('elmo-probe-settings').hidden = profile.id !== '001';
+  for (const id of ['quick-elmo', 'quick-identify', 'connection-task'])
+    $(id).disabled = !ready || running;
+  $('connection-task').querySelector('[value="capture"]').disabled = profile.id === 'identify';
+  $('connection-task-hint').textContent =
+    task === 'identify'
+      ? 'Reads available manufacturer, model, hardware, firmware, and software strings. No UUID entry needed; not every toy exposes them.'
+      : task === 'capture'
+        ? 'Listen to one notification channel for 15 seconds. You can choose channels found in your previous inspection.'
+        : 'Find this service and its connection channels first. No notification subscription.';
+  $('elmo-probe-settings').hidden = profile.id !== '001' || task !== 'capture';
   $('toy-source').hidden = !profile.custom;
   $('toy-source').textContent = profile.custom
     ? 'UUID source (user supplied): ' + profile.sourceNote
@@ -213,8 +320,7 @@ function updateMode() {
   $('specimen-name').textContent = profile.label;
   $('specimen-model').textContent = profile.id === '001' ? 'HASBRO · B6572' : 'INSPECTION PROFILE';
   $('specimen-number').textContent = profile.custom ? 'MY TOY' : profile.id;
-  $('active-experiment').textContent =
-    'PROJECT SASORI / ' + (profile.custom ? profile.label : 'EXPERIMENT ' + profile.id);
+  $('active-experiment').textContent = 'PROJECT SASORI / ' + profile.label;
   document.querySelector('.specimen-art').hidden = profile.id !== '001';
   $('toy-save').disabled = !ready || running;
   $('toy-import').disabled = !ready || running;
@@ -223,12 +329,25 @@ function updateMode() {
     .forEach((button) => {
       button.disabled = running;
     });
+  $('toy-list')
+    .querySelectorAll('[data-device-state]')
+    .forEach((badge) => {
+      badge.textContent =
+        running && session?.profileId === badge.dataset.deviceState
+          ? 'Active inspection'
+          : 'Not connected';
+    });
   document.body.classList.toggle('engineering', $('engineering').checked);
   if (!$('engineering').checked) $('include-payloads').checked = false;
+  syncRecordActions();
+  $('connect').disabled ||= controlsActive;
+  $('global-stop').disabled = !(running || controlsActive);
+  for (const id of ['quick-elmo', 'quick-identify']) $(id).disabled ||= controlsActive;
+  refreshHub();
 }
-function saveSettings() {
+function saveSettings(immediate = false) {
   clearTimeout(settingsTimer);
-  settingsTimer = setTimeout(() => {
+  const persist = () => {
     settings = {
       schemaVersion: 1,
       profile: $('profile').value,
@@ -238,7 +357,9 @@ function saveSettings() {
       engineering: $('engineering').checked,
     };
     store.setSettings(settings).catch(problem);
-  }, 250);
+  };
+  if (immediate === true) persist();
+  else settingsTimer = setTimeout(persist, 250);
 }
 for (const id of ['simulation', 'profile', 'engineering'])
   $(id).addEventListener('change', () => {
@@ -247,10 +368,15 @@ for (const id of ['simulation', 'profile', 'engineering'])
     updateMode();
     saveSettings();
   });
-$('svc').addEventListener('input', saveSettings);
+$('svc').addEventListener('input', () => {
+  syncProbeSelection();
+  updateMode();
+  saveSettings();
+});
 $('name-prefix').addEventListener('input', saveSettings);
 $('notify').addEventListener('input', () => {
   syncProbeSelection();
+  updateMode();
   saveSettings();
 });
 $('load-profile').addEventListener('click', () => {
@@ -258,6 +384,7 @@ $('load-profile').addEventListener('click', () => {
   $('notify').value = ELMO_NOTIFY;
   $('name-prefix').value = 'Elmo';
   syncProbeSelection();
+  updateMode();
   saveSettings();
   notice(
     'Published Elmo profile loaded from NonaSuomy/Love2LearnElmo. Its UUIDs are community-reported; a live inspection will establish whether they exist on your unit. No connection has been started.',
@@ -267,6 +394,7 @@ function lockConnection(locked) {
   running = locked;
   for (const id of [
     'profile',
+    'connection-task',
     'simulation',
     'svc',
     'notify',
@@ -306,23 +434,26 @@ function renderServices(services) {
       ) {
         const choose = node('button', 'Use for next inspection', 'text-button');
         choose.disabled = running;
-        choose.addEventListener('click', () => {
-          if (running) return;
-          $('svc').value = s.uuid;
-          $('notify').value = c.uuid;
-          $('consent').checked = false;
-          syncProbeSelection();
-          saveSettings();
-          notice(
-            'Observed notification endpoint selected for the next manual inspection. No subscription or connection started. Save this setup to My toys to keep it in a profile.',
-          );
-        });
+        choose.addEventListener('click', () => prepareEndpoint(s.uuid, c.uuid));
         characteristic.append(choose);
       }
       wrapper.append(characteristic);
     }
     target.append(wrapper);
   }
+}
+function prepareEndpoint(service, uuid) {
+  if (running) return;
+  $('svc').value = service;
+  $('notify').value = uuid;
+  $('consent').checked = false;
+  syncProbeSelection();
+  updateMode();
+  saveSettings();
+  navigate('overview');
+  notice(
+    'Observed channel selected. Confirm ownership and reconnect to capture it. Save the setup to reuse this channel.',
+  );
 }
 function renderPackets() {
   const target = $('packets');
@@ -372,7 +503,9 @@ function renderPackets() {
 $('packet-filter').addEventListener('input', renderPackets);
 function handleEvent(event) {
   if (!session) return;
-  if (event.type === 'stage') {
+  if (event.type === 'device') {
+    deviceLabel = event.label;
+  } else if (event.type === 'stage') {
     $('inspection-stage').textContent =
       'Stage: ' + event.stage + ' · ' + event.elapsedMs + ' ms elapsed';
     log('stage', event.stage + ' at ' + event.elapsedMs + ' ms');
@@ -391,18 +524,21 @@ function handleEvent(event) {
     );
     if (event.state === 'inspecting') saveSession(false).catch(problem);
     if (event.state === 'disconnected') {
+      if (session.inspection) session.inspection.gattDurationMs = event.gattDurationMs || 0;
       session.endedAt = new Date().toISOString();
       session.outcome = event.reason || 'disconnected';
-      if (!session.stats.packets && event.reason === 'inspection-complete')
+      if (
+        !session.stats.packets &&
+        session.inspection?.notify &&
+        event.reason === 'inspection-complete'
+      )
         session.outcome = 'inconclusive-no-notifications';
       lockConnection(false);
-      const next =
-        session.source === 'simulated'
-          ? 'Simulation finished. This does not verify real Bluetooth compatibility.'
-          : session.stats.packets
-            ? 'Inspection captured notifications. Review the observed service map and save notes; authentication is still unverified.'
-            : 'No notifications captured. Review the disconnect reason and profile; do not infer authentication success.';
-      $('next-step').textContent = next;
+      $('next-step').textContent = connectionResult(session).next;
+      if (!$('page-overview').hidden && !document.hidden) {
+        $('connection-result-title').focus({ preventScroll: true });
+        $('connection-result-title').scrollIntoView({ block: 'center', behavior: 'smooth' });
+      }
       saveSession(false).catch(problem);
     }
   } else if (event.type === 'packet') {
@@ -423,6 +559,9 @@ function handleEvent(event) {
     );
     renderPackets();
     if (session.stats.packets % 10 === 0) saveSession(false).catch(problem);
+  } else if (event.type === 'device-information') {
+    session.deviceInformation = event.information;
+    // Model strings are device-reported observations; declared identity is unchanged.
   } else if (event.type === 'services') {
     session.services = event.services;
     renderServices(event.services);
@@ -438,11 +577,12 @@ function handleEvent(event) {
       event.error,
     );
   } else log(event.type, event.message || 'Transport event');
+  refreshHub();
 }
 $('connect').addEventListener(
   'click',
   safe(() => {
-    if (!ready || running) return;
+    if (!ready || running || controlsActive) return;
     const simulated = $('simulation').checked;
     const profile = currentProfile();
     if (!simulated) {
@@ -450,9 +590,19 @@ $('connect').addEventListener(
         throw new Error('Confirm that you own or are authorized to inspect this device.');
       normalizeUUID($('svc').value);
       if ($('notify').value.trim()) normalizeUUID($('notify').value);
+      if ($('connection-task').value === 'capture' && !$('notify').value.trim())
+        throw new Error('Choose an observed notification channel or enter its sourced UUID first.');
     }
     diagnostics = new Diagnostics();
     session = createSession(simulated ? 'simulated' : 'live', $('profile').value);
+    deviceLabel = '';
+    if (profile.service || $('svc').value.trim())
+      session.inspection = makeInspection(
+        profile,
+        $('svc').value,
+        $('notify').value.trim(),
+        simulated ? 'simulation' : nativeBluetooth ? 'core-bluetooth' : 'web-bluetooth',
+      );
     session.title = (
       profile.label + (simulated ? ' · simulated inspection' : ' · inspection')
     ).slice(0, 180);
@@ -484,7 +634,8 @@ $('connect').addEventListener(
       });
     transport = simulated
       ? new SimulationTransport(handleEvent)
-      : new BluetoothTransport({ emit: handleEvent });
+      : new BluetoothTransport({ emit: handleEvent, bluetooth: currentBluetooth() });
+    saveSettings(true);
     const result = simulated
       ? transport.connect({ scenario: $('simulation-scenario').value })
       : transport.connect({
@@ -504,7 +655,10 @@ $('connect').addEventListener(
   }),
 );
 for (const id of ['disconnect', 'global-stop'])
-  $(id).addEventListener('click', () => transport?.disconnect('user'));
+  $(id).addEventListener('click', () => {
+    transport?.disconnect('user');
+    controlsHub?.stop('user');
+  });
 $('session-title').addEventListener('input', () => {
   if (session) session.title = $('session-title').value || 'Untitled experiment';
 });
@@ -532,6 +686,7 @@ $('save-session').addEventListener(
   safe(() => saveSession()),
 );
 function download(name, body, type) {
+  if (nativePlugin?.shareFile) return nativePlugin.shareFile({ name, text: body }).catch(problem);
   const url = URL.createObjectURL(new Blob([body], { type }));
   const a = document.createElement('a');
   a.href = url;
@@ -543,16 +698,19 @@ function download(name, body, type) {
 }
 function requireToyEditing() {
   if (!ready || running)
-    throw new Error('Wait for storage and stop the inspection before changing toy profiles.');
+    throw new Error('Wait for storage and stop the inspection before changing device profiles.');
 }
 function editToy(toy = null) {
   editingToyId = toy?.id || null;
   $('toy-name').value = toy?.label || '';
+  $('toy-model').value = toy?.model || '';
+  $('toy-revision').value = toy?.revision || 'unknown';
+  $('toy-firmware').value = toy?.firmware || 'unknown';
   $('toy-prefix').value = toy?.namePrefix || '';
   $('toy-service').value = toy?.service || '';
   $('toy-notify').value = toy?.notify || '';
   $('toy-source-note').value = toy?.sourceNote || '';
-  $('toy-form-title').textContent = toy ? 'Edit toy profile' : 'Add a toy';
+  $('toy-form-title').textContent = toy ? 'Edit device profile' : 'Add a device';
 }
 function renderToys() {
   $('toy-list').replaceChildren();
@@ -561,12 +719,12 @@ function renderToys() {
     (store.persistent ? 'Saved on this browser' : 'Temporary memory only; export before closing') +
     ' · ' +
     toys.length +
-    ' / 20 toy profiles';
+    ' / 20 device profiles';
   if (!toys.length)
     $('toy-list').append(
       node(
         'p',
-        'Your saved toy profiles will appear here. The built-in Elmo profile remains in the connection manager.',
+        'Your saved device profiles will appear here. The built-in Elmo profile remains in the connection manager.',
       ),
     );
   for (const toy of toys) {
@@ -586,6 +744,20 @@ function renderToys() {
       ),
       node('p', 'User-supplied source: ' + toy.sourceNote, 'hint'),
     );
+    const identity = identityOf(toy);
+    card.append(
+      node(
+        'p',
+        identity.model + ' · board ' + identity.revision + ' · firmware ' + identity.firmware,
+      ),
+    );
+    const stateBadge = node(
+      'p',
+      running && session?.profileId === toy.id ? 'Active inspection' : 'Not connected',
+      'badge subtle',
+    );
+    stateBadge.dataset.deviceState = toy.id;
+    card.append(stateBadge);
     const actions = node('div', '', 'actions');
     const load = node('button', 'Load for inspection', 'secondary');
     load.addEventListener(
@@ -594,12 +766,10 @@ function renderToys() {
         requireToyEditing();
         $('profile').value = toy.id;
         applyProfile();
-        $('uuid-settings').open = true;
+        $('uuid-settings').open = false;
         saveSettings();
         navigate('overview');
-        notice(
-          'Toy profile loaded. Review the UUIDs and confirm ownership before starting a manual inspection.',
-        );
+        notice('Device setup loaded. Confirm ownership, then tap Connect & inspect.');
       }),
     );
     const edit = node('button', 'Edit', 'text-button');
@@ -610,6 +780,16 @@ function renderToys() {
         editToy(toy);
       }),
     );
+    const controls = node('button', 'Open shared controls', 'secondary');
+    controls.addEventListener(
+      'click',
+      safe(() => {
+        if (running || controlsActive) throw new Error('Stop the current connection first.');
+        controlsHub?.useToy(toy);
+        navigate('universal');
+      }),
+    );
+    card.append(controls);
     const remove = node('button', 'Delete profile', 'text-button');
     let armed = false;
     remove.addEventListener(
@@ -650,6 +830,9 @@ $('toy-form').addEventListener(
     requireToyEditing();
     const fields = {
       label: $('toy-name').value,
+      model: $('toy-model').value.trim() || $('toy-name').value,
+      revision: $('toy-revision').value.trim() || 'unknown',
+      firmware: $('toy-firmware').value.trim() || 'unknown',
       namePrefix: $('toy-prefix').value,
       service: $('toy-service').value,
       notify: $('toy-notify').value.trim(),
@@ -669,49 +852,85 @@ $('toy-form').addEventListener(
     renderToys();
     notice(
       store.persistent
-        ? 'Toy profile saved on this browser. Choose Load for inspection when ready.'
+        ? 'Device profile saved on this browser. Choose Load for inspection when ready.'
         : store.warning,
     );
   }),
 );
-$('keep-setup').addEventListener(
-  'click',
-  safe(() => {
-    requireToyEditing();
-    const profile = currentProfile();
-    editToy(profile.custom ? profile : null);
-    $('toy-name').value = profile.label;
-    $('toy-prefix').value = $('name-prefix').value;
-    $('toy-service').value = $('svc').value;
-    $('toy-notify').value = $('notify').value;
-    const unchanged =
-      $('svc').value.trim().toLowerCase() === profile.service &&
-      $('notify').value.trim().toLowerCase() === (profile.notify || '');
-    const observed =
-      session?.source === 'live' &&
-      session.services.some(
-        (service) =>
-          service.evidence === 'observed-this-session' &&
-          service.uuid === $('svc').value.trim().toLowerCase() &&
-          service.characteristics.some(
-            (characteristic) =>
-              characteristic.evidence === 'observed-this-session' &&
-              characteristic.uuid === $('notify').value.trim().toLowerCase(),
-          ),
-      );
-    $('toy-source-note').value = observed
-      ? 'Observed in Sasori session ' +
-        session.id +
-        ' at ' +
-        session.startedAt +
-        '; repeat independently before protocol claims.'
-      : unchanged
+function prepareSavedDevice(record = null) {
+  requireToyEditing();
+  const profile = currentProfile();
+  editToy(profile.custom ? profile : null);
+  $('toy-name').value = profile.id === 'identify' ? 'My Bluetooth toy' : profile.label;
+  const sourceRecord = record || (session?.profileId === profile.id ? session : null);
+  const info =
+    sourceRecord?.source === 'live' && !sourceRecord.importedAt
+      ? sourceRecord.deviceInformation
+      : null;
+  $('toy-model').value =
+    profile.model || (profile.id === 'identify' ? info?.model : null) || profile.label;
+  $('toy-revision').value =
+    (profile.revision !== 'unknown' && profile.revision) ||
+    info?.hardware?.slice(0, 60) ||
+    'unknown';
+  $('toy-firmware').value =
+    (profile.firmware !== 'unknown' && profile.firmware) ||
+    info?.firmware?.slice(0, 60) ||
+    'unknown';
+  $('toy-prefix').value = $('name-prefix').value;
+  const identifying = record?.inspection?.service === DEVICE_INFORMATION_SERVICE;
+  const currentObserved = record?.services.some(
+    (s) =>
+      s.evidence === 'observed-this-session' &&
+      s.uuid === $('svc').value &&
+      (!$('notify').value ||
+        s.characteristics.some(
+          (c) => c.evidence === 'observed-this-session' && c.uuid === $('notify').value,
+        )),
+  );
+  $('toy-service').value = currentObserved
+    ? $('svc').value
+    : identifying && profile.id !== 'identify'
+      ? profile.service
+      : record?.inspection?.service || $('svc').value;
+  $('toy-notify').value = currentObserved
+    ? $('notify').value
+    : identifying
+      ? ''
+      : (record?.inspection?.notify ?? $('notify').value);
+  const service = $('toy-service').value.trim().toLowerCase();
+  const notify = $('toy-notify').value.trim().toLowerCase();
+  const observedRecord = record || (session?.profileId === profile.id ? session : null);
+  const observed =
+    observedRecord?.source === 'live' &&
+    !observedRecord.importedAt &&
+    observedRecord.services.some(
+      (s) =>
+        s.evidence === 'observed-this-session' &&
+        s.uuid === service &&
+        (!notify ||
+          s.characteristics.some(
+            (c) => c.evidence === 'observed-this-session' && c.uuid === notify,
+          )),
+    );
+  $('toy-source-note').value = observed
+    ? 'Observed in Sasori session ' +
+      observedRecord.id +
+      ' at ' +
+      observedRecord.startedAt +
+      '; model / revision strings are device-reported, not independent verification.'
+    : service === DEVICE_INFORMATION_SERVICE
+      ? DEVICE_INFORMATION_SOURCE
+      : service === profile.service && (!notify || notify === profile.notify)
         ? profile.custom
           ? profile.sourceNote
           : profile.source || ''
         : '';
-    navigate('toys');
-  }),
+  navigate('toys');
+}
+$('keep-setup').addEventListener(
+  'click',
+  safe(() => prepareSavedDevice()),
 );
 $('toy-export').addEventListener(
   'click',
@@ -727,7 +946,7 @@ $('toy-import').addEventListener(
       requireToyEditing();
       const file = input.files?.[0];
       if (!file) return;
-      if (file.size > MAX_TOY_FILE_BYTES) throw new Error('Toy profile import limit is 128 KB.');
+      if (file.size > MAX_TOY_FILE_BYTES) throw new Error('Device profile import limit is 128 KB.');
       const copies = parseToys(await file.text()).map(createToy);
       await store.saveToys(copies);
       toys = await store.listToys();
@@ -736,7 +955,7 @@ $('toy-import').addEventListener(
       notice(
         'Imported ' +
           copies.length +
-          ' toy profiles as new copies. Review their source notes before inspection.',
+          ' device profiles as new copies. Review their source notes before inspection.',
       );
     } finally {
       input.value = '';
@@ -778,6 +997,7 @@ $('export-text').addEventListener(
 );
 async function refreshRecords() {
   records = await store.list();
+  $('backup').disabled = !records.length;
   $('record-count').textContent = records.length;
   $('storage-state').textContent = store.persistent
     ? 'IndexedDB · ' + records.length + ' records'
@@ -793,7 +1013,9 @@ async function refreshRecords() {
       : '');
   $('recover-corrupt').hidden = !store.corrupt.length;
   renderRecords();
+  syncRecordActions();
   updateComparisonOptions();
+  refreshHub();
 }
 function renderRecords() {
   $('records').replaceChildren();
@@ -852,30 +1074,74 @@ function selectRecord(id) {
       ' notifications · schema v' +
       r.schemaVersion
     : 'Select a record to inspect or edit its notes.';
+  $('record-history').replaceChildren();
+  for (const revision of r?.noteHistory || []) {
+    const details = node('details', '');
+    details.append(
+      node(
+        'summary',
+        revision.title + ' · saved before ' + new Date(revision.savedAt).toLocaleString(),
+      ),
+      node('p', revision.notes),
+    );
+    $('record-history').append(details);
+  }
   renderRecords();
+  syncRecordActions();
+}
+function syncRecordActions() {
+  const active = running && session?.id === selectedId;
+  const selected = records.some((r) => r.id === selectedId);
+  for (const id of ['record-title', 'record-notes', 'update-record'])
+    $(id).disabled = !selected || noteSavePending;
+  $('delete-record').disabled = !selected || active || noteSavePending;
+  $('record-delete-help').textContent = active
+    ? 'Stop the active inspection before deleting its record.'
+    : 'Deletion requires a second click. Export a backup first if this record matters.';
 }
 $('record-search').addEventListener('input', renderRecords);
 $('update-record').addEventListener(
   'click',
   safe(async () => {
     const r = records.find((item) => item.id === selectedId);
-    if (!r) return;
-    r.title = $('record-title').value || 'Untitled experiment';
-    r.notes = $('record-notes').value;
-    await store.save(r);
-    if (session?.id === r.id) {
-      session.title = r.title;
-      session.notes = r.notes;
-      $('session-title').value = r.title;
+    if (!r || noteSavePending) return;
+    noteSavePending = true;
+    // Read the editor before locking it, and keep concurrent saves from basing
+    // their revision history on the same stale stored record.
+    const title = $('record-title').value || 'Untitled experiment';
+    const notes = $('record-notes').value;
+    syncRecordActions();
+    try {
+      const current =
+        session?.id === r.id ? portableRecord(session, $('include-payloads').checked) : r;
+      const revised = reviseNotes(current, title, notes);
+      // Update the live source before awaiting storage. A notification can trigger an
+      // autosave while this transaction is pending; that snapshot must include the edit.
+      if (session?.id === r.id) {
+        session.title = revised.title;
+        session.notes = revised.notes;
+        session.noteHistory = revised.noteHistory;
+        $('session-title').value = revised.title;
+      }
+      await store.save(revised);
+      await refreshRecords();
+      if (selectedId === r.id) selectRecord(r.id);
+      notice('Research notes saved on this browser.');
+    } finally {
+      noteSavePending = false;
+      syncRecordActions();
     }
-    await refreshRecords();
-    notice('Research notes saved on this browser.');
   }),
 );
 $('delete-record').addEventListener(
   'click',
   safe(async () => {
     if (!selectedId) return;
+    if (noteSavePending) return;
+    if (running && session?.id === selectedId) {
+      notice('Stop the active inspection before deleting its record.');
+      return;
+    }
     if (deleteArmed !== selectedId) {
       deleteArmed = selectedId;
       $('delete-record').textContent = 'Confirm deletion';
@@ -886,10 +1152,11 @@ $('delete-record').addEventListener(
       }, 5000);
       return;
     }
-    await store.remove(selectedId);
+    const id = selectedId;
+    await store.remove(id);
     clearTimeout(deleteTimer);
     await refreshRecords();
-    selectRecord(null);
+    if (selectedId === id) selectRecord(null);
     notice('Record deleted locally.');
   }),
 );
@@ -949,7 +1216,7 @@ $('backup').addEventListener(
   'click',
   safe(async () => {
     const all = await store.list();
-    download('sasori-backup.json', JSON.stringify(backup(all), null, 2), 'application/json');
+    download('sasori-backup.json', serializeBackup(all), 'application/json');
   }),
 );
 $('import-file').addEventListener(
@@ -958,7 +1225,7 @@ $('import-file').addEventListener(
     const file = event.target.files[0];
     if (!file) return;
     try {
-      if (file.size > MAX_FILE_BYTES) throw new Error('Import limit is 2 MB.');
+      if (file.size > MAX_FILE_BYTES) throw new Error('Import limit is 13 MB.');
       const imported = parseImport(await file.text(), file.name);
       await store.importCopies(imported);
       await refreshRecords();
@@ -1143,6 +1410,7 @@ $('trouble').addEventListener('change', updateTrouble);
 updateTrouble();
 function stopAll(reason) {
   transport?.disconnect(reason);
+  controlsHub?.stop(reason);
   auth.cancel();
   stopSequence();
   if ('speechSynthesis' in window) speechSynthesis.cancel();
@@ -1161,7 +1429,7 @@ window.addEventListener('error', () => {
   notice(
     'The interface encountered an error. Stop the inspection, export your log if possible, and reload.',
   );
-  transport?.disconnect('interface-error');
+  stopAll('interface-error');
 });
 async function initialize() {
   $('connect').disabled = true;
@@ -1183,6 +1451,53 @@ async function initialize() {
   ready = true;
   updateMode();
   await refreshRecords();
+  deviceHub = mountDeviceHub({
+    getState: () => ({
+      profile: currentProfile(),
+      session,
+      records,
+      running,
+      state: transport?.state || 'idle',
+      support: supportState(),
+      deviceLabel,
+    }),
+    notice,
+    navigate,
+    selectRecord,
+    prepareEndpoint,
+    saveDevice: safe((record) => prepareSavedDevice(record)),
+    exportReport: safe((record) => {
+      if (!record || running) return;
+      download(
+        'sasori-connection-report.json',
+        JSON.stringify(portableRecord(record), null, 2),
+        'application/json',
+      );
+    }),
+  });
+  controlsHub = await mountControls({
+    store,
+    bluetooth: currentBluetooth(),
+    native: !!nativeBluetooth,
+    secure: connectionSecure(),
+    download,
+    canStart: () => ready && !running,
+    changed: (active, synthetic) => {
+      if (controlsActive !== active || controlsSynthetic !== synthetic) {
+        controlsActive = active;
+        controlsSynthetic = synthetic;
+        updateMode();
+      }
+    },
+  });
+  await mountDiscovery({ store, download }).catch(problem);
+  recorder = await mountRecorder({
+    store,
+    download,
+    onSaved: refreshRecords,
+    getSession: () => session,
+    navigate,
+  });
   if (store.warning) notice(store.warning);
   log('info', 'Project Sasori v0.2.0 ready. No connection starts without your action.');
   navigate(location.hash.slice(1));

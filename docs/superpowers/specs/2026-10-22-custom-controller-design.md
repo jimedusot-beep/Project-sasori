@@ -8,6 +8,8 @@ Build a virtual mouth controller inside the existing Control laboratory. A user 
 
 Preserve BLE inspection, My toys, records, historical decoding, synthetic authentication, and existing local audio previews. The original `BluetoothTransport` stays inspection-only. Do not enable physical commands through the current capability flags. A custom controller has a different identity and schema from an original Elmo, a BLE inspection profile, and a `sasori.session` record. Imported data never dispatches commands.
 
+October 24 reconciliation: preserve the separate source-backed browser/desktop original-Elmo remotes as well. Their implemented handshake and fixed status/greeting subset do not implement this proposed replacement-controller contract or verify a physical motor stop.
+
 ## Alternatives and decision
 
 | Approach                                                                                       | Consequence                                                                       | Proposal    |

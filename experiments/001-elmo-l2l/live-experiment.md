@@ -1,5 +1,7 @@
 # Gated live experiment: known credential, then one status query
 
+**Historical draft:** the October 23 [recovered-source review](recovered-source.md) and [experimental desktop procedure](../../desktop/README.md#experimental-elmo-known-password-check) now supersede this document's missing-artifact/construction prerequisites for that bounded client. The original draft below remains unchanged as a preparation record; it is not the new client's runbook or evidence of a real hardware result.
+
 **DRAFT / NOT READY / NO APPLICATION WRITES AUTHORIZED BY THIS DOCUMENT.** Prepared October 21, 2026 (America/New_York). [Source verification](source-verification.md) leaves G1–G8 open. This is a preparation record, not an executable sequence or a claim that the complete protocol or unit characteristics are confirmed.
 
 ## Question and prerequisites

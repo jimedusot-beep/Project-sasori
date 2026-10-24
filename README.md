@@ -2,24 +2,44 @@
 
 A mobile workbench for observing Bluetooth devices, preserving research, and developing animatronic behavior safely. Experiment 001 investigates a user-owned Hasbro Love2Learn Elmo B6572 advertising as Elmo L2L.
 
-**v0.2.0 is an experimental, inspection-only release. Real iPhone/Bluefy/Elmo validation is still required.** Independent fan research; no affiliation with Hasbro or Naruto.
+The device workspace connects saved identities, active connection status, notification timelines, Discovery analysis, and versioned research notes. Start with [Quick connections](docs/quick-connect.md): Elmo settings are included, and another BLE toy can expose its model/firmware without manual UUID entry. Native access is available as a buildable [iPhone app](native/ios/README.md) and a local [desktop BLE helper](desktop/README.md); real-device validation remains required.
+
+**Open the [Elmo Remote](https://jimedusot-beep.github.io/Project-sasori/elmo.html) for a button-based connection, status and greeting trial. No Python or Terminal is required.** Use Chrome on a Bluetooth-equipped computer, or Bluefy on iPhone/iPad. The browser also provides explicit first-time password setup and [guided forgotten-password recovery](docs/elmo-password-recovery.md). Hasbro's physical reset erases personalization; real password persistence/recovery still needs verification. See the [simple remote guide](docs/elmo-remote.md).
+
+**v0.2.0 is experimental. The separate browser and desktop Elmo remotes implement a known-password handshake, input/volume queries and one greeting request. Native Elmo inspection remains separate. Shared standard BLE controls and an original MiP version/status/timed-LED adapter are also available. Real-device validation is still required.** Independent fan research; no affiliation with Hasbro or Naruto.
+
+[Universal controls](docs/universal-controls.md) provides one connection-and-action workspace, remembered local device references, and reusable setup backups across supported families. Select the protocol/model, try its offline demo, then connect your matching device. **Run connection check** records a repeatable Identify → Status → Find/LED trial with physical-effect/recovery observations. The [adapter and validation guide](docs/device-action-validation.md) explains exact MiP bytes, evidence limits, and private Elmo app-source intake. Real-unit Elmo authentication, movement and playback remain unverified.
+
+The broader [community scan](docs/research/community-scan-2026-10-23.md) recovered the previously missing Elmo APK and found a newer standalone community client. [Direct method review](experiments/001-elmo-l2l/recovered-source.md) now establishes the implemented handshake subset. Use the [browser remote](docs/elmo-remote.md) or [experimental desktop Elmo procedure](desktop/README.md#experimental-elmo-known-password-check) with your known password; source-backed software and synthetic tests do not establish acceptance or physical effects on your particular unit.
 
 ## Try the laboratory
 
-Open the [live laboratory](https://jimedusot-beep.github.io/Project-sasori/). HTTPS deployment and all 15 assets were verified on October 21, 2026. See [verification results](docs/verification.md) for the evidence and remaining hardware limits.
+Open the [live laboratory](https://jimedusot-beep.github.io/Project-sasori/). The Pages workflow checks deployed HTML and assets; see [current workflow runs](https://github.com/jimedusot-beep/Project-sasori/actions) for the latest software results. The [initial release verification](docs/verification.md) is a dated record, not physical validation of the newer remote.
 
 1. Open the site and turn on **Use simulation** to explore without hardware.
 2. Tap **Run simulated inspection**. Three synthetic notifications appear; the finished session saves locally.
 3. Open **Research records** to edit notes, search, compare captures, import JSON/TXT/CSV, or export a metadata backup.
-4. For real inspection, open the HTTPS site in **Bluefy on iPhone**, turn simulation off, load the published Elmo profile, review its source, confirm authorization, and tap **Connect & inspect**.
-5. For another BLE toy you own, open **My toys** to save a sourced service UUID and that toy's Bluetooth name prefix. Leave Notify blank for metadata-only inspection, then select an observed notification endpoint in Protocol explorer for the next manual session. See the [multi-toy guide](docs/my-toys.md).
+4. For real inspection, open the HTTPS site in **Bluefy on iPhone** or a Bluetooth-capable desktop browser. Tap **Love2Learn Elmo**, confirm ownership, and **Connect & inspect**. Start with connection details, then choose an observed channel from the result card for a separate notification capture.
+5. For another BLE toy, tap **Another Bluetooth toy**, supply its Bluetooth name or explicitly show all devices, and connect to read available model/firmware fields. **Save device setup** prepares a profile with those observations. **Devices** also accepts sourced custom service/notification UUIDs. See [Quick connections](docs/quick-connect.md) and the [multi-toy guide](docs/my-toys.md).
+6. Open **Discovery workbench** to label and compare offline hex or infrared timing captures, inspect local PCM16 WAV files, and save discovery metadata. See the [Discovery guide](docs/discovery-workbench.md) for retention and evidence limits.
 
 The published UUID profile is transcribed from [NonaSuomy's GATT table](https://github.com/NonaSuomy/Love2LearnElmo/blob/82fa312e06af1d8e549cec588856ebce227b5f77/README.md). It is community-reported evidence, not a recovery of the old V4 source or proof of compatibility with your firmware. If service discovery fails, follow the [iPhone UUID capture guide](experiments/001-elmo-l2l/iphone-uuid-capture-guide.md).
 
 ## What works in software
 
+- [Elmo Remote](docs/elmo-remote.md): a standalone responsive HTML app with Connect, Read status, Play greeting, Disconnect, an isolated demo and private result download. Browser Bluetooth supports existing-password authentication and explicitly opted-in setup after the toy reports no password. In-page recovery instructions cite Hasbro's password display and physical reset. Secrets are never saved. Native Elmo writes and independent physical validation remain unavailable.
+
+- [Experimental Elmo desktop client](desktop/README.md#experimental-elmo-known-password-check): privately prompted existing password, one bounded challenge/response, strict acceptance/rejection, volume/input queries, touch monitoring and an opt-in single greeting. No automatic enrollment, reset, raw commands or credential logging. The original inspection helper remains separate.
+
+- [Universal controls](docs/universal-controls.md): reusable standard BLE and original MiP protocol families; Identify, Status, bounded Find/LED, Stop, saved reconnect references and private setup backups. Web and native iPhone share the same intents. [Action trials](docs/device-action-validation.md) record timings, outcomes and separate owner observations; only fresh local live checks can meet the ten-session review target. Unsupported controls remain unavailable.
+
 - User-initiated, name-filtered discovery; service/characteristic metadata inspection; optional notification subscription.
+- [Protocol recorder](docs/protocol-recorder.md): normalized TX/RX JSON/CSV import, observation markers, frame timelines, selected intervals, byte/timing comparisons, and reusable trace records with opt-in raw retention. Built-in source-linked adapter manifests include Elmo analysis and an original manufacturer-documented MiP offline codec. [Protocol sources and reuse decisions](docs/research/adapter-inspirations.md) are pinned and cited; the recorder sends no commands. The separate Elmo remotes implement the source-backed handshake, with real-unit verification pending.
+- Quick Elmo/unknown-toy setups, bounded standard model/firmware reads on web and native iPhone, useful connection results, observed-channel shortcuts, and metadata connection reports. Identity reads finish as soon as the available fields have been read.
+- Integrated browser/Bluefy setup, active-device status, per-profile recent sessions, physical-evidence collection checklist, notification timing, direct offline analysis handoff, and five previous title/note versions.
+- A shared inspection adapter contract used by the web transport, native Core Bluetooth facade, and desktop Bleak helper. Imported profiles never execute or unlock commands.
 - Persistent user-defined toy profiles with source notes, isolated name/UUID settings, profile backups/imports, and observed notification endpoint selection. Other built-in experiment slots remain scaffolds.
+- Offline Discovery workbench: nine independent interface research plans, labeled byte/pulse comparisons, first-channel WAV waveform/spectrum inspection, bounded local capture storage, and metadata-only backups with imported-claim provenance.
 - State tracking, duplicate-attempt prevention, 45-second chooser budget, 6-second operation budgets, 15-second inspection deadline, 500-notification cap, manual reconnect, late-connection cleanup, and foreground-only inspection.
 - Packet timestamps, byte counts, hex/text views, malformed/oversized flags, historical-pattern descriptions, and the preserved offline hex analyzer.
 - IndexedDB records and settings, explicit memory fallback, notes, search, comparisons, JSON/TXT/CSV imports, metadata backups, v1 migration, corruption detection, and bounded storage.
@@ -36,9 +56,11 @@ The published UUID profile is transcribed from [NonaSuomy's GATT table](https://
 | Synthetic                                      | Software lifecycle and UI behavior only. Never hardware compatibility or successful Elmo authentication.                           |
 | Imported                                       | Source claims are retained and visibly marked as imported; they are not independently verified.                                    |
 
-Original [V4 probe](https://elmo-auth-probe-jimbo.jimmysoto1994.chatgpt.site) recovery was attempted through accessible page resources, connected Sites, and prior context. The URL returned HTTP 403, the connected Sites list was empty, and no original source was recovered. This release contains no reconstructed authentication routine.
+Original [V4 probe](https://elmo-auth-probe-jimbo.jimmysoto1994.chatgpt.site) recovery was attempted through accessible page resources, connected Sites, and prior context. The URL returned HTTP 403, the connected Sites list was empty, and no original V4 source was recovered. The new desktop handshake instead follows directly inspected app-method facts and the newly found community implementation; it is not a recovered V4 routine.
 
-**Authentication, Elmo audio, sensor semantics, motor control, and safe physical limits remain unverified.** The live transport has no application characteristic-write calls, firmware operation, raw transmitter, automatic reconnect, or credential input. Notification subscription changes the BLE subscription descriptor.
+**Real-unit Elmo authentication, audio/input behavior, motor control, and physical limits remain unverified.** Inspection transports have no application characteristic-write calls. Separate control adapters expose fixed reviewed commands; the experimental desktop Elmo client privately prompts for an existing password. There is no generic raw transmitter, firmware operation or automatic reconnect. Notification subscription changes the BLE subscription descriptor.
+
+**Elmo Remote's Disconnect closes Bluetooth; it is not a verified toy silence or motor-stop command.** Custom speech and independent mouth control are not implemented. The next physical milestone is a [recorded status/greeting trial](docs/elmo-remote.md#record-the-first-real-toy-trial); the replacement-controller route has separate hardware and software prerequisites.
 
 ## Your data
 
@@ -46,7 +68,7 @@ Records belong to this browser and exact site origin. They do not synchronize ac
 
 Default saves and backups omit raw payload bytes and text. Engineering mode allows deliberate raw session export/storage, reset to off for each new session. Unknown binary secrets cannot be reliably sanitized; raw hex may reveal the original bytes even when text is redacted. Review raw captures privately. Never commit credentials or personal identifiers.
 
-Limits: 50 records, 8 MB application budget, 250 KB per record, 2 MB per imported file, and 20,000 characters per note. Larger research collections should use multiple metadata backups. No browser GitHub-token synchronization is implemented.
+Limits: 50 records, 8 MB research-data budget, 250 KB per record, 13 MB per imported file, and 20,000 characters per note. Full notebooks export compact metadata backups that fit the import and native-share file budget. The storage, per-record, packet and note limits remain in effect during restoration. Bounded local IDs and import timestamps are accounted for separately so restoring a full notebook preserves its data. No browser GitHub-token synchronization is implemented.
 
 ## Development and checks
 
@@ -69,9 +91,16 @@ The site serves on port 4173. Live Web Bluetooth requires HTTPS or an eligible l
 
 - [Elmo retrofit build assignments](experiments/001-elmo-l2l/retrofit/README.md), [hardware inventory and parts requirements](experiments/001-elmo-l2l/retrofit/hardware-inventory.md), and [beginner bench worksheet](experiments/001-elmo-l2l/retrofit/bench-worksheet.md). The [virtual-controller design](docs/superpowers/specs/2026-10-22-custom-controller-design.md) is proposed for review; no replacement-controller implementation or hardware approval is claimed.
 - [Architecture and module APIs](docs/architecture.md)
+- [Supported control families, real-device check workflow and private Elmo source intake](docs/device-action-validation.md)
+- [Protocol recorder, trace format, and adapter catalog](docs/protocol-recorder.md), [source implementation register](docs/research/adapter-inspirations.md)
+- [October 23 code and reliability audit](docs/audit-2026-10-23.md)
+- [Connected devices and evidence collection](docs/connected-devices.md), [device adapter contract](docs/adapter-contract.md)
+- [Quick connections, model/firmware reads, and reusable setups](docs/quick-connect.md)
+- [Native iPhone build/install](native/ios/README.md) and [desktop helper setup](desktop/README.md)
+- [Discovery workbench: captures, comparisons, sound analysis, and backups](docs/discovery-workbench.md)
 - [Protocol specification and unknowns](docs/protocol.md)
 - [Experiment 001](experiments/001-elmo-l2l/README.md), [evidence register](experiments/001-elmo-l2l/evidence-register.md), and [historical inbound bytes](experiments/001-elmo-l2l/protocol-notifications.md)
-- Independent original-BLE track: [source verification and exact gaps](experiments/001-elmo-l2l/source-verification.md), [offline capture review](experiments/001-elmo-l2l/offline-review.md), and [gated live experiment draft](experiments/001-elmo-l2l/live-experiment.md). Authentication construction remains unverified; replacement-controller work can proceed independently.
+- Independent original-BLE track: [recovered source and current gaps](experiments/001-elmo-l2l/recovered-source.md) establishes the implemented handshake subset; the [remote trial worksheet](docs/elmo-remote.md#record-the-first-real-toy-trial) covers pending unit-specific evidence. The [earlier source review](experiments/001-elmo-l2l/source-verification.md), [offline capture review](experiments/001-elmo-l2l/offline-review.md), and [old live experiment draft](experiments/001-elmo-l2l/live-experiment.md) retain their historical scope. Replacement-controller work can proceed independently.
 - [iPhone setup](docs/iphone-setup.md), [troubleshooting](docs/troubleshooting.md), and [safety](docs/safety.md)
 - [Current research/source/license register](docs/research/source-register.md)
 - [Preserved seven-area engineering dossier](docs/research/seven-area-engineering-dossier.md) and [technology reuse matrix](docs/research/reuse-matrix.md)

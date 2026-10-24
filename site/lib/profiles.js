@@ -1,3 +1,4 @@
+import { DEVICE_INFORMATION_SERVICE, DEVICE_INFORMATION_SOURCE } from './device-information.js';
 // UUID facts transcribed from the cited researcher's GATT table. These are NOT recovered V4 source.
 export const ELMO_SOURCE = 'https://github.com/NonaSuomy/Love2LearnElmo';
 export const ELMO_SERVICE = 'dab91435-b5a1-e29c-b041-bcd562613bdf';
@@ -30,6 +31,15 @@ export const PROFILES = Object.freeze([
     service: ELMO_SERVICE,
     notify: ELMO_NOTIFY,
     source: ELMO_SOURCE,
+  },
+  {
+    id: 'identify',
+    label: 'Other Bluetooth toy · identify',
+    deviceName: null,
+    status: 'Standard model / firmware reader · availability varies by device',
+    service: DEVICE_INFORMATION_SERVICE,
+    notify: '',
+    source: DEVICE_INFORMATION_SOURCE,
   },
   {
     id: '002',

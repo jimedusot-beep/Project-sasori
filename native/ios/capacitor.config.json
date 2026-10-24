@@ -1,0 +1,7 @@
+{
+  "appId": "org.sasori.laboratory",
+  "appName": "Sasori",
+  "webDir": "www",
+  "server": { "allowNavigation": [] },
+  "ios": { "contentInset": "automatic" }
+}

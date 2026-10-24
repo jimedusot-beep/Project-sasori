@@ -35,6 +35,6 @@ Use a state machine such as DISARMED → READY → ACTIVE → STOPPED/FAULT, wit
 
 ## What is intentionally not implemented
 
-No motor pin map, connector pinout, power-on recipe, Elmo application command, replacement PCB wiring plan, servo travel range, bypass authentication or firmware flash procedure has been established. Design patterns from other toys are **not** proof the same electrical interfaces exist in this unit.
+This replacement-controller track establishes no motor pin map, connector pinout, power-on recipe, replacement PCB wiring plan, servo travel range, bypass authentication or firmware flash procedure. The separate [October 23 original-BLE source review](../experiments/001-elmo-l2l/recovered-source.md) now supports an experimental known-password/query/greeting client. It supplies no electrical compatibility evidence for replacement hardware. Design patterns from other toys are **not** proof the same electrical interfaces exist in this unit.
 
 Once a user-owned board photo and component measurements exist, this document should become a revisioned hardware profile with test records and a reviewed interface-control document. Continue original BLE investigation under M1/M2 in parallel.
