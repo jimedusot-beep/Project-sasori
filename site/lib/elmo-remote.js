@@ -21,6 +21,22 @@ export class ElmoRemoteError extends Error {
 const failure = (error) =>
   error instanceof ElmoRemoteError ? error : new ElmoRemoteError('bluetooth-error');
 const activeStates = ['choosing', 'connecting', 'authenticating', 'ready'];
+export const ELMO_SESSION_MODES = Object.freeze({
+  check: Object.freeze({
+    durationMs: 30000,
+    sounds: 1,
+    volumes: 4,
+    notifications: 500,
+    soundGapMs: 0,
+  }),
+  control: Object.freeze({
+    durationMs: 600000,
+    sounds: 60,
+    volumes: 60,
+    notifications: 6000,
+    soundGapMs: 4000,
+  }),
+});
 
 // A finite, original Web Bluetooth client for the same subset as desktop/sasori_elmo.py.
 // Authentication bytes remain private fields and never enter a snapshot or result.
@@ -42,6 +58,7 @@ export class ElmoRemote {
   #passwordSetupSent = false;
   #challengeResponded = false;
   #run = 0;
+  #soundReadyAt = 0;
   constructor({
     bluetooth,
     emit = () => {},
@@ -50,8 +67,14 @@ export class ElmoRemote {
     chooserMs = 40000,
     authMs = 10000,
     queryMs = 2000,
-    sessionMs = 30000,
+    mode = 'check',
+    sessionMs,
+    now = Date.now,
   } = {}) {
+    if (!Object.hasOwn(ELMO_SESSION_MODES, mode) || typeof now !== 'function')
+      throw new ElmoRemoteError('invalid-budget');
+    const limits = ELMO_SESSION_MODES[mode];
+    sessionMs ??= limits.durationMs;
     if (
       ![operationMs, chooserMs, authMs, queryMs, sessionMs].every(
         (n) => Number.isFinite(n) && n > 0,
@@ -60,7 +83,7 @@ export class ElmoRemote {
       chooserMs > 60000 ||
       authMs > 15000 ||
       queryMs > 5000 ||
-      sessionMs > 30000
+      sessionMs > limits.durationMs
     )
       throw new ElmoRemoteError('invalid-budget');
     Object.assign(this, {
@@ -72,6 +95,9 @@ export class ElmoRemote {
       authMs,
       queryMs,
       sessionMs,
+      mode,
+      limits,
+      now,
     });
     this.state = 'idle';
     this.busy = false;
@@ -88,6 +114,9 @@ export class ElmoRemote {
       busy: this.busy,
       synthetic: this.synthetic,
       deadlineAt: this.deadlineAt,
+      soundReadyIn: this.readyIn('sound'),
+      soundLimit: this.limits.sounds,
+      volumeLimit: this.limits.volumes,
       deviceName:
         typeof this.device?.name === 'string'
           ? [...this.device.name]
@@ -101,6 +130,9 @@ export class ElmoRemote {
   }
   result() {
     return this.report ? structuredClone(this.report) : null;
+  }
+  readyIn(intent) {
+    return intent === 'sound' ? Math.max(0, this.#soundReadyAt - this.now()) : 0;
   }
   #publish() {
     this.emit(this.snapshot());
@@ -172,7 +204,7 @@ export class ElmoRemote {
       this.stop('unsupported-notification');
       return;
     }
-    if (this.report.notifications >= 500) {
+    if (this.report.notifications >= this.limits.notifications) {
       this.stop('notification-limit');
       return;
     }
@@ -279,6 +311,9 @@ export class ElmoRemote {
       helloQueued: false,
       soundRequestedId: null,
       soundQueued: false,
+      sessionMode: this.mode,
+      soundRequests: 0,
+      soundWrites: 0,
       volumeRequested: null,
       volumeChanges: 0,
       inputSequence: 0,
@@ -480,16 +515,21 @@ export class ElmoRemote {
       throw new ElmoRemoteError('unsupported-sound');
     }
     if (this.state !== 'ready' || this.busy) throw new ElmoRemoteError('not-ready');
-    if (this.report.soundRequestedId !== null) throw new ElmoRemoteError('sound-limit');
+    if (this.report.soundRequests >= this.limits.sounds) throw new ElmoRemoteError('sound-limit');
+    if (this.readyIn('sound') > 0) throw new ElmoRemoteError('sound-cooldown');
     const run = this.#run;
     this.busy = true;
     this.report.soundRequestedId = id;
+    this.report.soundRequests++;
+    this.report.soundQueued = false;
     if (id === 9) this.report.helloRequested = true;
     this.#publish();
     try {
       await this.#step(() => this.#tx.writeValueWithoutResponse(packet), run);
       this.#guard(run);
       this.report.soundQueued = true;
+      this.report.soundWrites++;
+      this.#soundReadyAt = this.now() + this.limits.soundGapMs;
       if (id === 9) this.report.helloQueued = true;
     } catch (error) {
       if (run === this.#run) this.stop(failure(error).code);
@@ -509,7 +549,7 @@ export class ElmoRemote {
       throw new ElmoRemoteError('invalid-volume');
     }
     if (this.state !== 'ready' || this.busy) throw new ElmoRemoteError('not-ready');
-    if (this.report.volumeChanges >= 4) throw new ElmoRemoteError('volume-limit');
+    if (this.report.volumeChanges >= this.limits.volumes) throw new ElmoRemoteError('volume-limit');
     const run = this.#run;
     this.busy = true;
     this.report.volumeRequested = level;
@@ -553,6 +593,7 @@ export class ElmoRemote {
     this.#passwordSetupSent = false;
     this.#challengeResponded = false;
     this.#query = null;
+    this.#soundReadyAt = 0;
     this.state = 'disconnected';
     this.busy = false;
     this.deadlineAt = null;

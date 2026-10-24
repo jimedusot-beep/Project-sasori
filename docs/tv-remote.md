@@ -80,7 +80,7 @@ Learning is **IR only**. No raw-code upload, RF learning, rolling-code replay, u
 
 ## Routines and failures
 
-Use **Create or edit a routine → Load starter routine → Save routine** for “Volume down twice.” Connect a device that supports volume-down, choose the routine and tap **Run routine**. It sends two separate volume-down requests half a second apart. Routines have a 20-second runtime limit and never auto-run; see the [hub guide](device-hub.md#save-and-run-a-routine).
+Use **Create or edit a routine → Load starter routine → Save routine** for “Volume down twice.” Connect a device that supports volume-down, choose the routine and tap **Run routine**. It sends two separate volume-down requests half a second apart. Routines have a two-minute runtime limit and never auto-run; see the [hub guide](device-hub.md#save-and-run-a-routine).
 
 Stop, Cancel or page hiding stops pending browser steps and revokes the connection lease where reachable. A command already accepted by the TV/IR hub cannot be undone. If the page cannot open, check the helper process, Wi-Fi isolation, correct computer address/port and private-network firewall permission. If pairing expires, restart the companion and use the new code. If a device rejects control, its failure card points to the matching permission, capability or connection check.
 

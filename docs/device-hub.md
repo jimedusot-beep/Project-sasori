@@ -16,10 +16,10 @@ Open the [Sasori Device hub](https://jimedusot-beep.github.io/Project-sasori/hub
 2. Switch on your Love2Learn Elmo B6572, keep it nearby and close any other app connected to it. Select **Love2Learn Elmo**.
 3. Give the setup a name, such as “Living room Elmo.” Keep the `Elmo` name filter, or explicitly select **Show all Bluetooth devices** if needed.
 4. Enter the toy's existing password exactly. For a new or factory-reset toy, enter a new password and explicitly select **Set this password if Elmo reports none**. Sasori sends setup only after the exact unset report. A rejected existing password cannot be overwritten. If you forgot it, expand **I don’t know Elmo’s password** and follow the [manufacturer-linked recovery directions](elmo-password-recovery.md). Physical reset erases personalization.
-5. Tap **Connect device** and choose your toy. Wait for **Toy reported acceptance**. Sasori requests volume and touch state; absent replies stay unknown. Passwords clear from the field and are never saved.
-6. First choose **Greeting → Play sound** and listen to the actual toy. The current catalog also includes Clap sound, Laugh, Another laugh and Giggle. There is one sound request per connection. These numeric IDs are source-backed; sounds, language and behavior on your unit still need observation.
-7. Optionally choose a whole-number volume from **1–15** and tap **Apply volume**. Up to four changes are permitted per connection. “Last requested” and “Reported volume” are separate: a read-back is not an acknowledgment that the preceding write took effect. Touch indicators reflect reported input bits while connected.
-8. Record **Did the physical device respond?**, tap **Stop & disconnect**, then **Save connection result**. Each Elmo connection is bounded to 30 seconds. Disconnect cannot guarantee that an already-requested sound stops. After password setup, reconnect with setup unchecked and your new password to check retention.
+5. Choose **Control session** for up to ten minutes of foreground use, or **Quick check** for the earlier 30-second, one-sound check. Tap **Connect device** and choose your toy. Wait for **Toy reported acceptance**. Sasori requests volume and touch state; absent replies stay unknown. Passwords clear from the field and are never saved.
+6. First choose **Greeting → Play sound** and listen to the actual toy. The catalog now has twenty reviewed sound IDs, including welcomes, clap/music prompts, a dog imitation and laughter variations. Quick pads expose common choices. Control sessions permit up to sixty sound requests, four seconds apart; Quick check permits one. The gap does not establish that a sound has finished, and a later request may interrupt playback. These numeric IDs are source-backed; sounds, language and behavior on your unit still need observation.
+7. Optionally choose a whole-number volume from **1–15** and tap **Apply volume**. Control sessions permit up to sixty explicit changes; Quick check permits four. “Last requested” and “Reported volume” are separate: a read-back is not an acknowledgment that the preceding write took effect. Touch indicators reflect reported input bits while connected.
+8. Record **Did the physical device respond?**, tap **Stop & disconnect**, then **Save connection result**. Control sessions are bounded to ten minutes and Quick check to 30 seconds. Disconnect cannot guarantee that an already-requested sound stops. After password setup, reconnect with setup unchecked and your new password to check retention.
 
 No real Elmo was available for this release. Authentication, password retention, touch events, volume and sound effects remain unverified on your unit. The native iPhone Core Bluetooth facade remains inspection-only for Elmo; use the hosted hub in a compatible Bluetooth browser for these controls.
 
@@ -34,13 +34,21 @@ Failure cards explain the next useful action: missing Bluetooth, cancelled choos
 ## Save and run a routine
 
 1. Select a device family and expand **Create or edit a routine**.
-2. Tap **Load starter routine**, or choose a step and tap **Add step**. The Elmo starter waits for a new nose press then requests the greeting. The TV starter requests volume down, waits half a second, then requests it again. Standard BLE/MiP starters read identity and status.
+2. For Elmo, choose a **Ready-made performance**: Touch → hello, Little comedy routine or Clap and music. Tap **Load starter routine**, or choose a step and tap **Add step**. The Elmo starter waits for a new nose press then requests the greeting. The TV starter requests volume down, waits half a second, then requests it again. Standard BLE/MiP starters read identity and status.
 3. Name it and tap **Save routine**. Reopening a saved routine loads its steps for editing. Use **Clear steps** to replace them or **Remove saved routine** to delete that routine.
 4. Connect a matching device or its demo, choose the saved routine, then tap **Run routine**. Saving, importing and reconnecting never start it. Actions unavailable on that connected adapter stop the routine with a clear result.
 5. For an Elmo touch step, release the chosen input and press it while the routine waits. A previously active input is not enough; Sasori requires a new reported release → press. The touch wait lasts up to ten seconds. This is one trigger during the foreground session, not a permanent background automation.
 6. Tap **Cancel** or **Stop & disconnect** to cancel pending steps and disconnect. Commands already sent may continue. **Save routine result** records completion/cancellation/failure and synthetic/live provenance, without device IDs or authentication material.
 
-Limits are eight steps, 20 seconds runtime, 15 seconds of configured waits, one sound, one touch trigger and four Elmo volume changes. A routine is tied to one active connection and never crosses into a replacement connection. It cannot contain imported JavaScript, arbitrary packet bytes or firmware operations.
+Limits are 32 steps, two minutes runtime, 90 seconds of configured waits, twelve sound requests, four touch waits and twelve volume changes. Sound actions automatically wait for the control-session request gap. The active connection can have lower remaining time or action limits. A routine is tied to one active connection and never crosses into a replacement connection. It cannot contain imported JavaScript, arbitrary packet bytes or firmware operations.
+
+## Arm live touch reactions
+
+In a Control session, expand **Live touch reactions**. Choose an input and sound, then **Add / replace mapping**, or choose **Use playful mappings** for nose → giggle, left hand → greeting and clap → clap sound. **Save mappings with setup** preserves configuration; saving and reloading never arm it.
+
+Tap **Arm touch reactions**. A new reported release → press can trigger the mapped sound repeatedly during this foreground session. Presses during another action or the four-second gap are counted as skipped and never queued for later playback. Up to seven mapped inputs and sixty triggers are allowed. Manual actions and performances pause while reactions are armed. **Disarm** stops new reactions; **Stop & disconnect**, page hiding, time limits and lost/replaced connections also stop them. An already-sent sound can continue.
+
+In the demo, choose a **Demo touch input** and **Simulate … press** to test mappings without hardware. The reaction result records sent/skipped/failed request counts and retains synthetic/live provenance. Software counters are not physical playback confirmation.
 
 ## Other devices and TV remotes
 
@@ -63,3 +71,5 @@ The hub stores up to 20 setups and 20 routines in a separate 64 KB record in the
 Connection/routine receipts use fixed result fields, with owner observations separate from independent verification. Hardware, authentication and physical-effect verification flags remain false. Credentials, tokens, raw packets and backend error text are not exported. Phone/browser storage is origin-specific; hosted Sasori and a computer's local companion are separate origins and have separate saves.
 
 Implementation and evidence: [recovered Elmo methods](../experiments/001-elmo-l2l/recovered-source.md), [TV protocol sources](tv-remote.md#sources-and-implementation), [testing](testing.md) and [real-device acceptance](device-action-validation.md).
+
+For wider civilian-maker research and the proposed lower-cost phone-to-IR path, see the [resourceful-making research record](research/resourceful-maker-research-2026-10-24.md). The direct pocket bridge is a researched candidate, not implemented Sasori support.

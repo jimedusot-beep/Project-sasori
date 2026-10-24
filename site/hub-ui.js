@@ -19,6 +19,7 @@ import {
   localCompanionURL,
 } from './lib/hub-records.js';
 import { TVRemote } from './lib/tv-remote.js';
+import { TouchReactions, validateReactions } from './lib/reactions.js';
 
 const $ = (id) => document.getElementById(id);
 const companion = document.querySelector('meta[name="sasori-runtime"]')?.content === 'local-helper';
@@ -44,6 +45,22 @@ let current = null,
   routineReport = null,
   actionBusy = false,
   cachedDevice = null;
+let reactionDraft = [],
+  reactionReport = null;
+const reactions = new TouchReactions({
+  emit: (report) => {
+    reactionReport = report;
+    $('reaction-status').textContent =
+      report.outcome === 'armed'
+        ? 'Armed · ' +
+          report.sent +
+          ' requests sent · ' +
+          report.skipped +
+          ' busy/cooldown presses skipped.'
+        : 'Disarmed · ' + report.sent + ' requests sent. Already-sent sounds may continue.';
+    render();
+  },
+});
 let currentSetup = null,
   connectionSaved = false,
   endSaved = false,
@@ -168,6 +185,9 @@ function setFamily(id) {
   renderLists();
 }
 function loadSetup(setup) {
+  reactions.disarm();
+  reactionReport = null;
+  reactionDraft = structuredClone(setup?.reactions || []);
   current = null;
   snapshot = null;
   currentSetup = null;
@@ -177,6 +197,7 @@ function loadSetup(setup) {
   $('hub-password').value = '';
   $('companion-pin').value = '';
   $('allow-setup').checked = false;
+  $('elmo-mode').value = setup?.elmoMode || 'control';
   $('owner-observation').value = 'not-tested';
   setFamily(setup?.familyId || familyId);
   $('device-label').value =
@@ -187,6 +208,7 @@ function loadSetup(setup) {
   $('tv-target').value = setup?.tv?.target || '';
   $('ir-device').value = setup?.tv?.device || 'sasori-tv';
   updateTVFields();
+  renderReactionMappings();
   $('last-result').textContent = setup?.lastResult
     ? 'Last connection: ' +
       setup.lastResult.outcome +
@@ -204,6 +226,10 @@ function fields(skipTVTarget = false) {
     familyId,
     namePrefix: $('device-prefix').value.trim(),
   };
+  if (familyId === 'elmo-l2l/v1') {
+    setup.elmoMode = $('elmo-mode').value;
+    setup.reactions = validateReactions(reactionDraft);
+  }
   if (old?.deviceId && old.familyId === familyId) setup.deviceId = old.deviceId;
   if (familyId === 'tv-local/v1') {
     if (companion && !skipTVTarget)
@@ -289,6 +315,7 @@ async function connect(demo = false) {
     synthetic: demo,
     bluetooth: navigator.bluetooth,
     companion,
+    ...(familyId === 'elmo-l2l/v1' ? { mode: setup.elmoMode } : {}),
     emit: (value) => receive(session, value),
   });
   current = session;
@@ -338,7 +365,7 @@ async function connect(demo = false) {
   }
 }
 async function act(intent, args = {}) {
-  if (!current || running() || actionBusy) return;
+  if (!current || running() || reactions.active || actionBusy) return;
   actionBusy = true;
   render();
   try {
@@ -353,7 +380,7 @@ async function act(intent, args = {}) {
 function render() {
   const s = snapshot,
     lockedNow = locked(),
-    busy = actionBusy || running() || !!s?.busy;
+    busy = actionBusy || running() || reactions.active || !!s?.busy;
   for (const button of familyButtons.values()) button.disabled = lockedNow;
   for (const id of [
     'saved-setup',
@@ -363,6 +390,7 @@ function render() {
     'show-all',
     'hub-password',
     'allow-setup',
+    'elmo-mode',
     'tv-driver',
     'tv-target',
     'ir-device',
@@ -447,7 +475,7 @@ function render() {
       inputLabels[i] + (value == null ? ' · unknown' : value ? ' · active' : ' · inactive');
     el.classList.toggle('on', value === true);
   });
-  $('hub-sound').disabled = busy || !current?.can('sound', { id: Number($('sound-choice').value) });
+  renderSoundButtons();
   $('hub-volume').disabled =
     busy || !current?.can('volume', { level: Number($('volume-choice').value) });
   for (const [id, intent] of [
@@ -463,6 +491,28 @@ function render() {
   $('owner-observation').disabled = !s || s.synthetic || !s.lastAction;
   $('simulate-touch').hidden = !s?.synthetic || familyId !== 'elmo-l2l/v1' || !connected();
   $('simulate-touch').disabled = !!s?.busy;
+  $('demo-input-field').hidden = $('simulate-touch').hidden;
+  $('simulate-touch').textContent =
+    'Simulate ' + inputLabels[ELMO_INPUTS.indexOf($('demo-input').value)].toLowerCase() + ' press';
+  $('arm-reactions').disabled =
+    !connected() ||
+    running() ||
+    actionBusy ||
+    !!s?.busy ||
+    reactions.active ||
+    !reactionDraft.length ||
+    s?.sessionMode !== 'control';
+  $('disarm-reactions').disabled = !reactions.active;
+  $('save-reactions').disabled = !ready || readOnly || running() || reactions.active;
+  $('reaction-result').disabled = !reactionReport || reactions.active;
+  for (const id of [
+    'reaction-input',
+    'reaction-sound',
+    'map-reaction',
+    'reaction-starter',
+    'clear-reactions',
+  ])
+    $(id).disabled = reactions.active || running();
   $('ir-learning').hidden = !s?.learnAvailable || !companion;
   $('learn-button').disabled = busy || !connected() || !s?.learnAvailable;
   $('run-routine').disabled = !connected() || busy || !$('saved-routine').value;
@@ -483,12 +533,54 @@ function render() {
     'starter-routine',
     'save-routine',
     'remove-routine',
+    'performance-preset',
   ])
-    $(id).disabled = running() || readOnly;
+    $(id).disabled = running() || reactions.active || readOnly;
+  $('performance-field').hidden = familyId !== 'elmo-l2l/v1';
   $('saved-note').textContent = cachedDevice
     ? 'A previously granted device is ready to reuse. Connect still requires a manual press.'
     : 'Setup is saved locally; the browser may ask you to select the device again. No automatic connection.';
   countdown();
+}
+function renderSoundButtons() {
+  const busy = actionBusy || running() || reactions.active || !!snapshot?.busy;
+  $('hub-sound').disabled = busy || !current?.can('sound', { id: Number($('sound-choice').value) });
+  for (const button of document.querySelectorAll('[data-sound-id]'))
+    button.disabled = busy || !current?.can('sound', { id: Number(button.dataset.soundId) });
+  const gap = current?.readyIn('sound') || 0;
+  const count = snapshot?.soundRequests || 0;
+  $('sound-count').textContent =
+    connected() && familyId === 'elmo-l2l/v1'
+      ? count +
+        ' / ' +
+        snapshot.soundLimit +
+        ' sound requests' +
+        (count >= snapshot.soundLimit
+          ? ' · session limit reached'
+          : gap > 0
+            ? ' · ready in ' + Math.ceil(gap / 1000) + 's'
+            : ' · ready for your next request')
+      : '';
+  $('sound-budget').textContent =
+    $('elmo-mode').value === 'control'
+      ? 'Control session: up to 60 requests, paced four seconds apart.'
+      : 'Quick check: one sound request per connection.';
+}
+function renderReactionMappings() {
+  $('reaction-mappings').replaceChildren();
+  for (const rule of reactionDraft)
+    $('reaction-mappings').append(
+      node(
+        'li',
+        inputLabels[ELMO_INPUTS.indexOf(rule.input)] +
+          ' → ' +
+          ELMO_SOUNDS.find((s) => s.id === rule.soundId).label,
+      ),
+    );
+  if (!reactionDraft.length)
+    $('reaction-mappings').append(
+      node('li', 'Add mappings or use the playful preset. Arming is always manual.'),
+    );
 }
 function countdown() {
   $('remaining').textContent = snapshot?.deadlineAt
@@ -577,12 +669,29 @@ function starter() {
             { kind: 'action', intent: 'identify', args: {} },
             { kind: 'action', intent: 'status', args: {} },
           ];
+  if (familyId === 'elmo-l2l/v1' && $('performance-preset').value === 'comedy')
+    draft = [
+      { kind: 'action', intent: 'sound', args: { id: 9 } },
+      { kind: 'wait', ms: 5000 },
+      { kind: 'action', intent: 'sound', args: { id: 350 } },
+      { kind: 'wait', ms: 5000 },
+      { kind: 'action', intent: 'sound', args: { id: 448 } },
+    ];
+  if (familyId === 'elmo-l2l/v1' && $('performance-preset').value === 'music')
+    draft = [
+      { kind: 'action', intent: 'sound', args: { id: 94 } },
+      { kind: 'wait', ms: 5000 },
+      { kind: 'action', intent: 'sound', args: { id: 96 } },
+    ];
   $('routine-name').value =
     familyId === 'elmo-l2l/v1'
       ? 'Nose → hello'
       : familyId === 'tv-local/v1'
         ? 'Volume down twice'
         : 'Quick status check';
+  if (familyId === 'elmo-l2l/v1' && $('performance-preset').value !== 'touch')
+    $('routine-name').value =
+      $('performance-preset').value === 'comedy' ? 'Little comedy routine' : 'Clap and music';
   $('saved-routine').value = '';
   renderDraft();
   render();
@@ -603,14 +712,24 @@ for (const family of HUB_FAMILIES) {
   $('families').append(button);
 }
 for (const sound of ELMO_SOUNDS)
-  for (const id of ['sound-choice', 'step-sound'])
+  for (const id of ['sound-choice', 'step-sound', 'reaction-sound'])
     $(id).append(option(String(sound.id), sound.label));
 ELMO_INPUTS.forEach((input, i) => {
   const el = node('li', inputLabels[i] + ' · unknown');
   sensors.push(el);
   $('touch-inputs').append(el);
   $('step-touch').append(option(input, inputLabels[i]));
+  for (const id of ['reaction-input', 'demo-input']) $(id).append(option(input, inputLabels[i]));
 });
+$('demo-input').value = 'nose';
+for (const id of [9, 444, 448, 94, 96, 350]) {
+  const sound = ELMO_SOUNDS.find((s) => s.id === id);
+  const button = node('button', sound.label, 'secondary');
+  button.type = 'button';
+  button.dataset.soundId = String(id);
+  button.addEventListener('click', () => act('sound', { id }));
+  $('sound-pads').append(button);
+}
 for (const [key, label] of Object.entries(TV_KEYS))
   for (const id of ['step-key', 'learn-key']) $(id).append(option(key, label));
 $('hub-connect').addEventListener(
@@ -628,6 +747,7 @@ $('hub-password').addEventListener('keydown', (event) => {
   }
 });
 $('hub-stop').addEventListener('click', () => {
+  reactions.disarm();
   routine?.cancel();
   current?.stop();
   render();
@@ -648,7 +768,47 @@ for (const id of ['sound-choice', 'volume-choice', 'saved-routine'])
   $(id).addEventListener('change', render);
 $('simulate-touch').addEventListener(
   'click',
-  handle(() => current?.simulateTouch()),
+  handle(() => current?.simulateTouch($('demo-input').value)),
+);
+$('demo-input').addEventListener('change', render);
+$('elmo-mode').addEventListener('change', render);
+$('map-reaction').addEventListener('click', () => {
+  const input = $('reaction-input').value;
+  reactionDraft = validateReactions([
+    ...reactionDraft.filter((r) => r.input !== input),
+    { input, soundId: Number($('reaction-sound').value) },
+  ]);
+  renderReactionMappings();
+  render();
+});
+$('reaction-starter').addEventListener('click', () => {
+  reactionDraft = [
+    { input: 'nose', soundId: 448 },
+    { input: 'left_hand', soundId: 9 },
+    { input: 'clap', soundId: 94 },
+  ];
+  renderReactionMappings();
+  render();
+});
+$('clear-reactions').addEventListener('click', () => {
+  reactionDraft = [];
+  renderReactionMappings();
+  render();
+});
+$('arm-reactions').addEventListener(
+  'click',
+  handle(() => reactions.arm(current, reactionDraft)),
+);
+$('disarm-reactions').addEventListener('click', () => reactions.disarm());
+$('save-reactions').addEventListener(
+  'click',
+  handle(async () => {
+    await remember({ ...currentSetup, ...fields() }, current?.device);
+    notice('Touch mappings saved. They remain disarmed until you choose Arm.');
+  }),
+);
+$('reaction-result').addEventListener('click', () =>
+  download(reactionReport, 'sasori-reaction-result.json'),
 );
 $('choose-again').addEventListener('click', () => {
   cachedDevice = null;
@@ -801,7 +961,7 @@ $('add-step').addEventListener('click', () => {
     renderDraft();
   } catch {
     notice(
-      'That step exceeds a routine limit. Use up to 8 steps, one sound, four volume changes, one touch trigger and 15 seconds of waits.',
+      'That step exceeds a routine limit. Use up to 32 steps, twelve sounds, twelve volume changes, four touch triggers and 90 seconds of waits.',
     );
   }
 });
@@ -854,7 +1014,7 @@ $('run-routine').addEventListener(
   'click',
   handle(async () => {
     const saved = data.routines.find((r) => r.id === $('saved-routine').value);
-    if (!saved || !current || running()) return;
+    if (!saved || !current || running() || reactions.active) return;
     routine = new RoutineRunner({
       emit: (result) => {
         routineReport = result;
@@ -882,6 +1042,7 @@ $('run-routine').addEventListener(
   }),
 );
 function hide() {
+  reactions.disarm('page-hidden');
   $('hub-password').value = '';
   $('companion-pin').value = '';
   routine?.cancel();
@@ -891,7 +1052,10 @@ document.addEventListener('visibilitychange', () => {
   if (document.hidden) hide();
 });
 window.addEventListener('pagehide', hide);
-setInterval(countdown, 1000);
+setInterval(() => {
+  countdown();
+  renderSoundButtons();
+}, 500);
 setFamily(familyId);
 render();
 async function init() {

@@ -357,3 +357,116 @@ test('local Home Assistant setup clears test secrets and never saves them in bro
   await page.reload();
   await expect(page.locator('#ha-token')).toHaveValue('');
 });
+
+test('Control session survives the old 30-second boundary and the soundboard can send another catalog request', async ({
+  page,
+}) => {
+  await page.clock.install();
+  await page.goto('/hub.html');
+  expect(await page.locator('#sound-choice option').count()).toBe(20);
+  await page.locator('#hub-demo').click();
+  await page.locator('[data-sound-id="9"]').click();
+  await expect(page.locator('#sound-count')).toContainText('1 / 60');
+  await expect(page.locator('[data-sound-id="448"]')).toBeDisabled();
+  await page.clock.fastForward(4001);
+  await expect(page.locator('[data-sound-id="448"]')).toBeEnabled();
+  await page.locator('[data-sound-id="448"]').click();
+  await expect(page.locator('#sound-count')).toContainText('2 / 60');
+  await page.clock.fastForward(31000);
+  await expect(page.locator('#connection-state')).toHaveText('Demo · ready');
+  await page.locator('#hub-stop').click();
+  const report = await downloaded(page, '#hub-result');
+  expect(report.soundWrites).toBe(2);
+  expect(report.sessionMode).toBe('control');
+  expect(report.physicalEffectVerified).toBe(false);
+});
+
+test('Quick check remains a single-sound session', async ({ page }) => {
+  await page.clock.install();
+  await page.goto('/hub.html');
+  await page.locator('#elmo-mode').selectOption('check');
+  await page.locator('#hub-demo').click();
+  await page.locator('#hub-sound').click();
+  await page.clock.fastForward(5000);
+  await expect(page.locator('#hub-sound')).toBeDisabled();
+  await expect(page.locator('#sound-count')).toContainText('session limit reached');
+  await page.locator('#hub-stop').click();
+  expect((await downloaded(page, '#hub-result')).sessionMode).toBe('check');
+});
+
+test('saved touch mappings require manual arming and repeat only on new accepted presses', async ({
+  page,
+}) => {
+  await page.clock.install();
+  await page.goto('/hub.html');
+  await page.locator('#reactions-panel summary').click();
+  await page.locator('#reaction-starter').click();
+  await page.locator('#save-reactions').click();
+  await expect(page.locator('#storage-notice')).toContainText('Touch mappings saved');
+  await page.reload();
+  await page.locator('#reactions-panel summary').click();
+  await expect(page.locator('#reaction-mappings')).toContainText('Nose → Giggle');
+  await expect(page.locator('#reaction-status')).toContainText('disarmed');
+  await page.locator('#hub-demo').click();
+  await page.locator('#arm-reactions').click();
+  await expect(page.locator('#reaction-status')).toContainText('Armed · 0 requests');
+  await page.locator('#simulate-touch').click();
+  await expect(page.locator('#reaction-status')).toContainText('1 requests sent');
+  await page.locator('#simulate-touch').click();
+  await expect(page.locator('#reaction-status')).toContainText('1 busy/cooldown presses skipped');
+  await page.clock.fastForward(4001);
+  await page.locator('#simulate-touch').click();
+  await expect(page.locator('#reaction-status')).toContainText('2 requests sent');
+  await page.locator('#disarm-reactions').click();
+  await page.clock.fastForward(4001);
+  await page.locator('#simulate-touch').click();
+  const report = await downloaded(page, '#reaction-result');
+  expect(report.sent).toBe(2);
+  expect(report.source).toBe('synthetic');
+  expect(report.physicalEffectVerified).toBe(false);
+  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(
+    true,
+  );
+});
+
+test('a ready-made performance sends several paced sound requests and can be cancelled between them', async ({
+  page,
+}) => {
+  await page.clock.install();
+  await page.goto('/hub.html');
+  await page.locator('#routine-builder summary').click();
+  await page.locator('#performance-preset').selectOption('comedy');
+  await page.locator('#starter-routine').click();
+  await page.locator('#save-routine').click();
+  await expect(page.locator('#saved-routine')).not.toHaveValue('');
+  await page.locator('#hub-demo').click();
+  await page.locator('#run-routine').click();
+  await expect(page.locator('#sound-count')).toContainText('1 / 60');
+  await page.clock.fastForward(5500);
+  await expect(page.locator('#sound-count')).toContainText('2 / 60');
+  await page.clock.fastForward(5500);
+  await expect(page.locator('#routine-progress')).toContainText('Routine completed: 5 steps');
+  expect((await downloaded(page, '#routine-result')).completedSteps).toBe(5);
+  await page.locator('#hub-stop').click();
+  await page.locator('#hub-demo').click();
+  await page.locator('#run-routine').click();
+  await expect(page.locator('#sound-count')).toContainText('1 / 60');
+  await page.locator('#cancel-routine').click();
+  await page.clock.fastForward(15000);
+  expect((await downloaded(page, '#hub-result')).soundRequests).toBe(1);
+});
+
+test('backgrounding an armed reaction session disarms it and stops the connection', async ({
+  page,
+}) => {
+  await page.goto('/hub.html');
+  await page.locator('#hub-demo').click();
+  await page.locator('#reactions-panel summary').click();
+  await page.locator('#reaction-starter').click();
+  await page.locator('#arm-reactions').click();
+  await page.evaluate(() => window.dispatchEvent(new Event('pagehide')));
+  await expect(page.locator('#connection-state')).toHaveText('Not connected');
+  await expect(page.locator('#reaction-status')).toContainText('Disarmed');
+  expect((await downloaded(page, '#reaction-result')).reason).toBe('page-hidden');
+});
