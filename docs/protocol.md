@@ -1,6 +1,6 @@
 # Elmo BLE protocol: facts, candidates, and unknowns
 
-Status: the experimental [browser remote](elmo-remote.md) and desktop client implement a known-password handshake, input/volume queries and one greeting request. Native Elmo inspection remains separate. Relevant app-method facts are now established; real-unit compatibility and physical effects remain unverified. See [recovered source and current gaps](../experiments/001-elmo-l2l/recovered-source.md).
+Status: the experimental [browser remote](elmo-remote.md) and desktop client implement a known-password handshake, input/volume queries and one greeting request. The browser additionally supports [explicit first-time password setup and guided owner recovery](elmo-password-recovery.md). Native Elmo inspection remains separate. Relevant app-method facts are now established; real-unit compatibility, password persistence and physical effects remain unverified. See [recovered source and current gaps](../experiments/001-elmo-l2l/recovered-source.md).
 
 ## Provenance
 
@@ -28,7 +28,7 @@ Binary input is shown in hex with a malformed/non-UTF-8 flag where applicable. L
 
 Hasbro's historical app terms and the older community notebook alone did not establish an algorithm. The broader October 23 search recovered the previously reported app archive and a newer community implementation. Direct managed-method inspection now establishes the source-derived subset in [the method register](../experiments/001-elmo-l2l/recovered-source.md): password-byte conversion, MD5, folded Fletcher-32 construction, byte serialization, status framing and selected query/playback writers.
 
-The separate `desktop/sasori_elmo.py` client prompts privately for a known existing password and answers one received challenge. It accepts only explicit status 1 after its current response, rejects malformed/unknown status, and does not enroll passwords, reset, guess, log raw authentication material or retry automatically. Its source-derived synthetic vectors are not real radio captures. The laboratory Authentication Experiment remains synthetic. The separate [browser remote](elmo-remote.md) now runs an original JavaScript port of this algorithm and the same fixed query/greeting subset; native Elmo writes remain unavailable.
+The separate `desktop/sasori_elmo.py` client prompts privately for a known existing password and answers one received challenge. It accepts only explicit status 1 after its current response, rejects malformed/unknown status, and does not enroll passwords, reset, guess, log raw authentication material or retry automatically. Its source-derived synthetic vectors are not real radio captures. The laboratory Authentication Experiment remains synthetic. The separate [browser remote](elmo-remote.md) runs an original JavaScript port of this algorithm and the same fixed query/greeting subset. It also offers off-by-default password setup: only an exact `40 00` report in an eligible authentication phase permits a single `40` + digest write; acceptance still requires exact `40 01` after the current setup or challenge write. Unknown, rejected, repeated-unset and unsolicited acceptance responses cannot unlock controls or trigger an overwrite. Native Elmo writes remain unavailable.
 
 ### Earlier app-side research found during the October 21 review
 
@@ -38,13 +38,14 @@ Before marking an adapter hardware-verified or expanding its commands, collect r
 
 ## Command registry
 
-| Category                                  | Current entries                                               | Transmission                                                |
-| ----------------------------------------- | ------------------------------------------------------------- | ----------------------------------------------------------- |
-| Passive inspection                        | Service metadata and configured notifications                 | Explicit connection only; bounded                           |
-| Experimental browser/desktop Elmo clients | Known-password handshake, volume/input queries, greeting ID 9 | Explicit owner-run browser/CLI; hardware validation pending |
-| Verified application commands             | None established                                              | Unavailable                                                 |
-| Native Elmo physical controls             | Native Elmo facade remains inspection-only                    | Unavailable                                                 |
-| Simulation                                | Synthetic lifecycle, outcomes, movement, phone-local audio    | No Bluetooth traffic                                        |
+| Category                                  | Current entries                                                 | Transmission                                                                    |
+| ----------------------------------------- | --------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| Passive inspection                        | Service metadata and configured notifications                   | Explicit connection only; bounded                                               |
+| Experimental browser/desktop Elmo clients | Known-password handshake, volume/input queries, greeting ID 9   | Explicit owner-run browser/CLI; hardware validation pending                     |
+| Browser Elmo password setup               | New password after exact unset report; guided physical recovery | Explicit opt-in, one setup write, exact acceptance; real persistence unverified |
+| Verified application commands             | None established                                                | Unavailable                                                                     |
+| Native Elmo physical controls             | Native Elmo facade remains inspection-only                      | Unavailable                                                                     |
+| Simulation                                | Synthetic lifecycle, outcomes, movement, phone-local audio      | No Bluetooth traffic                                                            |
 
 ## Independent source-verification track
 

@@ -118,6 +118,15 @@ export function elmoResponse(digest, challenge) {
   return response;
 }
 
+export function elmoPasswordSetup(digest) {
+  if (!(digest instanceof Uint8Array) || digest.length !== 16)
+    throw new Error('An Elmo password digest is required.');
+  const packet = new Uint8Array(17);
+  packet[0] = 0x40;
+  packet.set(digest, 1);
+  return packet;
+}
+
 export function elmoCommand(intent) {
   const commands = { volume: [0x22], inputs: [0x20], hello: [0x10, 9, 0] };
   if (!Object.hasOwn(commands, intent)) throw new Error('Unsupported Elmo action.');

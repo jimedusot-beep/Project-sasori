@@ -12,11 +12,14 @@ const labels = [
   'Nose',
 ];
 const errors = {
-  'password-required': 'Enter the existing password set for your Elmo (4–128 characters).',
+  'password-required':
+    'Enter your existing Elmo password, or a new one for setup (4–128 characters).',
   'password-rejected':
     'Elmo rejected that password. Check the toy’s existing password and reconnect.',
   'password-not-set':
-    'Elmo reports that no password is set. First-time password setup is not available in this remote.',
+    'Elmo reports no password is set. Enter a new password, select “Set this password if Elmo reports none”, and reconnect.',
+  'password-setup-not-confirmed':
+    'Elmo still reports no password after setup. No second setup write was sent. Save the result before retrying.',
   'selection-cancelled': 'No toy selected. Your next connection is one click away.',
   'browser-unavailable': 'Open this link in Chrome on a computer, or Bluefy on iPhone / iPad.',
   'unsupported-device':
@@ -62,6 +65,7 @@ function render(next = state) {
   $('mode').textContent = state.synthetic ? 'DEMO' : 'LIVE';
   $('demo-note').hidden = !state.synthetic;
   $('elmo-password').disabled = working;
+  $('allow-password-setup').disabled = working;
   $('show-all').disabled = working;
   $('elmo-connect').disabled = working || !supported;
   $('elmo-connect').textContent = working
@@ -119,7 +123,9 @@ function render(next = state) {
         : state.state === 'connecting'
           ? 'Checking the toy’s Bluetooth connection and channels…'
           : state.state === 'authenticating'
-            ? 'Waiting for Elmo’s challenge and explicit password acceptance…'
+            ? report?.passwordSetupOutcome === 'write-requested'
+              ? 'Elmo reported no password. Sending your chosen password and waiting for explicit acceptance…'
+              : 'Waiting for Elmo’s challenge and explicit password acceptance…'
             : connected && state.busy
               ? 'Reading the toy’s available state…'
               : connected && report?.helloQueued
@@ -129,8 +135,13 @@ function render(next = state) {
                 : connected
                   ? state.synthetic
                     ? 'The demo handshake is complete. Try the simulated greeting.'
-                    : 'Elmo reported password acceptance. You can now request one greeting.'
+                    : report?.passwordSetupOutcome === 'toy-reported-acceptance'
+                      ? 'Elmo reported new-password acceptance. Try the greeting, then reconnect with your password to check that it was retained.'
+                      : 'Elmo reported password acceptance. You can now request one greeting.'
                   : 'Enter your toy’s password, then choose Connect Elmo.';
+  if (state.state === 'disconnected' && report?.passwordSetupOutcome === 'not-confirmed')
+    $('elmo-message').textContent +=
+      ' The new password may already be stored. Save this result, then try that password again with setup unchecked.';
   countdown();
   if (connected && !state.busy && !wasReady && matchMedia('(max-width: 720px)').matches)
     $('controls-title').scrollIntoView({ block: 'start', behavior: 'auto' });
@@ -178,6 +189,7 @@ async function connect(demo, chooseAnother = false) {
     password,
     device: demo || chooseAnother ? null : lastLiveDevice,
     showAll: $('show-all').checked,
+    allowPasswordSetup: $('allow-password-setup').checked,
   });
   if (!demo) lastLiveDevice = runner.device;
   renderButtons();
