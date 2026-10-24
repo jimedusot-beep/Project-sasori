@@ -1,5 +1,6 @@
 """The simulator-launch fallback requires render proof; timeout alone must fail."""
 import importlib.util
+import json
 from pathlib import Path
 import subprocess
 import tempfile
@@ -9,6 +10,10 @@ SPEC = importlib.util.spec_from_file_location(
     "native_smoke", Path(__file__).resolve().parents[1] / "native/ios/smoke.py")
 smoke = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(smoke)
+
+
+def readiness(*markers):
+    return json.dumps([{"processImagePath": "/Simulator/App.app/App", "eventMessage": marker} for marker in markers])
 
 
 class NativeSmokeTests(unittest.TestCase):
@@ -21,7 +26,7 @@ class NativeSmokeTests(unittest.TestCase):
                 raise subprocess.TimeoutExpired(args, 120)
             if "log" in args:
                 self.assertIn("10m", args)
-                return "Sasori native interface ready"
+                return readiness("Sasori native interface ready", "Sasori native privacy interface ready")
             return ""
 
         with tempfile.TemporaryDirectory() as root:
@@ -33,8 +38,21 @@ class NativeSmokeTests(unittest.TestCase):
         def run(*args):
             if args[2] == "launch":
                 raise subprocess.TimeoutExpired(args, 120)
-            self.assertNotIn("screenshot", args)
             return "no readiness marker"
+
+        with self.assertRaisesRegex(RuntimeError, "render evidence"):
+            smoke.verify_workspace("new-simulator", run=run, pause=lambda _: None)
+
+    def test_privacy_bridge_must_render_even_if_the_original_laboratory_is_ready(self):
+        def run(*args):
+            return readiness("Sasori native interface ready")
+
+        with self.assertRaisesRegex(RuntimeError, "render evidence"):
+            smoke.verify_workspace("new-simulator", run=run, pause=lambda _: None)
+
+    def test_log_query_text_cannot_count_as_app_readiness(self):
+        def run(*args):
+            return json.dumps([{"processImagePath": "/usr/bin/log", "eventMessage": 'query: Sasori native interface ready OR Sasori native privacy interface ready'}])
 
         with self.assertRaisesRegex(RuntimeError, "render evidence"):
             smoke.verify_workspace("new-simulator", run=run, pause=lambda _: None)
@@ -48,7 +66,7 @@ class NativeSmokeTests(unittest.TestCase):
 
         def screenshot_failure(*args):
             if "log" in args:
-                return "Sasori native interface ready"
+                return readiness("Sasori native interface ready", "Sasori native privacy interface ready")
             if "screenshot" in args:
                 raise subprocess.CalledProcessError(1, args)
             return ""

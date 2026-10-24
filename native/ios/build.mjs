@@ -20,3 +20,11 @@ await writeFile(
   ),
 );
 console.log('Bundled Sasori UI and local native bridge. No remote website or secrets included.');
+const privacy = await readFile(root + 'www/privacy.html', 'utf8');
+await writeFile(
+  root + 'www/privacy.html',
+  privacy.replace(
+    '<script type="module" src="privacy-ui.js"></script>',
+    '<script src="native.js"></script>\n<script type="module" src="privacy-ui.js"></script>',
+  ),
+);
