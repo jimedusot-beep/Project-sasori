@@ -11,7 +11,7 @@ Sasori cloned [Koontzie/ir-remote at 34c8488](https://github.com/Koontzie/ir-rem
 
 ## Encoding review
 
-NEC/Samsung code structure is checked by Sasori tests for the selected vectors, using the documented byte-reversal/construction convention and IRremoteESP8266's encoder behavior. This is software evidence only.
+NEC/Samsung code structure is checked by Sasori tests for the selected vectors, using the documented byte-reversal/construction convention and IRremoteESP8266's pinned [NEC encoder](https://github.com/crankyoldgit/IRremoteESP8266/blob/v2.9.0/src/ir_NEC.cpp) and [Samsung encoder](https://github.com/crankyoldgit/IRremoteESP8266/blob/v2.9.0/src/ir_Samsung.cpp). This is software evidence only.
 
 The upstream converter constructs Sony SIRC as `address << 7 | command` and lists TV power as `0x95`. [IRremoteESP8266's primary encoder tests](https://github.com/crankyoldgit/IRremoteESP8266/blob/1e2f0f3ef0a93cbf2a8ddb2e95130f8f4c584b3f/test/ir_Sony_test.cpp) expect `encodeSony(12, 21, 1) == 0xA90`. The [implementation](https://github.com/crankyoldgit/IRremoteESP8266/blob/1e2f0f3ef0a93cbf2a8ddb2e95130f8f4c584b3f/src/ir_Sony.cpp) reverses the assembled bits. Therefore the upstream Sony catalog is excluded, pending independent conversion/fixture review. Custom Sony profiles must already use IRremoteESP8266 send encoding, not a raw Flipper address/command concatenation.
 

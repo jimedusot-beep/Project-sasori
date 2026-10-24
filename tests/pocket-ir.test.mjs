@@ -107,6 +107,17 @@ test('reviewed starter frames follow NEC and Samsung byte encodings, with named 
     frame(reverse(4), reverse(4) ^ 255, reverse(8), reverse(8) ^ 255),
     POCKET_PROFILES[1].buttons[0].code,
   );
+  const commands = [
+    [2, 7, 11, 15, 1],
+    [8, 2, 3, 9, 0],
+  ];
+  POCKET_PROFILES.forEach((profile, p) =>
+    profile.buttons.forEach((button, b) => {
+      const addr = reverse(p === 0 ? 7 : 4),
+        command = reverse(commands[p][b]);
+      assert.equal(button.code, frame(addr, p === 0 ? addr : addr ^ 255, command, command ^ 255));
+    }),
+  );
   for (const p of POCKET_PROFILES) {
     assert.equal(validatePocketProfile(p).buttons.length, 5);
     assert.ok(p.buttons.every((b) => b.label.length));
@@ -375,7 +386,7 @@ test('corrupt stored profiles do not silently overwrite original values', async 
     tx.oncomplete = resolve;
   });
   await assert.rejects(s.getPocketData());
-  await assert.rejects(s.setPocketData(emptyPocketData()), /another tab/);
+  await assert.rejects(s.setPocketData(emptyPocketData()), /invalid/);
   s.db?.close();
 });
 test('vendored source starts fresh without seeded actions and preserves MIT attribution', async () => {

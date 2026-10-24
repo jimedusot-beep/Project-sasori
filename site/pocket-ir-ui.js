@@ -188,9 +188,11 @@ $('save').addEventListener('click', () =>
       id,
       name: $('setup-name').value.trim() || profile.name,
     });
+    const epoch = session?.epoch;
+    const wasPrepared = preparedId === profile.id;
     await persist(importPocketProfile(JSON.stringify(copy), data));
-    preparedId = '';
-    session?.clearPrepared();
+    // A label-only saved copy has identical bytes; do not reprogram a ready bridge.
+    preparedId = wasPrepared && session?.connected && session.epoch === epoch ? copy.id : '';
   }),
 );
 $('export').addEventListener('click', () => {

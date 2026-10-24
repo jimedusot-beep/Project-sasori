@@ -20,7 +20,15 @@ bash scripts/build-pocket-ir.sh
 
 This downloads a SHA-256-checked Arduino CLI and version-pinned core/libraries into a temporary directory, compiles for `esp32:esp32:esp32s3:CDCOnBoot=cdc`, and writes local binaries plus `SHA256SUMS` to `build/pocket-ir/`. It does not select a serial port or flash anything. CI uses the same script and its compile log is under **Verify laboratory → pocket-firmware**. Compiler success proves source compatibility, not physical operation.
 
-Alternatively use Arduino IDE, install the same versions listed in [NOTICE.md](NOTICE.md), open `remote_ble/remote_ble.ino`, choose your actual ESP32-S3 board and enable USB CDC on boot. Confirm the flash/PSRAM and USB settings for your exact board. Select its USB serial port and Upload. A development board may require holding BOOT while connecting USB, then releasing it and pressing RESET; follow that board's instructions. Do not flash a toy or TV with this firmware.
+For Windows/macOS or a graphical upload, use Arduino IDE 2 from [arduino.cc](https://www.arduino.cc/en/software):
+
+1. Open **Settings / Preferences → Additional Boards Manager URLs** and add `https://espressif.github.io/arduino-esp32/package_esp32_index.json`.
+2. Open **Boards Manager**, search for **esp32 by Espressif Systems**, select version **3.3.10**, and install.
+3. Open **Library Manager** and install **IRremoteESP8266 2.9.0**, **NimBLE-Arduino 2.5.0**, and **ArduinoJson 7.4.3**. Use each entry's version selector.
+4. Download this repository's ZIP from **Code → Download ZIP**, extract it, and open `hardware/pocket-ir/remote_ble/remote_ble.ino`. Keep the sketch in its `remote_ble` folder.
+5. Choose your actual ESP32-S3 board in **Tools → Board**. Set **USB CDC On Boot → Enabled**; confirm flash/PSRAM and USB mode against your exact board documentation. The reference CLI target uses the generic ESP32-S3 board defaults.
+6. Plug in the board with a USB **data** cable and select its port in **Tools → Port**. Press **Verify** first, then **Upload**. If no port appears, check the cable and the USB driver specified by your board vendor. Some boards require holding **BOOT** while connecting USB, then releasing it and pressing **RESET**; follow that board's instructions.
+7. Wait for a successful upload and reset the board. Do not flash a toy or TV with this firmware.
 
 ## 3. Check the bridge
 

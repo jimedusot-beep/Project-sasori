@@ -280,6 +280,15 @@ export class ResearchStore {
     done.catch(() => {});
     const target = tx.objectStore('settings'),
       current = await request(target.get('pocket-ir'));
+    if (current) {
+      try {
+        validatePocketData(current);
+      } catch {
+        tx.abort();
+        await done.catch(() => {});
+        throw new Error('Stored remote setups are invalid. Recover existing data before saving.');
+      }
+    }
     if ((current?.revision ?? 0) !== clean.revision) {
       tx.abort();
       await done.catch(() => {});

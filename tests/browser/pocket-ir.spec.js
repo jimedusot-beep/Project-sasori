@@ -60,7 +60,7 @@ test('saved setup reload is inert; profile changes and reconnect require prepara
   await page.locator('#setup-name').fill('Living room TV');
   await page.locator('#save').click();
   await expect(page.locator('#profile option:checked')).toHaveText('Living room TV');
-  await expect(page.getByRole('button', { name: 'Power', exact: true })).toBeDisabled();
+  await expect(page.getByRole('button', { name: 'Power', exact: true })).toBeEnabled();
   await page.reload();
   await expect(page.locator('#profile option:checked')).toHaveText('Living room TV');
   await expect(page.getByRole('button', { name: 'Power', exact: true })).toBeDisabled();
