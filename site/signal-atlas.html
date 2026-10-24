@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+    <meta name="theme-color" content="#111918" />
+    <meta name="referrer" content="no-referrer" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"
+    />
+    <meta
+      name="description"
+      content="Sasori's private offline electronics signal comparison and evidence atlas."
+    />
+    <title>Signal Atlas · Project Sasori</title>
+    <link rel="icon" href="icon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="signal-atlas.css" />
+    <script type="module" src="signal-atlas-ui.js"></script>
+  </head>
+  <body>
+    <a class="skip" href="#atlas">Skip to Signal Atlas</a>
+    <header class="topbar">
+      <a href="hub.html" class="brand">SASORI <span>← Device Hub</span></a>
+      <a href="index.html#discovery">Original Discovery ↗</a>
+    </header>
+    <main id="atlas">
+      <div class="intro">
+        <p class="eyebrow">SIGNAL ATLAS / OFFLINE ANALYSIS LAB</p>
+        <h1>See the patterns.<br /><span>Keep the evidence.</span></h1>
+        <p>
+          Compare observations from owned electronics without connecting, sending, replaying or
+          guessing commands. Your local Discovery captures remain in this browser. Simulated and
+          imported evidence never count as hardware verification.
+        </p>
+        <div class="toolbar">
+          <button type="button" id="demo" class="secondary">Try synthetic comparison</button>
+          <button type="button" id="refresh" class="secondary">Reload saved captures</button>
+          <button type="button" id="export" class="secondary" disabled>
+            Export private-safe aggregate
+          </button>
+        </div>
+        <p id="status" role="status" aria-live="polite">Opening local Discovery records…</p>
+      </div>
+      <div class="workspace">
+        <section class="panel" aria-labelledby="capture-title">
+          <p class="eyebrow">01 / ADD AN OBSERVATION</p>
+          <h2 id="capture-title">Analyze bytes or IR timing</h2>
+          <form id="capture-form">
+            <label for="label">Capture label</label>
+            <input
+              id="label"
+              type="text"
+              maxlength="120"
+              required
+              placeholder="e.g. Volume up · attempt 1"
+            />
+            <label for="model">Exact device model & revision</label>
+            <input
+              id="model"
+              type="text"
+              maxlength="160"
+              required
+              placeholder="e.g. TV model · firmware revision"
+            />
+            <div class="form-row">
+              <div>
+                <label for="kind">Signal representation</label>
+                <select id="kind">
+                  <option value="bytes">Hex bytes (BLE, serial, app)</option>
+                  <option value="pulses">IR mark/space timings (µs)</option>
+                </select>
+              </div>
+              <div>
+                <label for="method">Observation method</label>
+                <select id="method">
+                  <option value="ble">BLE notification / capture</option>
+                  <option value="internal">Known UART / SPI / I²C</option>
+                  <option value="app">Authorized app observation</option>
+                  <option value="infrared">Infrared receiver</option>
+                  <option value="peripheral">Documented sensor</option>
+                  <option value="rf">Receive-only RF</option>
+                </select>
+              </div>
+            </div>
+            <label for="evidence">Claimed evidence class</label>
+            <select id="evidence">
+              <option value="synthetic">Synthetic (default, no device tested)</option>
+              <option value="owner-observed">Owner-observed (unverified claim)</option>
+              <option value="community-reported">Community-reported (unverified claim)</option>
+            </select>
+            <label for="source">Provenance / setup note</label>
+            <textarea
+              id="source"
+              required
+              maxlength="2000"
+              rows="3"
+              placeholder="Record capture tool, receiver settings, normal action, source, firmware and conditions. Never enter keys or passwords."
+            ></textarea>
+            <label for="values">Hex byte pairs or positive microsecond timings</label>
+            <textarea
+              id="values"
+              required
+              maxlength="32768"
+              rows="5"
+              spellcheck="false"
+              placeholder="e.g. 01 02 FF 10"
+            ></textarea>
+            <label class="check" for="retain">
+              <input id="retain" type="checkbox" />
+              <span
+                >Retain raw values locally for later comparisons.
+                <strong>Unchecked by default.</strong> Imported or saved bytes may contain private
+                information.</span
+              >
+            </label>
+            <button type="submit" class="primary" id="save" disabled>
+              Save in existing Discovery notebook
+            </button>
+            <p class="hint">
+              Saving with retention unchecked keeps a summary only. New entries never unlock device
+              actions. Maximum 50 captures / 2 MB shared with the original Discovery notebook.
+            </p>
+          </form>
+        </section>
+        <section class="panel" aria-labelledby="overview-title">
+          <p class="eyebrow">02 / FIND REPEATABLE PATTERNS</p>
+          <h2 id="overview-title">Saved signal families</h2>
+          <label for="tolerance">IR tolerance (µs, integer from 0–1,000,000)</label>
+          <input id="tolerance" type="number" value="100" min="0" max="1000000" step="1" />
+          <label for="group">Choose one exact model + method + format</label>
+          <select id="group">
+            <option value="">No captures loaded</option>
+          </select>
+          <div class="stats" id="stats"><p>No analysis yet.</p></div>
+          <p class="hint">
+            Stable = same byte, or pulse range within your selected tolerance, across *all retained
+            recordings*. Variable = values disagree. Partial = an index is missing from a recording.
+            Neither identifies what the signal means.
+          </p>
+          <div id="heatmap" class="heatmap" role="group" aria-label="Up to 64 index statuses"></div>
+          <p id="heatmap-description" class="hint">
+            Compare at least two raw-retained observations for an index map.
+          </p>
+          <div class="legend" aria-label="Map legend">
+            <span class="stable">Stable</span><span class="variable">Variable</span
+            ><span class="partial">Partial coverage</span>
+          </div>
+        </section>
+        <section class="panel" aria-labelledby="compare-title">
+          <p class="eyebrow">03 / COMPARE TWO CAPTURES</p>
+          <h2 id="compare-title">What changed?</h2>
+          <div class="form-row">
+            <div>
+              <label for="first">Baseline A</label
+              ><select id="first">
+                <option value="">Choose capture</option>
+              </select>
+            </div>
+            <div>
+              <label for="second">Experiment B</label
+              ><select id="second">
+                <option value="">Choose capture</option>
+              </select>
+            </div>
+          </div>
+          <button id="compare" class="primary" type="button" disabled>
+            Compare aligned indexes
+          </button>
+          <div id="pair-results" aria-live="polite">
+            <p>Choose two retained captures from one family.</p>
+          </div>
+        </section>
+        <section class="panel" aria-labelledby="import-title">
+          <p class="eyebrow">04 / RECOVER & SHARE</p>
+          <h2 id="import-title">Import Discovery metadata</h2>
+          <p>
+            Select a Sasori Discovery metadata backup. The entire JSON batch is validated before
+            saving; its records become imported claims with new IDs. The backup contains no original
+            raw signals, so imported summaries are not directly comparable.
+          </p>
+          <label for="backup">Sasori Discovery backup (.json, ≤1 MB)</label>
+          <input id="backup" type="file" accept=".json,application/json" />
+          <button id="import" type="button" class="secondary" disabled>
+            Import into existing notebook
+          </button>
+          <p class="hint">
+            The Atlas summary export intentionally omits model names, labels, source notes, capture
+            IDs, IR codes and raw payloads. Keep full evidence in private originals. This page has
+            no Bluetooth, network API or transmit controls.
+          </p>
+        </section>
+      </div>
+      <footer>
+        Offline first · No uploads · No inferred authentication · No hardware-verification claims ·
+        <a href="https://github.com/jimedusot-beep/Project-sasori/blob/main/docs/signal-atlas.md"
+          >Documentation</a
+        >
+      </footer>
+    </main>
+  </body>
+</html>
