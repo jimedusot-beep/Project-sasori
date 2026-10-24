@@ -14,6 +14,10 @@ The device workspace connects saved identities, active connection status, notifi
 
 The broader [community scan](docs/research/community-scan-2026-10-23.md) recovered the previously missing Elmo APK and found a newer standalone community client. [Direct method review](experiments/001-elmo-l2l/recovered-source.md) now establishes the implemented handshake subset. Use the [browser remote](docs/elmo-remote.md) or [experimental desktop Elmo procedure](desktop/README.md#experimental-elmo-known-password-check) with your known password; source-backed software and synthetic tests do not establish acceptance or physical effects on your particular unit.
 
+## Offline Signal Atlas
+
+[Open Signal Atlas](https://jimedusot-beep.github.io/Project-sasori/signal-atlas.html) to group and compare existing Discovery captures from the **same browser's local notebook**. Explore a synthetic demo, paste authorized bytes or infrared timings, opt in to raw-value retention, inspect stable/variable/missing indexes, import metadata-only backups and export identity-free aggregate findings. No Bluetooth or device actions occur in Atlas. Imported and synthetic claims never establish physical effects. See [Atlas documentation](docs/signal-atlas.md) for precise evidence and storage limits.
+
 ## Try the laboratory
 
 Open the [live laboratory](https://jimedusot-beep.github.io/Project-sasori/). HTTPS deployment and all 15 assets were verified on October 21, 2026. See [verification results](docs/verification.md) for the evidence and remaining hardware limits.
