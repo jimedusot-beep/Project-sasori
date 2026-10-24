@@ -1,4 +1,4 @@
-import { hubFamily, hubAction, ELMO_INPUTS } from './hub-catalog.js';
+import { hubFamily, hubAction, ELMO_INPUTS } from './hub-catalog.js?v=recognition-20261024';
 
 export const MAX_ROUTINE_STEPS = 32;
 export const MAX_ROUTINE_MS = 120000;

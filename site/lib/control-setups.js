@@ -1,6 +1,6 @@
 import { recordId } from './records.js';
 import { sanitizeText } from './diagnostics.js';
-import { CONTROL_FAMILIES } from './device-controls.js';
+import { CONTROL_FAMILIES } from './device-controls.js?v=recognition-20261024';
 import { CONTROL_ADAPTER } from './standard-controls.js';
 
 export const MAX_CONTROL_SETUPS = 20;

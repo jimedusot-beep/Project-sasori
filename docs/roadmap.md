@@ -1,36 +1,41 @@
 # Prioritized roadmap
 
-## M1 — Repeatable physical inspection
+The implemented Device Hub now covers Elmo, standard BLE gadgets, original MiP, experimental Furby Connect and local TV adapters. Pocket Remote provides a separate ESP32 IR path. Software tests and source documentation do not establish behavior on this owner's hardware.
 
-Tracked in [issue #4](https://github.com/jimedusot-beep/Project-sasori/issues/4).
+## Current upgrade — recognition and another toy adapter
 
-1. Open the published page in Bluefy and test the attributed candidate profile on the real Elmo.
-2. If needed, collect actual service/characteristic UUIDs and properties with the read-only nRF guide.
-3. Complete five foreground 15-second captures with explicit stop reasons and saved notes.
-4. Verify a manual stop and page-background stop. Record iPhone/iOS/Bluefy versions; keep identifiers private.
+- Identify a chosen Bluetooth device using exact known service/channel metadata, then disconnect before suggesting an adapter. No name-based protocol guesses or application writes occur during recognition.
+- Reuse the chosen device reference through an explicit adapter selection and Connect press.
+- Implement the [Furby Connect](furby-connect.md) firmware/presence queries and bounded blue antenna-light request using pinned Bluefluff facts. Reuse setups, routines and receipts; keep native Furby writes unavailable until a reviewed bridge exists.
+- Preserve explicit unknown fields and physical-validation limits. This is supported-adapter matching, not automatic reverse engineering of an unknown protocol.
 
-Exit criterion: repeatable discovery, metadata, subscription, capture, and teardown on the real unit. Software simulation is not an alternative acceptance.
+## Next acceptance — original Elmo and Furby hardware
 
-## M2 — Authorized, evidence-backed authentication
+1. Use the [Device Hub directions](device-hub.md) on the exact unit. Retain model, firmware, observed channels and private connection results.
+2. Elmo: verify source-derived authentication with the existing password, status replies and one greeting. Observe actual playback, disconnect and recovery. New-password setup requires an explicit choice and the toy's unset-password response.
+3. Furby Connect: follow the [adapter acceptance guide](furby-connect.md#physical-acceptance) for version/presence, antenna light/off, cancellation and recovery.
+4. Repeat fresh connections; keep owner observations, software receipts, community evidence and independent verification separate.
 
-Tracked in [issue #5](https://github.com/jimedusot-beep/Project-sasori/issues/5).
+[Issue #4](https://github.com/jimedusot-beep/Project-sasori/issues/4) tracks repeatable inspection and [issue #5](https://github.com/jimedusot-beep/Project-sasori/issues/5) tracks authentication acceptance. Source-derived browser/desktop Elmo implementations now exist; independent owner-unit validation remains pending.
 
-After M1, collect legally held app/protocol documentation and authorized private traces. Establish message framing, challenge fields, credential handling, positive/rejected markers, retry limits, and a disprovable hypothesis. Review implementation before any live authentication traffic. Never brute force, extract credentials, reset firmware, or transplant commands from another toy.
+## Expand commands from exact evidence
 
-Exit criterion: independently reproduced authentication with bounded opt-in traffic and clear inconclusive/rejected outcomes.
+Add documented, model-specific action catalogs, framing and replies with strict parameters, finite budgets and cancellation. New motor control requires measured electrical/mechanical limits and an independently usable physical stop. A writable characteristic or imported claim cannot establish what a command does.
 
-## M3 — Guarded voice and movement
+Existing toy-password recovery uses original-app settings or the manufacturer's physical reset. New-password setup when unset is implemented. No universal remote bypass is assumed. Any model-specific alternative needs independently reproducible evidence.
 
-Only after M2 and separate protocol/physical-limit evidence: characterize one known action at a time, define independent operating envelopes and a physical power stop, then add guarded adapters and regression fixtures. No raw transmitter in the normal UI.
+## Native access and autonomous routines
 
-For the independent hardware path, see [Elmo replacement-controller research](replacement-controller-research.md). It can proceed without recovering the original Bluetooth authentication scheme, but physical power and movement tests require independent electrical and safety verification.
+The buildable native iPhone app implements inspection, standard BLE and original MiP fixed controls. Furby controls currently use Web Bluetooth; native Elmo writes are also unfinished. Add reviewed native semantic operations before advertising parity.
 
-## M4 — Broader laboratory
+Current routines and touch reactions run only in a foreground connection. Longer-lived automation needs a companion/native service with session ownership, explicit start/stop, time/action limits, persistent results and reconnect behavior. A browser timer is not a reliable background service.
 
-Implement device profiles 002–004 as independent modules; use the simulator contract first. Add private Bleak transport and H.E.R.B.I.E. session ingestion. Any authenticated remote management needs a separate backend and threat review.
+## Firmware and replacement controllers
 
-## Data durability improvements
+General firmware flashing is not implemented. Support would require an exact board/bootloader, verified image provenance, compatibility checks, an independently tested restoration path and hardware acceptance. Do not infer compatibility from similar UUIDs.
 
-Tracked in [issue #6](https://github.com/jimedusot-beep/Project-sasori/issues/6).
+The [replacement-controller route](replacement-controller-research.md) is independent of original-board authentication. Board/load identification, electrical ratings, mechanical limits and a simulation-tested interface precede physical wiring or motors. The retrofit proposal remains separate work.
 
-Add optional server-side authenticated GitHub/private-storage integration without public tokens. Keep origin/local storage disclosure explicit. Expand raw-capture archiving only after privacy-safe retention and recovery are designed.
+## Private cross-device storage
+
+[Issue #6](https://github.com/jimedusot-beep/Project-sasori/issues/6) tracks durability. Current saves are local to each origin, with deliberate portable backups. Automatic sync needs an authenticated private backend, per-user authorization, conflict protection, secrets handling and tested restoration; public repository storage or embedded tokens are not substitutes.

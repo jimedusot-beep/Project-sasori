@@ -96,7 +96,13 @@ test('Elmo volume requests read back separately, sound is explicit and bounded, 
   r.stop();
 });
 test('one shared hub runs every demo without real Bluetooth or TV network access', async () => {
-  for (const familyId of ['elmo-l2l/v1', 'ble-standard/v1', 'wowwee-mip/v1', 'tv-local/v1']) {
+  for (const familyId of [
+    'elmo-l2l/v1',
+    'ble-standard/v1',
+    'wowwee-mip/v1',
+    'furby-connect/v1',
+    'tv-local/v1',
+  ]) {
     const h = new HubSession({
       familyId,
       synthetic: true,

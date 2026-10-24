@@ -50,15 +50,20 @@ Tap **Arm touch reactions**. A new reported release → press can trigger the ma
 
 In the demo, choose a **Demo touch input** and **Simulate … press** to test mappings without hardware. The reaction result records sent/skipped/failed request counts and retains synthetic/live provenance. Software counters are not physical playback confirmation.
 
+## Identify a supported Bluetooth toy
+
+Tap **Identify a Bluetooth toy**, select a device, then choose a suggested adapter. The bounded check reads only known service/channel metadata and disconnects without application writes or notification subscriptions. It recognizes candidate Elmo, original MiP, Furby Connect and standard BLE combinations. Confirm your model and press Connect separately; names and matching services do not authenticate a device. Cancel, Stop or hiding the page discards pending results. [Full identification and Furby directions](furby-connect.md).
+
 ## Other devices and TV remotes
 
-| Family                           | Available controls                                                            | What must match                                                       |
-| -------------------------------- | ----------------------------------------------------------------------------- | --------------------------------------------------------------------- |
-| Standard Bluetooth gadget        | Available identity and battery reads; mild Find alert when exposed            | Bluetooth SIG Device Information, Battery or Immediate Alert services |
-| Original WowWee MiP              | Manufacturer version/status queries and a bounded blue chest-light pulse      | Original MiP GATT channels and command format                         |
-| Roku local network               | Directional pad, Home/Back, playback; reported TV-volume/power-off capability | Local Roku ECP device and enabled remote-control setting              |
-| Home Assistant media player      | Reported volume, mute, playback and power capabilities                        | An already-configured `media_player` integration                      |
-| Home Assistant learned IR remote | Named learned buttons using the same remote layout                            | A compatible configured IR hub and learned original-remote signals    |
+| Family                           | Available controls                                                                     | What must match                                                         |
+| -------------------------------- | -------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| Standard Bluetooth gadget        | Available identity and battery reads; mild Find alert when exposed                     | Bluetooth SIG Device Information, Battery or Immediate Alert services   |
+| Original WowWee MiP              | Manufacturer version/status queries and a bounded blue chest-light pulse               | Original MiP GATT channels and command format                           |
+| Furby Connect (2016)             | GeneralPlus firmware-byte query, undecoded presence reply and brief blue antenna light | Exact Furby Connect channels; browser only, hardware validation pending |
+| Roku local network               | Directional pad, Home/Back, playback; reported TV-volume/power-off capability          | Local Roku ECP device and enabled remote-control setting                |
+| Home Assistant media player      | Reported volume, mute, playback and power capabilities                                 | An already-configured `media_player` integration                        |
+| Home Assistant learned IR remote | Named learned buttons using the same remote layout                                     | A compatible configured IR hub and learned original-remote signals      |
 
 TV controls require the [local TV companion](tv-remote.md), which serves this same hub to your phone. An ordinary phone web page cannot emit infrared. An IR hub lets you reuse the buttons for a TV, projector, stereo or another small device with a matching IR remote. Only adapter-supported buttons enable; this is shared control vocabulary, not universal authentication or automatic model support.
 

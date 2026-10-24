@@ -1,6 +1,6 @@
 import { recordId } from './records.js';
 import { sanitizeText } from './diagnostics.js';
-import { controlFamily } from './device-controls.js';
+import { controlFamily } from './device-controls.js?v=recognition-20261024';
 export const MAX_ACTION_TRIALS = 200;
 export const MAX_TRIAL_BYTES = 400000;
 const text = (s, max) => typeof s === 'string' && s.length <= max;

@@ -1,7 +1,7 @@
 import { recordId } from './records.js';
 import { sanitizeText } from './diagnostics.js';
-import { hubFamily } from './hub-catalog.js';
-import { validateRoutine } from './routines.js';
+import { hubFamily } from './hub-catalog.js?v=recognition-20261024';
+import { validateRoutine } from './routines.js?v=recognition-20261024';
 import { validateReactions } from './reactions.js';
 
 export const HUB_LIMIT = 20;
