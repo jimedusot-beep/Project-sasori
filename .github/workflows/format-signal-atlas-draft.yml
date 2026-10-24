@@ -1,0 +1,30 @@
+name: Format Signal Atlas Draft
+on:
+  push:
+    branches:
+      - feature/signal-atlas-2026-10-24
+    paths:
+      - .github/workflows/format-signal-atlas-draft.yml
+permissions:
+  contents: write
+jobs:
+  format-draft:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - name: Format Signal Atlas files
+        run: npx prettier --write site/lib/signal-atlas.js site/signal-atlas-ui.js site/signal-atlas.html site/signal-atlas.css tests/signal-atlas.test.mjs tests/browser/signal-atlas.spec.js docs/signal-atlas.md site/hub.html site/index.html README.md
+      - name: Commit formatting
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add site/lib/signal-atlas.js site/signal-atlas-ui.js site/signal-atlas.html site/signal-atlas.css tests/signal-atlas.test.mjs tests/browser/signal-atlas.spec.js docs/signal-atlas.md site/hub.html site/index.html README.md
+          if ! git diff --cached --quiet; then
+            git commit -m 'style: apply project formatter to Signal Atlas'
+            git push origin HEAD:feature/signal-atlas-2026-10-24
+          fi
