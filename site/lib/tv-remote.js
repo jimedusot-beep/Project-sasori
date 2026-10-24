@@ -19,7 +19,7 @@ export class TVRemote {
   constructor({
     synthetic = false,
     companion = false,
-    fetcher = globalThis.fetch,
+    fetcher = globalThis.fetch?.bind(globalThis),
     emit = () => {},
   } = {}) {
     Object.assign(this, { synthetic, companion, fetcher, emit });
