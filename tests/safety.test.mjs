@@ -34,6 +34,7 @@ test('inspection scripts have no write API and shipped scripts use no raw remote
     'site/recorder-ui.js',
     'site/elmo-ui.js',
     'site/hub-ui.js',
+    'site/pocket-ir-ui.js',
     'site/companion-ui.js',
     'site/elmo-packets.mjs',
     ...(await readdir('site/lib')).filter((x) => x.endsWith('.js')).map((x) => 'site/lib/' + x),
@@ -45,6 +46,7 @@ test('inspection scripts have no write API and shipped scripts use no raw remote
         'site/lib/standard-controls.js',
         'site/lib/mip-controls.js',
         'site/lib/elmo-remote.js',
+        'site/lib/pocket-ir.js', // audited fixed-protocol consumer IR sender
       ].includes(p),
   ))
     assert.doesNotMatch(
@@ -66,6 +68,15 @@ test('inspection scripts have no write API and shipped scripts use no raw remote
     assert.match(html, /form-action 'none'/);
     assert.doesNotMatch(html, /connect-src[^;]*https?:/);
   }
+  const pilot = await readFile('site/lib/pocket-ir.js', 'utf8');
+  assert.match(pilot, /filters: \[\{ services: \[POCKET_IR_UUIDS\.service\] \}\]/);
+  assert.doesNotMatch(pilot, /acceptAllDevices\s*:/);
+  assert.doesNotMatch(pilot, /\.writeValueWithoutResponse\s*\(/);
+  assert.match(pilot, /validatePocketConfig\(candidate\)/);
+  const pilotHtml = await readFile('site/pocket-ir.html', 'utf8');
+  assert.match(pilotHtml, /connect-src 'none'/);
+  assert.match(pilotHtml, /form-action 'none'/);
+  assert.doesNotMatch(pilotHtml, /<script[^>]*src="https?:/);
   const tv = await readFile('site/lib/tv-remote.js', 'utf8');
   assert.match(tv, /if \(!API_PATHS\.has\(path\)\)/);
   assert.match(tv, /this\.fetcher\('\/api\/tv\/disconnect'/);

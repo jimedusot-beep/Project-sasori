@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+    <meta name="theme-color" content="#111918" />
+    <meta name="referrer" content="no-referrer" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"
+    />
+    <title>Pocket Remote · Sasori</title>
+    <link rel="icon" href="icon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="pocket-ir.css" />
+    <script type="module" src="pocket-ir-ui.js"></script>
+  </head>
+  <body>
+    <a class="skip" href="#workbench">Skip to remote</a>
+    <header>
+      <a href="hub.html" class="brand">SASORI <span>← Device Hub</span></a
+      ><span class="tag" id="mode">EXPERIMENTAL · ESP32 IR BRIDGE</span>
+    </header>
+    <main id="workbench">
+      <section class="intro">
+        <div class="eyebrow">POCKET REMOTE / 002</div>
+        <h1>Less setup.<br /><em>More button pressing.</em></h1>
+        <p>
+          A phone, a small ESP32 infrared bridge, and five useful buttons. Runs locally. Keeps your
+          setups. No computer companion during use.
+        </p>
+        <div class="button-row">
+          <a
+            class="build-link"
+            href="https://github.com/jimedusot-beep/Project-sasori/blob/main/hardware/pocket-ir/README.md"
+            target="_blank"
+            rel="noopener noreferrer"
+            >Build the open-source bridge ↗</a
+          ><span class="small"
+            >Phone alone cannot emit IR. Physical hardware testing is still pending.</span
+          >
+        </div>
+      </section>
+      <div class="work-grid">
+        <section class="panel setup">
+          <h2>01 / Pick &amp; connect</h2>
+          <label for="profile">Remote profile</label
+          ><select id="profile"></select>
+          <p id="profile-source" class="small"></p>
+          <label class="check"
+            ><input type="checkbox" id="owner-check" /> I own or have permission to operate this
+            bridge and appliance.</label
+          >
+          <div class="button-row">
+            <button id="connect" class="primary" type="button">Choose IR bridge</button
+            ><button id="demo" type="button">Try offline demo</button>
+          </div>
+          <p class="small">
+            iPhone: open in Bluefy. Desktop / Android: use a Web Bluetooth browser. Select your
+            specifically flashed bridge.
+          </p>
+          <h2 class="step-two">02 / Prepare once</h2>
+          <p class="small">
+            Stores this profile’s buttons in the bridge’s five slots. No IR is emitted during
+            preparation. Prepare again after reconnecting or changing profiles.
+          </p>
+          <button id="prepare" type="button" disabled>Prepare remote</button>
+          <p id="connection" role="status" aria-live="polite">
+            Disconnected. Try the demo immediately, or connect your bridge.
+          </p>
+          <button id="disconnect" type="button" disabled>Stop &amp; disconnect</button>
+        </section>
+        <section class="panel remote-panel">
+          <div class="remote-heading">
+            <h2>03 / Your remote</h2>
+            <span class="tag">LOCAL ONLY</span>
+          </div>
+          <p id="ready-status" class="small" role="status"></p>
+          <div id="remote" class="remote" aria-label="Remote buttons"></div>
+          <p class="receipt">
+            <strong id="attempts">0</strong> transmit reports this connection<br /><span
+              class="small"
+              >Bridge reports are not confirmation that your appliance responded.</span
+            >
+          </p>
+        </section>
+        <section class="panel compact">
+          <h2>Keep a useful setup</h2>
+          <label for="setup-name">Setup name</label
+          ><input id="setup-name" maxlength="80" placeholder="Living room TV" autocomplete="off" />
+          <div class="button-row">
+            <button id="save" type="button">Save setup</button
+            ><button id="export" type="button">Export profile</button
+            ><button id="delete" type="button" disabled>Delete saved setup</button>
+          </div>
+          <p id="storage-status" class="small" role="status"></p>
+          <details>
+            <summary>Custom buttons &amp; import</summary>
+            <p class="small">
+              Copy a starter profile, edit its name and up to five buttons, then import.
+              NEC/Samsung: 32 bits. Sony: 12/15/20 bits with IRremoteESP8266 encoding. Importing
+              never sends IR. Profile exports contain button codes, not Bluetooth identifiers.
+            </p>
+            <button id="edit" type="button">Copy selected profile to editor</button>
+            <label for="profile-json">Sasori profile JSON (12 KB maximum)</label
+            ><textarea
+              id="profile-json"
+              rows="10"
+              maxlength="12000"
+              spellcheck="false"
+              autocomplete="off"
+            ></textarea>
+            <button id="import" type="button">Import &amp; save profile</button>
+          </details>
+        </section>
+        <section class="panel compact">
+          <h2>What happened</h2>
+          <p class="small">
+            Temporary statuses, no device identifiers or raw IR codes. Setups stay in this browser;
+            nothing is uploaded.
+          </p>
+          <ol id="events" class="events" aria-label="Recent bridge events" tabindex="0"></ol>
+          <button id="clear-events" type="button">Clear log</button>
+        </section>
+      </div>
+      <p class="footer">
+        Built from an MIT maker firmware and CC0 community code entries, with source credits in the
+        build guide. This bridge has no authenticated BLE pairing. Turn it off when finished. Hiding
+        the page closes the connection; IR already emitted and the bridge’s physical buttons cannot
+        be recalled by the phone.
+      </p>
+    </main>
+  </body>
+</html>

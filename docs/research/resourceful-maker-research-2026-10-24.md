@@ -53,3 +53,9 @@ The [Elmo protocol evidence](../../experiments/001-elmo-l2l/recovered-source.md)
 ## License decisions
 
 Observed repository license identifiers at the reviewed refs: uMyo MIT; Koontzie/ir-remote MIT; Shrike GPL-2.0; OMOTE firmware GPL-3.0; IRremoteESP8266 LGPL-2.1; Flipper-IRDB CC0-1.0. Hardware, media, documentation and dependencies can have separate notices. Glia/OpenFlexure/vendor/tutorial materials remain reference-only here; check the exact file terms before reuse. No code, audio, device firmware or remote-code database from these projects is bundled in this change. Future imports must preserve required notices and compatibility rather than assuming a repository-wide license covers every asset.
+
+## Implemented transfer: Pocket Remote
+
+The [Pocket Remote release](../pocket-ir-pilot.md) now turns the small-bridge idea into a named-button phone workflow. Sasori actually cloned the pinned MIT Koontzie source, retained its license, adapted the firmware with empty fresh slots and strict widths, and preserved an unmodified wiring card. Ten credited CC0 community entries seed Samsung/LG candidate profiles. The normal flow has no hex entry: select → connect → prepare → press. Saved portable profiles reuse that interface for other exact IR devices without a new dashboard per model.
+
+The [build kit and source manifest](../../hardware/pocket-ir/README.md) document parts, pins, a version-pinned compile, phone use, and hardware acceptance. Software tests distinguish a bridge transmit report from an observed appliance effect. An encoding mismatch found in the upstream Sony conversion is recorded in the [reuse notice](../../hardware/pocket-ir/NOTICE.md), and Sony catalog entries are excluded until corrected fixtures are reviewed. No physical compatibility, range, or toy-unlock claim follows from compilation or simulation.
