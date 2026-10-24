@@ -41,9 +41,13 @@ function currentGroup() {
   return groups.find((g) => g.key === $('group').value) || null;
 }
 function labeledCapture(record) {
-  return record.label + ' · ' + record.evidence +
+  return (
+    record.label +
+    ' · ' +
+    record.evidence +
     (record.importedAt ? ' · imported claim' : '') +
-    (record.payloadsIncluded ? ' · raw retained' : ' · metadata only');
+    (record.payloadsIncluded ? ' · raw retained' : ' · metadata only')
+  );
 }
 function setOptions(select, items, previous, placeholder) {
   select.replaceChildren(option('', placeholder));
@@ -58,7 +62,8 @@ function renderGroup() {
   stats.replaceChildren();
   heatmap.replaceChildren();
   $('pair-results').replaceChildren(node('p', 'Choose two retained captures from one family.'));
-  $('heatmap-description').textContent = 'Compare at least two raw-retained observations for an index map.';
+  $('heatmap-description').textContent =
+    'Compare at least two raw-retained observations for an index map.';
   if (!group) {
     stats.append(node('p', 'Choose a group or try the synthetic demo.'));
     setOptions($('first'), [], '', 'Choose capture A');
@@ -70,7 +75,10 @@ function renderGroup() {
     [group.counts.total, 'Captures in family'],
     [group.counts.retained, 'Raw-retained captures'],
     [group.counts.metadataOnly, 'Metadata only'],
-    [group.counts.imported + group.counts.synthetic + group.counts.community, 'Imported / synthetic / community claims'],
+    [
+      group.counts.imported + group.counts.synthetic + group.counts.community,
+      'Imported / synthetic / community claims',
+    ],
   ];
   for (const [value, label] of fields) {
     const cell = node('div', '', 'stat');
@@ -93,25 +101,47 @@ function renderGroup() {
   }
   for (const position of group.positions) {
     const cell = node('span', position.offset, 'cell ' + position.status);
-    cell.title = 'Index ' + position.offset + ' · ' + position.status +
-      ' · ' + position.coverage + '/' + retained.length + ' captures';
+    cell.title =
+      'Index ' +
+      position.offset +
+      ' · ' +
+      position.status +
+      ' · ' +
+      position.coverage +
+      '/' +
+      retained.length +
+      ' captures';
     cell.setAttribute('aria-label', cell.title);
     heatmap.append(cell);
   }
-  const totals = Object.fromEntries(['stable', 'variable', 'partial'].map((status) =>
-    [status, group.positions.filter((p) => p.status === status).length]));
+  const totals = Object.fromEntries(
+    ['stable', 'variable', 'partial'].map((status) => [
+      status,
+      group.positions.filter((p) => p.status === status).length,
+    ]),
+  );
   $('heatmap-description').textContent =
-    group.positions.length + ' aligned positions shown · ' +
-    totals.stable + ' stable · ' + totals.variable + ' variable · ' +
-    totals.partial + ' partial.' +
-    (group.truncated ? ' View capped to first 64 positions; longer captures remain preserved locally.' : '');
+    group.positions.length +
+    ' aligned positions shown · ' +
+    totals.stable +
+    ' stable · ' +
+    totals.variable +
+    ' variable · ' +
+    totals.partial +
+    ' partial.' +
+    (group.truncated
+      ? ' View capped to first 64 positions; longer captures remain preserved locally.'
+      : '');
 }
 function renderAtlas() {
   let selected = $('group').value;
   groups = buildSignalAtlas(activeRecords, { toleranceUs: tolerance() });
   $('group').replaceChildren(option('', 'Choose a signal family'));
-  groups.forEach((g) => $('group').append(
-    option(g.key, g.deviceModel + ' · ' + g.method + '/' + g.kind + ' · ' + g.counts.total)));
+  groups.forEach((g) =>
+    $('group').append(
+      option(g.key, g.deviceModel + ' · ' + g.method + '/' + g.kind + ' · ' + g.counts.total),
+    ),
+  );
   if (!groups.some((g) => g.key === selected)) selected = groups[0]?.key || '';
   $('group').value = selected;
   $('export').disabled = !groups.length;
@@ -134,9 +164,10 @@ async function refresh() {
   activeRecords = records;
   renderAtlas();
   message(
-    records.length + ' Discovery captures available in this browser. ' +
-    (store.persistent ? 'IndexedDB storage enabled.' : store.warning) +
-    ' No wireless connection was requested.',
+    records.length +
+      ' Discovery captures available in this browser. ' +
+      (store.persistent ? 'IndexedDB storage enabled.' : store.warning) +
+      ' No wireless connection was requested.',
   );
 }
 function demoRecords() {
@@ -174,11 +205,13 @@ async function perform(action) {
     $('import').disabled = !$('backup').files?.length;
   }
 }
-$('demo').addEventListener('click', () => perform(async () => {
-  activeRecords = demoRecords();
-  renderAtlas();
-  message('Synthetic demonstration only. Demo captures are in memory and have not been saved.');
-}));
+$('demo').addEventListener('click', () =>
+  perform(async () => {
+    activeRecords = demoRecords();
+    renderAtlas();
+    message('Synthetic demonstration only. Demo captures are in memory and have not been saved.');
+  }),
+);
 $('refresh').addEventListener('click', () => perform(refresh));
 $('group').addEventListener('change', renderGroup);
 $('kind').addEventListener('change', () => {
@@ -192,29 +225,41 @@ $('tolerance').addEventListener('change', () => {
     problem(error);
   }
 });
-$('export').addEventListener('click', () => perform(async () => {
-  download(atlasMetadataExport(groups), 'sasori-signal-atlas-aggregate.json');
-  message('Aggregate exported without device IDs, names, notes, raw signals or capture IDs.');
-}));
-$('compare').addEventListener('click', () => perform(async () => {
-  const group = currentGroup();
-  const first = group?.captures.find((r) => r.id === $('first').value);
-  const second = group?.captures.find((r) => r.id === $('second').value);
-  if (!first || !second || first.id === second.id)
-    throw new Error('Choose two different retained captures.');
-  const result = compareAtlasPair(first, second, tolerance());
-  const root = $('pair-results');
-  root.replaceChildren(node(
-    'p',
-    result.total + ' differences: ' + result.changed + ' changed, ' +
-      result.added + ' added, ' + result.removed + ' removed. Up to 64 positions listed.',
-  ));
-  const list = node('ol', '', 'result-list');
-  for (const d of result.differences)
-    list.append(node('li', 'Index ' + d.offset + ': ' + d.status));
-  if (!result.differences.length) list.append(node('li', 'All aligned positions match.'));
-  root.append(list, node('p', result.caveat, 'hint'));
-}));
+$('export').addEventListener('click', () =>
+  perform(async () => {
+    download(atlasMetadataExport(groups), 'sasori-signal-atlas-aggregate.json');
+    message('Aggregate exported without device IDs, names, notes, raw signals or capture IDs.');
+  }),
+);
+$('compare').addEventListener('click', () =>
+  perform(async () => {
+    const group = currentGroup();
+    const first = group?.captures.find((r) => r.id === $('first').value);
+    const second = group?.captures.find((r) => r.id === $('second').value);
+    if (!first || !second || first.id === second.id)
+      throw new Error('Choose two different retained captures.');
+    const result = compareAtlasPair(first, second, tolerance());
+    const root = $('pair-results');
+    root.replaceChildren(
+      node(
+        'p',
+        result.total +
+          ' differences: ' +
+          result.changed +
+          ' changed, ' +
+          result.added +
+          ' added, ' +
+          result.removed +
+          ' removed. Up to 64 positions listed.',
+      ),
+    );
+    const list = node('ol', '', 'result-list');
+    for (const d of result.differences)
+      list.append(node('li', 'Index ' + d.offset + ': ' + d.status));
+    if (!result.differences.length) list.append(node('li', 'All aligned positions match.'));
+    root.append(list, node('p', result.caveat, 'hint'));
+  }),
+);
 $('capture-form').addEventListener('submit', (event) => {
   event.preventDefault();
   perform(async () => {
@@ -235,26 +280,36 @@ $('capture-form').addEventListener('submit', (event) => {
     await store.saveDiscoveries([record]);
     $('retain').checked = false;
     await refresh();
-    message('Saved ' + record.label + ' to the shared Discovery notebook. ' +
-      (keep ? 'Raw values are retained locally.' : 'Only metadata and numeric summary were saved.') +
-      ' No hardware action was attempted.');
+    message(
+      'Saved ' +
+        record.label +
+        ' to the shared Discovery notebook. ' +
+        (keep
+          ? 'Raw values are retained locally.'
+          : 'Only metadata and numeric summary were saved.') +
+        ' No hardware action was attempted.',
+    );
   });
 });
 $('backup').addEventListener('change', () => {
   $('import').disabled = busy || !$('backup').files?.length;
 });
-$('import').addEventListener('click', () => perform(async () => {
-  const file = $('backup').files?.[0];
-  if (!file) throw new Error('Choose a Discovery backup.');
-  if (file.size > MAX_DISCOVERY_FILE_BYTES)
-    throw new Error('Discovery backup exceeds 1 MB.');
-  const parsed = parseDiscoveries(await file.text());
-  await store.saveDiscoveries(parsed);
-  $('backup').value = '';
-  await refresh();
-  message('Imported ' + parsed.length +
-    ' metadata-only Discovery claim(s). No imported record is hardware-verified.');
-}));
+$('import').addEventListener('click', () =>
+  perform(async () => {
+    const file = $('backup').files?.[0];
+    if (!file) throw new Error('Choose a Discovery backup.');
+    if (file.size > MAX_DISCOVERY_FILE_BYTES) throw new Error('Discovery backup exceeds 1 MB.');
+    const parsed = parseDiscoveries(await file.text());
+    await store.saveDiscoveries(parsed);
+    $('backup').value = '';
+    await refresh();
+    message(
+      'Imported ' +
+        parsed.length +
+        ' metadata-only Discovery claim(s). No imported record is hardware-verified.',
+    );
+  }),
+);
 
 // Open the existing storage schema; never auto-import, upgrade evidence, or request hardware.
 try {

@@ -25,14 +25,14 @@
 
 The aim is to turn evidence gathering into actionable, reproducible work without claiming automatic device support.
 
-| Stage | Deliverable | What counts as proof |
-| --- | --- | --- |
-| Implemented in Atlas v1 | Reusable groups, private stored captures, comparison map and safe summaries | Unit tests, simulated-browser tests, persistence tests, manual mobile review |
-| Next: structured signal annotations | Hypothesis/reason/source, protocol bit-width and known repeating fields | Repeat independent observations with one changed input; preserve competing explanations |
-| Next: safer hardware inputs | Owner-approved logic/serial analyzer and documented IR receiver imports | Passive known-good traces with calibrated sample rate, pin/electrical identity and reproducible parsing |
-| Next: model-specific profiles | Exact firmware/revision, vetted opcode meaning and action/receipt model | Physical observed effects and recovery tests, not just matching synthetic frames |
-| Next: repair/salvage integration | Components catalog, board photographs, continuity/voltage notes and local BOM | Independently verified electrical ratings; no speculative battery or motor wiring |
-| Next: Pocket IR handoff | Only named, reviewed consumer IR commands, supervised tests and secure board identity | Firmware authentication, verified IR output on a known model, and physical outcome receipts |
+| Stage                               | Deliverable                                                                           | What counts as proof                                                                                    |
+| ----------------------------------- | ------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| Implemented in Atlas v1             | Reusable groups, private stored captures, comparison map and safe summaries           | Unit tests, simulated-browser tests, persistence tests, manual mobile review                            |
+| Next: structured signal annotations | Hypothesis/reason/source, protocol bit-width and known repeating fields               | Repeat independent observations with one changed input; preserve competing explanations                 |
+| Next: safer hardware inputs         | Owner-approved logic/serial analyzer and documented IR receiver imports               | Passive known-good traces with calibrated sample rate, pin/electrical identity and reproducible parsing |
+| Next: model-specific profiles       | Exact firmware/revision, vetted opcode meaning and action/receipt model               | Physical observed effects and recovery tests, not just matching synthetic frames                        |
+| Next: repair/salvage integration    | Components catalog, board photographs, continuity/voltage notes and local BOM         | Independently verified electrical ratings; no speculative battery or motor wiring                       |
+| Next: Pocket IR handoff             | Only named, reviewed consumer IR commands, supervised tests and secure board identity | Firmware authentication, verified IR output on a known model, and physical outcome receipts             |
 
 ## Sources / engineering inspiration
 

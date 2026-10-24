@@ -7,7 +7,11 @@ export const MAX_ATLAS_COLUMNS = 64;
 
 export function atlasKey(record) {
   const row = validateDiscovery(record);
-  return [row.deviceModel.trim().toLocaleLowerCase().replace(/\s+/g, ' '), row.method, row.kind].join('\u241f');
+  return [
+    row.deviceModel.trim().toLocaleLowerCase().replace(/\s+/g, ' '),
+    row.method,
+    row.kind,
+  ].join('\u241f');
 }
 
 export function buildSignalAtlas(input, { toleranceUs = 100 } = {}) {
@@ -48,10 +52,7 @@ export function buildSignalAtlas(input, { toleranceUs = 100 } = {}) {
       // A missing position is not stable. Unknown and mixed evidence stay explicit.
       const positions = [];
       if (retained.length >= 2 && group.kind !== 'audio') {
-        const max = Math.min(
-          MAX_ATLAS_COLUMNS,
-          Math.max(...retained.map((r) => r.values.length)),
-        );
+        const max = Math.min(MAX_ATLAS_COLUMNS, Math.max(...retained.map((r) => r.values.length)));
         for (let offset = 0; offset < max; offset++) {
           const samples = retained
             .map((r) => r.values[offset])
@@ -80,7 +81,8 @@ export function buildSignalAtlas(input, { toleranceUs = 100 } = {}) {
         counts,
         positions,
         comparable: retained.length >= 2 && group.kind !== 'audio',
-        truncated: positions.length === MAX_ATLAS_COLUMNS &&
+        truncated:
+          positions.length === MAX_ATLAS_COLUMNS &&
           retained.some((r) => r.values.length > MAX_ATLAS_COLUMNS),
         // Never imply observed semantics or that imported/synthetic files validate hardware.
         evidenceLabel:
@@ -89,8 +91,12 @@ export function buildSignalAtlas(input, { toleranceUs = 100 } = {}) {
             : 'Owner-labeled captures; physical effects unverified',
       };
     })
-    .sort((a, b) => a.deviceModel.localeCompare(b.deviceModel) ||
-      a.method.localeCompare(b.method) || a.kind.localeCompare(b.kind));
+    .sort(
+      (a, b) =>
+        a.deviceModel.localeCompare(b.deviceModel) ||
+        a.method.localeCompare(b.method) ||
+        a.kind.localeCompare(b.kind),
+    );
 }
 
 export function compareAtlasPair(first, second, toleranceUs = 100) {

@@ -2,7 +2,9 @@ import { test, expect } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
 import AxeBuilder from '@axe-core/playwright';
 
-test('synthetic Atlas compares positions without touching Bluetooth or local storage', async ({ page }) => {
+test('synthetic Atlas compares positions without touching Bluetooth or local storage', async ({
+  page,
+}) => {
   await page.addInitScript(() => {
     window.atlasRadioCalls = 0;
     Object.defineProperty(navigator, 'bluetooth', {
@@ -32,7 +34,9 @@ test('synthetic Atlas compares positions without touching Bluetooth or local sto
   expect(errors).toEqual([]);
 });
 
-test('manual captures persist in existing Discovery, retention opt-in, and aggregate export omits identifiers', async ({ page }) => {
+test('manual captures persist in existing Discovery, retention opt-in, and aggregate export omits identifiers', async ({
+  page,
+}) => {
   const errors = [];
   page.on('pageerror', (e) => errors.push(e.message));
   await page.goto('/signal-atlas.html');
@@ -58,7 +62,14 @@ test('manual captures persist in existing Discovery, retention opt-in, and aggre
   const report = JSON.parse(await readFile(await (await pending).path(), 'utf8'));
   expect(report.format).toBe('sasori.signal-atlas-summary');
   expect(report.groups[0].counts.retained).toBe(2);
-  for (const forbidden of ['Private Model', 'Private bench notes', 'SN123', '<img', 'values', '10 20']) {
+  for (const forbidden of [
+    'Private Model',
+    'Private bench notes',
+    'SN123',
+    '<img',
+    'values',
+    '10 20',
+  ]) {
     expect(JSON.stringify(report)).not.toContain(forbidden);
   }
   expect(await page.evaluate(() => window.atlasInjected)).toBeUndefined();
@@ -67,7 +78,9 @@ test('manual captures persist in existing Discovery, retention opt-in, and aggre
   expect(errors).toEqual([]);
 });
 
-test('metadata-only records cannot be compared, malformed import does not mutate notebook', async ({ page }) => {
+test('metadata-only records cannot be compared, malformed import does not mutate notebook', async ({
+  page,
+}) => {
   await page.goto('/signal-atlas.html');
   await page.locator('#label').fill('Metadata fixture');
   await page.locator('#model').fill('Simulated receiver rev 2');
@@ -80,14 +93,24 @@ test('metadata-only records cannot be compared, malformed import does not mutate
     format: 'sasori.discoveries',
     schemaVersion: 1,
     payloadPolicy: 'metadata-only',
-    records: [{ format: 'sasori.discovery', schemaVersion: 1,
-      id: 'discovery-example1', label: 'Broken import',
-      deviceModel: 'Receiver rev 2', sourceNote: 'Synthetic fake',
-      kind: 'bytes', method: 'ble', evidence: 'synthetic',
-      createdAt: new Date().toISOString(), importedAt: null,
-      payloadsIncluded: false, values: [255],
-      summary: { count: 1, unique: 1 },
-    }],
+    records: [
+      {
+        format: 'sasori.discovery',
+        schemaVersion: 1,
+        id: 'discovery-example1',
+        label: 'Broken import',
+        deviceModel: 'Receiver rev 2',
+        sourceNote: 'Synthetic fake',
+        kind: 'bytes',
+        method: 'ble',
+        evidence: 'synthetic',
+        createdAt: new Date().toISOString(),
+        importedAt: null,
+        payloadsIncluded: false,
+        values: [255],
+        summary: { count: 1, unique: 1 },
+      },
+    ],
   };
   await page.locator('#backup').setInputFiles({
     name: 'bad.json',
@@ -101,12 +124,18 @@ test('metadata-only records cannot be compared, malformed import does not mutate
   await expect(page.locator('#compare')).toBeDisabled();
 });
 
-test('mobile Signal Atlas has no overflow and passes automated accessibility audit', async ({ page }) => {
+test('mobile Signal Atlas has no overflow and passes automated accessibility audit', async ({
+  page,
+}) => {
   await page.goto('/signal-atlas.html');
   await expect(page.locator('#save')).toBeEnabled();
-  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1)).toBe(true);
+  expect(
+    await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1),
+  ).toBe(true);
   for (const id of ['demo', 'refresh', 'save', 'compare']) {
-    expect(await page.locator('#' + id).evaluate((el) => el.getBoundingClientRect().height)).toBeGreaterThanOrEqual(44);
+    expect(
+      await page.locator('#' + id).evaluate((el) => el.getBoundingClientRect().height),
+    ).toBeGreaterThanOrEqual(44);
   }
   const report = await new AxeBuilder({ page }).analyze();
   expect(report.violations).toEqual([]);
