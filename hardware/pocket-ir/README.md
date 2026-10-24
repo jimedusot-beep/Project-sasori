@@ -38,11 +38,12 @@ Open the USB serial monitor at 115200 baud. Reset the board and look for `IR-Rem
 
 1. Open [Pocket Remote](https://jimedusot-beep.github.io/Project-sasori/pocket-ir.html). On iPhone use Bluefy; desktop/Android needs a Web Bluetooth browser. Safari can use the offline demo but does not supply this Bluetooth interface.
 2. Pick **Samsung TV** or **LG TV**, only as a community candidate for your own IR-capable appliance. Brand alone does not establish compatibility. Use an exact known code from your remote if these candidates do not match.
-3. Check permission, tap **Choose IR bridge**, and select your specifically flashed board. This sends no configuration or IR.
-4. Tap **Prepare remote**. Sasori writes each named button once and waits for matching slot acknowledgments. This changes stored slots but emits no IR. Controls stay disabled if preparation is incomplete.
-5. Point the bridge toward your appliance and press one named button. Each press makes one bounded request. Observe the actual device; `sent:N` reports a bridge attempt, not an appliance acknowledgment.
-6. Name and **Save setup** or **Export profile** for reuse. Saves/imports/reloads never transmit. Every fresh connection requires an explicit Prepare because this firmware cannot read back and prove existing slot contents.
-7. Tap **Stop & disconnect** and unplug the bridge. Hiding the page disconnects. Stored physical buttons can still work without a phone until power is removed; already-emitted IR cannot be cancelled.
+3. To reuse another exact IR remote, follow the [Flipper .ir import directions](../../docs/flipper-ir-import.md): open a local file, review supported buttons, and save up to five. No Flipper hardware or JSON editing is needed.
+4. Check permission, tap **Choose IR bridge**, and select your specifically flashed board. This sends no configuration or IR.
+5. Tap **Prepare remote**. Sasori writes each named button once and waits for matching slot acknowledgments. This changes stored slots but emits no IR. Controls stay disabled if preparation is incomplete.
+6. Point the bridge toward your appliance and press one named button. Each press makes one bounded request. Observe the actual device; `sent:N` reports a bridge attempt, not an appliance acknowledgment.
+7. Name and **Save setup** or **Export profile** for reuse. Saves/imports/reloads never transmit. Every fresh connection requires an explicit Prepare because this firmware cannot read back and prove existing slot contents.
+8. Tap **Stop & disconnect** and unplug the bridge. Hiding the page disconnects. Stored physical buttons can still work without a phone until power is removed; already-emitted IR cannot be cancelled.
 
 Without hardware, tap **Try offline demo → Prepare remote → Power**. This simulates the entire flow without Bluetooth or IR.
 

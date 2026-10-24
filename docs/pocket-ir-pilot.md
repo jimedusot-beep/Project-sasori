@@ -12,6 +12,10 @@ With the specifically flashed bridge: open in Bluefy on iPhone or a Web Bluetoot
 
 Starter profiles contain five Samsung TV or five LG TV community codes. They are **candidates, not verified support for every TV of that brand**. The selected codes have reviewed software encoding vectors; no TV effects have been observed by Sasori. Custom profiles can define up to five named NEC32, Samsung32, or already-encoded Sony12/15/20 buttons. There is no learning receiver or automatic code sweep.
 
+## Reuse existing remote files
+
+The [Flipper IR importer](flipper-ir-import.md) accepts a local `.ir` remote file, previews supported and unsupported signals, and saves up to five selected named buttons without hex or JSON editing. Use **Load Sony file example** to try the complete workflow. It converts NEC/NECext/Samsung32/SIRC/SIRC15/SIRC20; unsupported RAW and other protocols remain disabled. Previewing and saving do not send IR.
+
 ## Reusable setups
 
 Save a named copy, export it, or copy it into the advanced JSON editor to adjust known commands. Import validates the entire profile before committing. Starter profiles cannot be overwritten. Up to 20 custom profiles share a bounded 64 KB record in the existing IndexedDB settings store; no database version bump or research-data migration is needed. Concurrent-tab revisions conflict rather than silently overwriting. Corrupt saves disable saving and preserve existing data.
