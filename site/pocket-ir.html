@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#111918">
+  <meta name="referrer" content="no-referrer">
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <title>Pocket IR Bridge · Sasori Experimental Lab</title>
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="pocket-ir.css">
+  <script type="module" src="pocket-ir-ui.js"></script>
+</head>
+<body>
+  <a class="skip" href="#workbench">Skip to workbench</a>
+  <header><a href="hub.html" class="brand">SASORI <span>← Device Hub</span></a><span class="tag">EXPERIMENTAL · HARDWARE REQUIRED</span></header>
+  <main id="workbench">
+    <section class="intro">
+      <div class="eyebrow">OPEN-HARDWARE EXPERIMENT 002</div>
+      <h1>Your phone. Your remote.<br><em>No computer companion.</em></h1>
+      <p>This opt-in pilot talks directly to a specifically flashed, owner-controlled ESP32-S3 infrared bridge. It cannot send IR from an ordinary phone and is <strong>not verified against physical hardware in Sasori</strong>.</p>
+      <p><a href="https://github.com/jimedusot-beep/Project-sasori/blob/main/docs/pocket-ir-pilot.md" target="_blank" rel="noopener noreferrer">Build details and limits ↗</a> · <a href="https://github.com/Koontzie/ir-remote" target="_blank" rel="noopener noreferrer">Upstream firmware reference ↗</a></p>
+    </section>
+    <section class="work-grid">
+      <div class="panel">
+        <h2>01 / Pair your bridge</h2>
+        <p>Use Bluefy on iPhone or a browser supporting Web Bluetooth. The bridge must advertise the documented service UUID. No network, cloud account or companion process is used.</p>
+        <label class="check"><input type="checkbox" id="owner-check"> I own or have permission to control this infrared bridge and the nearby target appliance.</label>
+        <div class="button-row">
+          <button id="connect" class="primary" type="button">Choose IR bridge</button>
+          <button id="disconnect" type="button" disabled>Disconnect</button>
+        </div>
+        <p id="connection" role="status" aria-live="polite">Disconnected. No Bluetooth chooser has opened.</p>
+        <p class="small">Closing this page, hiding it, or disconnecting stops new requests. IR already emitted cannot be recalled.</p>
+      </div>
+      <div class="panel">
+        <h2>02 / Configure one named slot</h2>
+        <p>Use a code from your own remote capture or a checked, model-specific source. No universal scan, guessing, or arbitrary packet console.</p>
+        <div class="form-grid">
+          <label for="slot">Bridge slot (1–5)</label>
+          <select id="slot">
+            <option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option>
+          </select>
+          <label for="proto">IR protocol</label>
+          <select id="proto"><option value="NEC">NEC</option><option value="SAMSUNG">Samsung</option><option value="SONY">Sony</option></select>
+          <label for="code">IR hexadecimal code</label>
+          <input id="code" type="text" maxlength="18" placeholder="0x..." spellcheck="false" autocapitalize="off" autocomplete="off">
+          <label for="bits">Code bits</label>
+          <input id="bits" type="number" min="1" max="64" step="1" value="32">
+        </div>
+        <button id="configure" type="button" disabled>Store selected slot on bridge</button>
+        <p class="small">The firmware stores slots in flash. Selecting Configure changes that slot, not Elmo or other Bluetooth devices. Wait for a <strong>Stored</strong> notification; no automatic sending occurs.</p>
+      </div>
+      <div class="panel">
+        <h2>03 / Test deliberately</h2>
+        <p id="slot-status">Configure and receive a saved acknowledgment for a slot during this connection before sending.</p>
+        <button class="primary" id="transmit" type="button" disabled>Send selected IR slot once</button>
+        <p class="small">The bridge may report “Transmit attempted”; that does not prove the target responded. Watch the real device, and never use this experiment with access controls, vehicle systems, or safety-critical equipment.</p>
+      </div>
+      <div class="panel">
+        <h2>04 / Observation log</h2>
+        <p class="small">Temporary, on-screen statuses only. No credentials, Bluetooth identifiers, IR codes, or logs are uploaded or stored by this page.</p>
+        <ol id="events" class="events" aria-live="polite"><li>No events yet.</li></ol>
+        <button id="clear-events" type="button">Clear log</button>
+      </div>
+    </section>
+    <p class="footer">An original Sasori browser client using a publicly documented experimental GATT contract. Independently verify board revision, firmware, range, target compatibility, and observed effect before calling it working.</p>
+  </main>
+</body>
+</html>
