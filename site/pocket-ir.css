@@ -152,6 +152,7 @@ label.check input {
   margin: 9px 0;
 }
 input:not([type='checkbox']),
+textarea,
 select {
   background: #121b19;
   border: 1px solid #71847c;
@@ -172,6 +173,7 @@ button {
   padding: 12px 14px;
   cursor: pointer;
   margin-top: 12px;
+  min-height: 48px;
 }
 button.primary {
   background: #a6eed0;
@@ -199,6 +201,69 @@ button:disabled {
 }
 .footer {
   padding-top: 25px;
+  font-size: 13px;
+}
+.step-two {
+  margin-top: 30px;
+}
+.build-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 48px;
+  font-weight: 650;
+}
+.remote-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.remote-heading h2 {
+  margin: 0;
+}
+.remote {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  max-width: 340px;
+  margin: 28px auto;
+}
+button.remote-key {
+  min-height: 82px;
+  border-radius: 22px;
+  background: #293f37;
+  font-size: 18px;
+  margin: 0;
+}
+button.remote-key.power {
+  grid-column: 1 / -1;
+  background: #b7eed3;
+  color: #16271f;
+}
+.receipt {
+  text-align: center;
+  margin-top: 28px;
+}
+.receipt strong {
+  color: #a6eed0;
+  font-size: 27px;
+}
+.compact {
+  min-height: 0;
+}
+details {
+  border-top: 1px solid #41564f;
+  margin-top: 18px;
+  padding-top: 12px;
+}
+summary {
+  cursor: pointer;
+  padding: 12px 0;
+  min-height: 48px;
+}
+textarea {
+  resize: vertical;
+  font-family: monospace;
   font-size: 13px;
 }
 @media (max-width: 790px) {

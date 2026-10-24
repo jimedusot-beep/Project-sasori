@@ -1,68 +1,58 @@
-# Sasori Pocket IR Bridge — experimental computer-free remote
+# Pocket Remote — experimental phone-to-IR control
 
-**Status (2026-10-24):** original browser pilot written, no Sasori hardware validation or confirmed real TV action. This is not included in the ordinary Device Hub's verified TV methods.
+**Implemented software, physical verification pending.** This is the small-hardware route: one phone, an ESP32-S3 IR emitter, five named buttons, saved local profiles. No computer companion is needed after flashing. A phone alone cannot emit infrared. This is separate from Elmo's BLE adapter and from the Roku/Home Assistant companion.
 
-## Why this experiment?
+[Open Pocket Remote](https://jimedusot-beep.github.io/Project-sasori/pocket-ir.html) · [Full hardware/build/phone directions](../hardware/pocket-ir/README.md) · [Copied source and licenses](../hardware/pocket-ir/NOTICE.md)
 
-The published Sasori TV workflow needs a computer companion and an additional IR hub for generic remotes. A dedicated inexpensive ESP32-S3 BLE-to-infrared board can perform the physical IR transmission while an iPhone in Bluefy provides the interface. **The phone alone cannot generate infrared.** Only a manually selected, owner-controlled bridge and ordinary consumer infrared appliance belong in this experiment.
+## Use it now
 
-The existing wider maker research is at [resourceful-maker-research-2026-10-24.md](research/resourceful-maker-research-2026-10-24.md). This experiment converts one research candidate into an original, bounded implementation rather than adding another aspirational feature to a list.
+Without hardware: **Try offline demo → Prepare remote → Power**. All responses are synthetic and labeled Demo; no Bluetooth or network calls are made.
 
-## Source-backed firmware protocol
+With the specifically flashed bridge: open in Bluefy on iPhone or a Web Bluetooth browser on desktop/Android; choose a matching community candidate or saved custom profile; confirm permission; Choose IR bridge; Prepare remote; press one named button. Every new connection or profile change needs explicit preparation. There is no hex entry in this normal path. Follow the complete build guide before connecting hardware.
 
-Primary source: [Koontzie/ir-remote](https://github.com/Koontzie/ir-remote/tree/34c848831abd6bf9e49e50ea3eed971fb245c729), inspected exact revision 34c848831abd6bf9e49e50ea3eed971fb245c729; particularly [firmware/remote_ble/remote_ble.ino](https://github.com/Koontzie/ir-remote/blob/34c848831abd6bf9e49e50ea3eed971fb245c729/firmware/remote_ble/remote_ble.ino). Repository MIT; follow dependency and file-specific license notices if using external firmware.
+Starter profiles contain five Samsung TV or five LG TV community codes. They are **candidates, not verified support for every TV of that brand**. The selected codes have reviewed software encoding vectors; no TV effects have been observed by Sasori. Custom profiles can define up to five named NEC32, Samsung32, or already-encoded Sony12/15/20 buttons. There is no learning receiver or automatic code sweep.
 
-| Purpose     | UUID                                 | Reviewed interface                                      |
-| ----------- | ------------------------------------ | ------------------------------------------------------- |
-| BLE service | b457c32b-22b1-425f-8a88-4d6dc37ba4eb | Advertised UUID                                         |
-| Configure   | d997012d-7d2b-47de-ae87-bae14df446ef | WRITE JSON containing slot, proto, code, bits           |
-| Trigger     | 58397514-04a3-4265-9590-9d910c4e99d2 | WRITE JSON containing slot                              |
-| Status      | b8ddfe01-519f-430d-bd4e-aba0dd852e2c | READ/NOTIFY: ready, saved:N, sent:N, pressed:N, err:... |
+## Reusable setups
 
-Supported commands are limited to slots 1–5 and protocols NEC, SAMSUNG and SONY. Sasori validates hexadecimal code width and a 1–64 bit count. The upstream board saves configured slots in nonvolatile flash; Sasori stores neither these values nor a list of Bluetooth devices on this page.
+Save a named copy, export it, or copy it into the advanced JSON editor to adjust known commands. Import validates the entire profile before committing. Starter profiles cannot be overwritten. Up to 20 custom profiles share a bounded 64 KB record in the existing IndexedDB settings store; no database version bump or research-data migration is needed. Concurrent-tab revisions conflict rather than silently overwriting. Corrupt saves disable saving and preserve existing data.
 
-Firmware does **not** provide secure client authentication or robust per-request transaction IDs. Treat its notification as a **claim from a selected bridge**, not cryptographic identity or proof that a target responded. There can also be unrelated physical button statuses. The upstream firmware can seed an example Samsung power slot, but Sasori does **not** trigger existing slots automatically; an observed saved acknowledgment for a slot during this very connection is required first.
+Setups and exports intentionally contain IR codes and your labels; review them before sharing. They contain no Bluetooth platform identifiers or passwords. The visible event log is temporary, bounded to 20 statuses, and excludes raw codes and backend errors. Nothing is uploaded. Hosted/local origins and browsers keep separate saves. Temporary storage warns you to export before closing.
 
-## Hardware trial with matching board only
+Saving, importing, choosing a profile, reopening, and connecting never emit IR. Preparation stores codes on the bridge but does not trigger them. The bridge retains slots in flash; the browser still requires fresh matching acknowledgments in each connection because there is no slot readback or authenticated contents verification.
 
-1. Follow the pinned upstream project's board, BOM, pin mapping, programming and safety instructions. Its firmware references an ESP32-S3, IR emitter and GPIO4 driver. A different board (such as M5Stack ATOM Lite with its documented GPIO12 IR emitter) is NOT a drop-in wiring match. Do not infer wiring or voltage from other devices. Sasori does not flash firmware.
-2. Verify upstream firmware build, board revision and IR emission independently before trying Sasori. Start with USB-powered bench conditions and the owner's non-safety-critical consumer appliance.
-3. Open https://jimedusot-beep.github.io/Project-sasori/pocket-ir.html in Bluefy on iPhone or a Web Bluetooth-compatible browser. Check ownership/authorization, press Choose IR bridge, and select your own specifically flashed board.
-4. Enter one verified model-specific IR code, its protocol and bit length; store it into a chosen slot. A WRITE acknowledgment is not enough. Wait until the bridge **actually reports saved:N** before the page enables a transmit button.
-5. Press Send selected IR slot once; observe the appliance yourself. The bridge may report sent:N when it attempted transmission, **not** when the appliance accepted it. Note the device model, outcome, board revision, firmware version and any recovery privately. No data is uploaded from this page.
-6. Disconnect manually. Hiding/closing the page stops new requests; emitted IR cannot be recalled. Flash-persisted slots can still be fired using the physical buttons without a phone: keep the test bridge off when not supervised.
+## Bridge contract and bounded requests
 
-Use only on equipment you own or have explicit permission to operate. Automotive entry, security, gate systems, credentialed remotes, rolling codes and safety-critical devices are out of scope.
+Primary implementation: [Koontzie/ir-remote, exact revision](https://github.com/Koontzie/ir-remote/tree/34c848831abd6bf9e49e50ea3eed971fb245c729). Sasori includes an attributed MIT adaptation with empty fresh slots and strict widths.
 
-## Test and production gates
+| Purpose   | UUID                                 | Interface                                          |
+| --------- | ------------------------------------ | -------------------------------------------------- |
+| Service   | b457c32b-22b1-425f-8a88-4d6dc37ba4eb | Advertised service filter                          |
+| Configure | d997012d-7d2b-47de-ae87-bae14df446ef | WRITE `{slot,proto,code,bits}`                     |
+| Trigger   | 58397514-04a3-4265-9590-9d910c4e99d2 | WRITE `{slot}`                                     |
+| Status    | b8ddfe01-519f-430d-bd4e-aba0dd852e2c | NOTIFY `saved:N`, `sent:N`, `pressed:N`, `err:...` |
 
-- [ ] Run Sasori's pure protocol and simulated GATT regression tests.
-- [ ] Verify supported firmware builds on one exact board and expected GATT characteristics.
-- [ ] Perform five fresh user-authorized connects and manual disconnects.
-- [ ] Confirm valid/rejected IR inputs and one known-good physical emitter output.
-- [ ] Reproduce one ordinary TV/button outcome ten times while independently observing the target.
-- [ ] Test page-hide abort, interrupted chooser, unplugged board, missing notifications and rapid clicks.
-- [ ] Before production release, add authenticated bridge pairing and a firmware identity/compatibility claim beyond the service UUID.
-- [ ] Verify legal/license compliance and device-specific notices for any third-party material reused.
+The chooser expires after 30 seconds; each GATT stage and each complete write-plus-matching-status operation expires after 8 seconds. A 46-second outer deadline bounds connection setup. Stop cancels the pending promise immediately. Browsers cannot programmatically dismiss their device chooser, but a late result cannot enable this session. Disconnected or replaced sessions ignore late notifications and completions. Observed characteristic properties must support write-with-response and notifications.
 
-No motor control, toy firmware writes, Wi-Fi scanning, rolling-code replay, automatic transmission or generic unrestricted Bluetooth writes are included.
+A stored button requires both the write response and its current matching `saved:N`; an unsolicited status cannot enable it. Sending waits for `sent:N`, rejects concurrent writes, and enforces a 250 ms gap after completion. Incomplete preparation leaves the whole UI remote disabled. Timeout or disconnect invalidates prepared buttons and requires reconnection. There is no background queue or automatic retransmission.
 
-## Research-to-feature transfer map
+**Protocol limit:** the firmware provides no authenticated pairing, request nonce, or appliance feedback. A matching status is only an unauthenticated slot claim; it cannot distinguish every delayed same-slot status from another client or physical input. `sent:N` does not prove IR timing, line of sight, or target response. Keep this powered bridge supervised and unplug it afterward.
 
-These original projects document valuable methods; no conclusion about a person's financial background or identity follows from geography.
+Stop, unchecking permission, page hide, and page close stop new requests and close the connection. They cannot recall emitted IR or disable separately wired physical buttons. The firmware patch clears its pending BLE trigger on disconnect, but cannot interrupt transmission already running. Existing NVS is not erased by the browser.
 
-| Project and context                                                                                            | Reusable idea                                                  | Sasori outcome to build                                                                                     |
-| -------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| [Ultimate Robotics uMyo](https://github.com/ultimaterobotics/uMyo) — Ukraine-based project                     | Sensor-to-wireless bridge and calibration                      | Consented local input events feeding a reusable automation adapter                                          |
-| [Glia](https://glia.org/pages/open-source-research-and-development) — Gaza/Palestine collaborative design      | Repairable, locally fabricated devices with full documentation | Locally replaceable bridge parts, sourcing alternatives, open BOM and tests; **not** clinical-device claims |
-| [OpenFlexure vendors](https://openflexure.org/about/vendors) — including Tanzania's Bongo Tech & Research Labs | Local production, calibration, maintainability                 | Bench acceptance records and reproducible compatibility for every bridge revision                           |
-| [Vicharak Shrike](https://github.com/vicharak-in/shrike) — India                                               | Extensible, low-cost MCU/FPGA experimentation                  | Optional future diagnostic hardware, not needed by today's infrared pilot                                   |
-| [M5Stack ATOM Lite](https://docs.m5stack.com/en/homeassistant/devices/atom_lite) — Shenzhen hardware           | Onboard button and IR emitter, published pin facts             | Compare a small alternative IR board; **separate firmware and pin validation**                              |
-| [ESPHome IR/RF components](https://esphome.io/guides/setting_up_rmt_devices/) — global contributors            | Typed command encoding and capturing exact IR timings          | A future supervised IR learning bridge, no blind replay                                                     |
-| [sigrok PulseView](https://sigrok.org/wiki/PulseView) — open analyzer ecosystem                                | Protocol decoding and time-aligned traces                      | Import authorized hardware captures into Sasori's offline Discovery                                         |
-| [rtl_433](https://github.com/merbanan/rtl_433) — global open source                                            | Passive decode of compatible environmental sensor signals      | Optional later receive-only sensor telemetry with proper hardware/privacy review                            |
-| [Koontzie IR bridge](https://github.com/Koontzie/ir-remote) — independent maker                                | Five persistent named IR slots over BLE                        | **Implemented in this branch:** the original bounded phone pilot                                            |
+## Release evidence and remaining physical gate
 
-## Ranked next steps after the pilot
+Automated tests cover source vectors, invalid inputs, no writes on connect, scoped acknowledgments, notification-before-write ordering, interruption, deadlines, stale completions, paced sends, persistence, import atomicity, revision conflicts, responsive browser flows, accessibility, and the pinned firmware compile. CI results are the evidence for software claims, not device certification.
 
-**1. Hardware verification:** demonstrate a real, repeated TV action before describing any bridge as supported. **2. Authenticated board design:** address the documented lack of GATT authentication and add a fixed version/capabilities handshake. **3. Device model profiles:** maintain reviewed NEC/Samsung/Sony IR codes with correct provenance and license, with no automatic send on import. **4. Signal Atlas:** normalize IR, BLE, audio and analyzer captures with real evidence labels and confidence boundaries. **5. Salvage inputs:** connect inexpensive/repurposed physical buttons and sensors to local opt-in routines. Every step must preserve cheap reproducibility, manual user consent and explicit failure handling.
+Before labeling a hardware combination supported, record the exact board/driver/firmware, verify IR on the bench, demonstrate one real appliance action over ten fresh connections, and test missing notifications, unplugging, denied chooser, rapid presses, and backgrounding. No Sasori physical acceptance result has been recorded. Authenticated pairing and firmware identity/readback remain future protocol work.
+
+## Minimalist ideas actually implemented
+
+| Source                                                                          | Transferred strategy                                         | Implemented result                                                                       |
+| ------------------------------------------------------------------------------- | ------------------------------------------------------------ | ---------------------------------------------------------------------------------------- |
+| [Koontzie IR bridge](https://github.com/Koontzie/ir-remote)                     | Persistent five-slot remote with BLE configuration           | Attributed firmware, direct phone adapter, five named buttons                            |
+| [Flipper-IRDB](https://github.com/Lucaslhm/Flipper-IRDB)                        | Share protocol descriptions rather than rebuild every remote | Small credited CC0 starter catalog and portable validated profile format                 |
+| [ESPHome remote transmitter](https://esphome.io/components/remote_transmitter/) | Describe buttons declaratively                               | Fixed protocol/width validation and reusable named profiles                              |
+| [OMOTE](https://github.com/OMOTE-Community/OMOTE-Firmware)                      | Local handheld controls                                      | A phone layout with large buttons and no cloud dependency; no GPL runtime copied         |
+| [Wider maker research](research/resourceful-maker-research-2026-10-24.md)       | Repairable parts and reproducible builds                     | Open wiring reference, pinned toolchain, source/license manifest, bench acceptance steps |
+
+This kit does not add radio-remote replay, rolling codes, target firmware flashing, or a universal toy authentication bypass. More IR models can use this same profile format once their exact encoding and behavior are checked; proprietary BLE toys still need their own protocol adapter.

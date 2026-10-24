@@ -10,6 +10,7 @@ import { emptyControlSetups, validateControlSetups } from './control-setups.js';
 import { validateTrials } from './action-trials.js';
 import { validateDiscovery, MAX_DISCOVERIES, MAX_DISCOVERY_BYTES } from './discovery.js';
 import { emptyHubData, validateHubData } from './hub-records.js';
+import { emptyPocketData, validatePocketData } from './pocket-ir-setups.js';
 const request = (req) =>
   new Promise((resolve, reject) => {
     req.onsuccess = () => resolve(req.result);
@@ -32,6 +33,7 @@ export class ResearchStore {
     this.controlSetups = emptyControlSetups();
     this.actionTrials = [];
     this.hubData = emptyHubData();
+    this.pocketData = emptyPocketData();
     this.persistent = false;
     this.warning = '';
     this.corrupt = [];
@@ -252,6 +254,38 @@ export class ResearchStore {
       throw new Error('Hub changed in another window. Reload before saving.');
     }
     target.put(next, 'device-hub');
+    await done;
+    return next;
+  }
+  async getPocketData() {
+    if (this.closed) throw new Error(this.warning);
+    if (!this.persistent) return structuredClone(this.pocketData);
+    const value = await request(
+      this.db.transaction('settings', 'readonly').objectStore('settings').get('pocket-ir'),
+    );
+    return value ? validatePocketData(value) : emptyPocketData();
+  }
+  async setPocketData(value) {
+    if (this.closed) throw new Error(this.warning);
+    const clean = validatePocketData(value),
+      next = { ...clean, revision: clean.revision + 1 };
+    const conflict = () => new Error('Remote setups changed in another tab. Reload before saving.');
+    if (!this.persistent) {
+      if (this.pocketData.revision !== clean.revision) throw conflict();
+      this.pocketData = structuredClone(next);
+      return next;
+    }
+    const tx = this.db.transaction('settings', 'readwrite'),
+      done = completed(tx);
+    done.catch(() => {});
+    const target = tx.objectStore('settings'),
+      current = await request(target.get('pocket-ir'));
+    if ((current?.revision ?? 0) !== clean.revision) {
+      tx.abort();
+      await done.catch(() => {});
+      throw conflict();
+    }
+    target.put(next, 'pocket-ir');
     await done;
     return next;
   }

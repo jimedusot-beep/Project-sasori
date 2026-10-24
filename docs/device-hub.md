@@ -72,4 +72,4 @@ Connection/routine receipts use fixed result fields, with owner observations sep
 
 Implementation and evidence: [recovered Elmo methods](../experiments/001-elmo-l2l/recovered-source.md), [TV protocol sources](tv-remote.md#sources-and-implementation), [testing](testing.md) and [real-device acceptance](device-action-validation.md).
 
-For wider civilian-maker research and the proposed lower-cost phone-to-IR path, see the [resourceful-making research record](research/resourceful-maker-research-2026-10-24.md). The direct pocket bridge is a researched candidate, not implemented Sasori support.
+For wider civilian-maker research and the proposed lower-cost phone-to-IR path, see the [resourceful-making research record](research/resourceful-maker-research-2026-10-24.md). The [experimental Pocket Remote](pocket-ir-pilot.md) now implements the phone-to-ESP32 IR path with saved named profiles and a demo. It includes an attributed firmware/build kit; physical hardware support remains unverified.

@@ -30,6 +30,12 @@ for (let attempt = 1; attempt <= 4; attempt++) {
       'hub.html',
       'hub.css',
       'hub-ui.js',
+      'signal-atlas.html',
+      'signal-atlas.css',
+      'signal-atlas-ui.js',
+      'pocket-ir.html',
+      'pocket-ir.css',
+      'pocket-ir-ui.js',
       'companion.html',
       'companion-ui.js',
     ])

@@ -9,134 +9,124 @@
       http-equiv="Content-Security-Policy"
       content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"
     />
-    <title>Pocket IR Bridge · Sasori Experimental Lab</title>
+    <title>Pocket Remote · Sasori</title>
     <link rel="icon" href="icon.svg" type="image/svg+xml" />
     <link rel="stylesheet" href="pocket-ir.css" />
     <script type="module" src="pocket-ir-ui.js"></script>
   </head>
   <body>
-    <a class="skip" href="#workbench">Skip to workbench</a>
+    <a class="skip" href="#workbench">Skip to remote</a>
     <header>
       <a href="hub.html" class="brand">SASORI <span>← Device Hub</span></a
-      ><span class="tag">EXPERIMENTAL · HARDWARE REQUIRED</span>
+      ><span class="tag" id="mode">EXPERIMENTAL · ESP32 IR BRIDGE</span>
     </header>
     <main id="workbench">
       <section class="intro">
-        <div class="eyebrow">OPEN-HARDWARE EXPERIMENT 002</div>
-        <h1>Your phone. Your remote.<br /><em>No computer companion.</em></h1>
+        <div class="eyebrow">POCKET REMOTE / 002</div>
+        <h1>Less setup.<br /><em>More button pressing.</em></h1>
         <p>
-          This opt-in pilot talks directly to a specifically flashed, owner-controlled ESP32-S3
-          infrared bridge. It cannot send IR from an ordinary phone and is
-          <strong>not verified against physical hardware in Sasori</strong>.
+          A phone, a small ESP32 infrared bridge, and five useful buttons. Runs locally. Keeps your
+          setups. No computer companion during use.
         </p>
-        <p>
+        <div class="button-row">
           <a
-            href="https://github.com/jimedusot-beep/Project-sasori/blob/main/docs/pocket-ir-pilot.md"
+            class="build-link"
+            href="https://github.com/jimedusot-beep/Project-sasori/blob/main/hardware/pocket-ir/README.md"
             target="_blank"
             rel="noopener noreferrer"
-            >Build details and limits ↗</a
+            >Build the open-source bridge ↗</a
+          ><span class="small"
+            >Phone alone cannot emit IR. Physical hardware testing is still pending.</span
           >
-          ·
-          <a href="https://github.com/Koontzie/ir-remote" target="_blank" rel="noopener noreferrer"
-            >Upstream firmware reference ↗</a
-          >
-        </p>
+        </div>
       </section>
-      <section class="work-grid">
-        <div class="panel">
-          <h2>01 / Pair your bridge</h2>
-          <p>
-            Use Bluefy on iPhone or a browser supporting Web Bluetooth. The bridge must advertise
-            the documented service UUID. No network, cloud account or companion process is used.
-          </p>
+      <div class="work-grid">
+        <section class="panel setup">
+          <h2>01 / Pick &amp; connect</h2>
+          <label for="profile">Remote profile</label
+          ><select id="profile"></select>
+          <p id="profile-source" class="small"></p>
           <label class="check"
-            ><input type="checkbox" id="owner-check" /> I own or have permission to control this
-            infrared bridge and the nearby target appliance.</label
+            ><input type="checkbox" id="owner-check" /> I own or have permission to operate this
+            bridge and appliance.</label
           >
           <div class="button-row">
-            <button id="connect" class="primary" type="button">Choose IR bridge</button>
-            <button id="disconnect" type="button" disabled>Disconnect</button>
+            <button id="connect" class="primary" type="button">Choose IR bridge</button
+            ><button id="demo" type="button">Try offline demo</button>
           </div>
+          <p class="small">
+            iPhone: open in Bluefy. Desktop / Android: use a Web Bluetooth browser. Select your
+            specifically flashed bridge.
+          </p>
+          <h2 class="step-two">02 / Prepare once</h2>
+          <p class="small">
+            Stores this profile’s buttons in the bridge’s five slots. No IR is emitted during
+            preparation. Prepare again after reconnecting or changing profiles.
+          </p>
+          <button id="prepare" type="button" disabled>Prepare remote</button>
           <p id="connection" role="status" aria-live="polite">
-            Disconnected. No Bluetooth chooser has opened.
+            Disconnected. Try the demo immediately, or connect your bridge.
           </p>
-          <p class="small">
-            Closing this page, hiding it, or disconnecting stops new requests. IR already emitted
-            cannot be recalled.
-          </p>
-        </div>
-        <div class="panel">
-          <h2>02 / Configure one named slot</h2>
-          <p>
-            Use a code from your own remote capture or a checked, model-specific source. No
-            universal scan, guessing, or arbitrary packet console.
-          </p>
-          <div class="form-grid">
-            <label for="slot">Bridge slot (1–5)</label>
-            <select id="slot">
-              <option value="1">1</option>
-              <option value="2">2</option>
-              <option value="3">3</option>
-              <option value="4">4</option>
-              <option value="5">5</option>
-            </select>
-            <label for="proto">IR protocol</label>
-            <select id="proto">
-              <option value="NEC">NEC</option>
-              <option value="SAMSUNG">Samsung</option>
-              <option value="SONY">Sony</option>
-            </select>
-            <label for="code">IR hexadecimal code</label>
-            <input
-              id="code"
-              type="text"
-              maxlength="18"
-              placeholder="0x..."
-              spellcheck="false"
-              autocapitalize="off"
-              autocomplete="off"
-            />
-            <label for="bits">Code bits</label>
-            <input id="bits" type="number" min="1" max="64" step="1" value="32" />
+          <button id="disconnect" type="button" disabled>Stop &amp; disconnect</button>
+        </section>
+        <section class="panel remote-panel">
+          <div class="remote-heading">
+            <h2>03 / Your remote</h2>
+            <span class="tag">LOCAL ONLY</span>
           </div>
-          <button id="configure" type="button" disabled>Store selected slot on bridge</button>
+          <p id="ready-status" class="small" role="status"></p>
+          <div id="remote" class="remote" aria-label="Remote buttons"></div>
+          <p class="receipt">
+            <strong id="attempts">0</strong> transmit reports this connection<br /><span
+              class="small"
+              >Bridge reports are not confirmation that your appliance responded.</span
+            >
+          </p>
+        </section>
+        <section class="panel compact">
+          <h2>Keep a useful setup</h2>
+          <label for="setup-name">Setup name</label
+          ><input id="setup-name" maxlength="80" placeholder="Living room TV" autocomplete="off" />
+          <div class="button-row">
+            <button id="save" type="button">Save setup</button
+            ><button id="export" type="button">Export profile</button
+            ><button id="delete" type="button" disabled>Delete saved setup</button>
+          </div>
+          <p id="storage-status" class="small" role="status"></p>
+          <details>
+            <summary>Custom buttons &amp; import</summary>
+            <p class="small">
+              Copy a starter profile, edit its name and up to five buttons, then import.
+              NEC/Samsung: 32 bits. Sony: 12/15/20 bits with IRremoteESP8266 encoding. Importing
+              never sends IR. Profile exports contain button codes, not Bluetooth identifiers.
+            </p>
+            <button id="edit" type="button">Copy selected profile to editor</button>
+            <label for="profile-json">Sasori profile JSON (12 KB maximum)</label
+            ><textarea
+              id="profile-json"
+              rows="10"
+              maxlength="12000"
+              spellcheck="false"
+              autocomplete="off"
+            ></textarea>
+            <button id="import" type="button">Import &amp; save profile</button>
+          </details>
+        </section>
+        <section class="panel compact">
+          <h2>What happened</h2>
           <p class="small">
-            The firmware stores slots in flash. Selecting Configure changes that slot, not Elmo or
-            other Bluetooth devices. Wait for a <strong>Stored</strong> notification; no automatic
-            sending occurs.
+            Temporary statuses, no device identifiers or raw IR codes. Setups stay in this browser;
+            nothing is uploaded.
           </p>
-        </div>
-        <div class="panel">
-          <h2>03 / Test deliberately</h2>
-          <p id="slot-status">
-            Configure and receive a saved acknowledgment for a slot during this connection before
-            sending.
-          </p>
-          <button class="primary" id="transmit" type="button" disabled>
-            Send selected IR slot once
-          </button>
-          <p class="small">
-            The bridge may report “Transmit attempted”; that does not prove the target responded.
-            Watch the real device, and never use this experiment with access controls, vehicle
-            systems, or safety-critical equipment.
-          </p>
-        </div>
-        <div class="panel">
-          <h2>04 / Observation log</h2>
-          <p class="small">
-            Temporary, on-screen statuses only. No credentials, Bluetooth identifiers, IR codes, or
-            logs are uploaded or stored by this page.
-          </p>
-          <ol id="events" class="events" aria-live="polite">
-            <li>No events yet.</li>
-          </ol>
+          <ol id="events" class="events" aria-label="Recent bridge events"></ol>
           <button id="clear-events" type="button">Clear log</button>
-        </div>
-      </section>
+        </section>
+      </div>
       <p class="footer">
-        An original Sasori browser client using a publicly documented experimental GATT contract.
-        Independently verify board revision, firmware, range, target compatibility, and observed
-        effect before calling it working.
+        Built from an MIT maker firmware and CC0 community code entries, with source credits in the
+        build guide. This bridge has no authenticated BLE pairing. Turn it off when finished. Hiding
+        the page closes the connection; IR already emitted and the bridge’s physical buttons cannot
+        be recalled by the phone.
       </p>
     </main>
   </body>

@@ -1,0 +1,10 @@
+{
+  "upstream": "https://github.com/Koontzie/ir-remote",
+  "commit": "34c848831abd6bf9e49e50ea3eed971fb245c729",
+  "files": {
+    "firmware/remote_ble/remote_ble.ino": "245b7e32a1c11fb8f9bb6ea59e19967e2f1cd1088c3f65001f1b8c069c6d63e2",
+    "hardware/WIRING.md": "3012e05c6de53fd537f694eaa2abc20b6e9cb750325f8b0d548c043b46a8daba",
+    "data/db/tvs/samsung.json": "627999eeefb5950be660b318b605eda66149d04dc375dcb8b50487d074d3a561",
+    "data/db/tvs/lg.json": "755fd1612386dfc79a0d53bddb387ac586f02a9dae28c638b04d3b5b6c45cc38"
+  }
+}
