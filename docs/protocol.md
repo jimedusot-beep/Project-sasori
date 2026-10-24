@@ -43,7 +43,7 @@ Before marking an adapter hardware-verified or expanding its commands, collect r
 | Passive inspection                        | Service metadata and configured notifications                   | Explicit connection only; bounded                                               |
 | Experimental browser/desktop Elmo clients | Known-password handshake, volume/input queries, greeting ID 9   | Explicit owner-run browser/CLI; hardware validation pending                     |
 | Browser Elmo password setup               | New password after exact unset report; guided physical recovery | Explicit opt-in, one setup write, exact acceptance; real persistence unverified |
-| Verified application commands             | None established                                                | Unavailable                                                                     |
+| Hardware-verified Elmo commands           | None independently established on this unit                     | Physical acceptance remains pending                                             |
 | Native Elmo physical controls             | Native Elmo facade remains inspection-only                      | Unavailable                                                                     |
 | Simulation                                | Synthetic lifecycle, outcomes, movement, phone-local audio      | No Bluetooth traffic                                                            |
 
