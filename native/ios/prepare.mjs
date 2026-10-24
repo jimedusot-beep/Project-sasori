@@ -20,7 +20,11 @@ const appGroup = Object.keys(groups).find(
   (key) => !key.endsWith('_comment') && (groups[key].path === 'App' || groups[key].name === 'App'),
 );
 if (!appGroup) throw new Error('Generated App source group not found.');
-for (const name of ['SasoriBluetoothPlugin.swift', 'SasoriViewController.swift']) {
+for (const name of [
+  'SasoriBluetoothPlugin.swift',
+  'SasoriSurveyPlugin.swift',
+  'SasoriViewController.swift',
+]) {
   await cp(root + 'Sources/' + name, root + 'ios/App/App/' + name);
   if (!project.hasFile(name))
     project.addSourceFile(name, { target: project.getFirstTarget().uuid }, appGroup);
@@ -52,6 +56,13 @@ if (!text.includes('NSBluetoothAlwaysUsageDescription'))
     '<key>NSBluetoothAlwaysUsageDescription</key><string>Sasori connects to the nearby device you choose to inspect its services and capture notifications.</string></dict>',
   );
 await writeFile(plist, text);
+if (!text.includes('NSCameraUsageDescription')) {
+  text = text.replace(
+    '</dict>',
+    '<key>NSCameraUsageDescription</key><string>Sasori uses the camera only when you start an optical inspection. Photos are saved only by your choice.</string></dict>',
+  );
+  await writeFile(plist, text);
+}
 console.log(
   'Prepared inspection-only iOS app. Open in Xcode to select your signing team and iPhone.',
 );

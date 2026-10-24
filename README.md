@@ -1,5 +1,7 @@
 # Project Sasori — Animatronics & Reverse Engineering Laboratory
 
+**[Phone Privacy Lab](https://jimedusot-beep.github.io/Project-sasori/privacy.html)** adds camera magnification, optional supported torch/exposure controls, measured frame comparisons and a local observation notebook. The compiled iPhone app adds a bounded, advertisement-only BLE survey. These are experimental observation tools, not a hidden-camera classifier or room-safety certification. [Capabilities, privacy and owner trials](docs/privacy-lab.md).
+
 A mobile workbench for observing Bluetooth devices, preserving research, and developing animatronic behavior safely. Experiment 001 investigates a user-owned Hasbro Love2Learn Elmo B6572 advertising as Elmo L2L.
 
 The device workspace connects saved identities, active connection status, notification timelines, Discovery analysis, and versioned research notes. Start with [Quick connections](docs/quick-connect.md): Elmo settings are included, and another BLE toy can expose its model/firmware without manual UUID entry. Native access is available as a buildable [iPhone app](native/ios/README.md) and a local [desktop BLE helper](desktop/README.md); real-device validation remains required.

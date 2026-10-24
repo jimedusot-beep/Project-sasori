@@ -1,3 +1,5 @@
 import { Capacitor, registerPlugin } from '@capacitor/core';
-if (Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'ios')
+if (Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'ios') {
   globalThis.SasoriNativeBluetooth = registerPlugin('SasoriBluetooth');
+  globalThis.SasoriNativeSurvey = registerPlugin('SasoriSurvey');
+}

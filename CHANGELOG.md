@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Add a phone-only Privacy Lab with camera lifecycle/deadlines, capability-gated torch/exposure, measured optical comparisons, private optional-photo observations and synthetic examples. Add a separate native iPhone advertisement-only BLE survey with per-session aliases, bounded sampling and background teardown. No camera-detection or room-safety claim; no new runtime dependencies.
+
 - Add a phone-ready Device hub across Elmo, standard BLE, original MiP and local TV adapters, with remembered setups, grant restoration where supported and useful failure explanations.
 - Extend the original Elmo codec with five reviewed sound IDs and volume 1–15 requests, preserving one-sound/four-volume/30-second session limits and separate reported state.
 - Add saved family-specific routines with explicit start, fresh touch triggers, eight-step/20-second bounds, cancellation and private synthetic/live result receipts.
