@@ -21,8 +21,16 @@ def verify_workspace(device, run=command, pause=time.sleep, screenshot="build/sa
     for attempt in range(40):
         pause(2)
         logs = run("xcrun", "simctl", "spawn", device, "log", "show", "--last", "10m",
-                       "--style", "compact", "--predicate", 'eventMessage CONTAINS "Sasori native"')
-        if all(marker in logs for marker in markers):
+                       "--style", "json", "--predicate", 'process == "App" AND eventMessage BEGINSWITH "Sasori native"')
+        try:
+            entries = json.loads(logs)
+            seen = {entry["eventMessage"].strip() for entry in entries
+                    if isinstance(entry, dict)
+                    and str(entry.get("processImagePath", "")).endswith("/App")
+                    and isinstance(entry.get("eventMessage"), str)}
+        except (ValueError, TypeError):
+            seen = set()
+        if all(marker in seen for marker in markers):
             break
     else:
         print("Native readiness diagnostics:\n" + logs, flush=True)

@@ -23,6 +23,8 @@ Each device receives a fresh `signal-N` alias per session. Latest/minimum/maximu
 
 The Swift plugin keeps peripheral identifiers private. Raw manufacturer bytes are never exposed. Native simulator compilation and browser fake-plugin tests do not establish real-radio behavior.
 
+Native preparation installs Sasori's controller in the generated SceneDelegate and writes permission descriptions at the plist root. The smoke test requires exact structured readiness events from the app process for both the laboratory and Privacy Lab; the log command's own query text cannot count as evidence. It opens the Privacy Lab page and checks native plugin availability without scanning.
+
 The native deadline uses monotonic uptime checks before starting a scan, accepting an advertisement and returning a poll, plus a timer in common run-loop modes. OS scheduling can delay teardown; a delayed final duration is not hidden by clamping it to 30 seconds. The JavaScript facade rejects malformed or excessively late reports. Tracking-mode and real-radio deadline checks still require the owner trial below.
 
 ## Local evidence and export
