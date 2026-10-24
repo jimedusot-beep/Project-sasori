@@ -1,5 +1,11 @@
 # Project Sasori v0.2.0 — Experimental laboratory
 
+## Elmo control and wider maker research — October 24, 2026
+
+The Device hub now defaults to a ten-minute Elmo Control session with twenty reviewed sound IDs, repeatable sound/volume requests, quick sound pads and explicitly armed live touch reactions. Saved performances support 32 steps/two minutes and automatically pace sound requests. The original Quick check/simple remote keeps its short single-sound behavior. Physical behavior still needs testing on the owner's unit.
+
+The [wider maker-research record](research/resourceful-maker-research-2026-10-24.md) cites civilian work from Ukraine, Gaza/Palestine, Tanzania, India, China and global communities. It records technical transfer decisions and a source-reviewed direct phone-to-IR bridge candidate. That bridge is not yet a Sasori transport.
+
 ## Device hub update — October 24, 2026
 
 Open the [Device hub](https://jimedusot-beep.github.io/Project-sasori/hub.html) for remembered setups, Elmo sound/volume/touch controls, standard BLE/MiP controls and cancellable saved routines. See the [complete phone directions](device-hub.md).

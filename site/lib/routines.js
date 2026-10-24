@@ -1,7 +1,7 @@
 import { hubFamily, hubAction, ELMO_INPUTS } from './hub-catalog.js';
 
-export const MAX_ROUTINE_STEPS = 8;
-export const MAX_ROUTINE_MS = 20000;
+export const MAX_ROUTINE_STEPS = 32;
+export const MAX_ROUTINE_MS = 120000;
 export function validateRoutine(input) {
   if (
     !input ||
@@ -15,7 +15,7 @@ export function validateRoutine(input) {
     !input.steps.length ||
     input.steps.length > MAX_ROUTINE_STEPS
   )
-    throw new Error('A routine needs a name and 1–8 supported steps.');
+    throw new Error('A routine needs a name and 1–32 supported steps.');
   hubFamily(input.familyId);
   let soundCount = 0,
     volumeCount = 0,
@@ -32,7 +32,7 @@ export function validateRoutine(input) {
       step?.kind === 'wait' &&
       Number.isSafeInteger(step.ms) &&
       step.ms >= 50 &&
-      step.ms <= 5000
+      step.ms <= 30000
     ) {
       waitBudget += step.ms;
       return { kind: 'wait', ms: step.ms };
@@ -51,9 +51,9 @@ export function validateRoutine(input) {
     }
     throw new Error('Unsupported routine step.');
   });
-  if (soundCount > 1 || volumeCount > 4 || touchCount > 1 || waitBudget > 15000)
+  if (soundCount > 12 || volumeCount > 12 || touchCount > 4 || waitBudget > 90000)
     throw new Error(
-      'Use at most one sound, four volume changes, one touch trigger and 15 seconds of waits.',
+      'Use at most twelve sounds, twelve volume changes, four touch triggers and 90 seconds of waits.',
     );
   return { id: input.id, name: input.name.trim(), familyId: input.familyId, steps };
 }
@@ -200,8 +200,21 @@ export class RoutineRunner {
           );
         } else if (step.kind === 'touch') await this.touch(step, remaining);
         else {
+          const gap = session.readyIn?.(step.intent) || 0;
+          if (Number.isFinite(gap) && gap > 0) {
+            await this.bounded(
+              (signal) =>
+                new Promise((resolve) => {
+                  const timer = setTimeout(resolve, gap);
+                  signal.addEventListener('abort', () => clearTimeout(timer), { once: true });
+                }),
+              remaining,
+            );
+          }
           if (!session.can(step.intent, step.args)) throw new Error('action-unavailable');
-          await this.bounded(() => session.dispatch(step.intent, step.args), remaining);
+          const actionRemaining = this.budgetMs - (performance.now() - start);
+          if (actionRemaining <= 0) throw new Error('routine-timeout');
+          await this.bounded(() => session.dispatch(step.intent, step.args), actionRemaining);
         }
         if (this.controller.signal.aborted || session.connectionId !== this.connectionId)
           throw cancelled();

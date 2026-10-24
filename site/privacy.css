@@ -25,6 +25,12 @@ footer {
   font-size: 0.8rem;
   letter-spacing: 0.08em;
 }
+header {
+  padding-top: calc(24px + env(safe-area-inset-top, 0px));
+}
+footer {
+  padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+}
 main {
   max-width: 1440px;
   margin: auto;

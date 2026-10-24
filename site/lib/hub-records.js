@@ -2,6 +2,7 @@ import { recordId } from './records.js';
 import { sanitizeText } from './diagnostics.js';
 import { hubFamily } from './hub-catalog.js';
 import { validateRoutine } from './routines.js';
+import { validateReactions } from './reactions.js';
 
 export const HUB_LIMIT = 20;
 export const HUB_BYTES = 64000;
@@ -71,8 +72,12 @@ export const HUB_FAILURES = Object.freeze({
     'Your setup is kept. Already-sent sounds or TV commands may continue.',
   ],
   'sound-limit': [
-    'One sound was already requested',
-    'Reconnect for another sound. A queued request does not prove playback.',
+    'Session sound limit reached',
+    'Reconnect using Control session for repeatable sound requests. A queued request does not prove playback.',
+  ],
+  'sound-cooldown': [
+    'Sound controls are pacing requests',
+    'Wait for the short request gap. The toy does not supply a verified playback-complete acknowledgment.',
   ],
   'volume-limit': ['Volume adjustment limit reached', 'Reconnect for another bounded session.'],
   'invalid-volume': ['Choose volume 1–15', 'Enter a whole number in the supported range.'],
@@ -209,6 +214,15 @@ export function validateHubData(input) {
       namePrefix: s.namePrefix || '',
     };
     if (s.deviceId) out.deviceId = s.deviceId;
+    if (s.elmoMode !== undefined) {
+      if (s.familyId !== 'elmo-l2l/v1' || !['check', 'control'].includes(s.elmoMode))
+        throw new Error('Invalid Elmo mode.');
+      out.elmoMode = s.elmoMode;
+    }
+    if (s.reactions !== undefined) {
+      if (s.familyId !== 'elmo-l2l/v1') throw new Error('Touch mappings require Elmo.');
+      out.reactions = validateReactions(s.reactions);
+    }
     if (s.companionURL) out.companionURL = localCompanionURL(s.companionURL);
     if (s.tv) {
       if (s.familyId !== 'tv-local/v1' || !['roku', 'ha-media', 'ha-remote'].includes(s.tv.driver))
@@ -281,11 +295,13 @@ export function portableHubData(input) {
     ...data,
     revision: 0,
     legacyImported: true,
-    setups: data.setups.map(({ id, label, familyId, namePrefix }) => ({
+    setups: data.setups.map(({ id, label, familyId, namePrefix, elmoMode, reactions }) => ({
       id,
       label: sanitizeText(label).slice(0, 80),
       familyId,
       namePrefix: sanitizeText(namePrefix).slice(0, 60),
+      ...(elmoMode ? { elmoMode } : {}),
+      ...(reactions ? { reactions } : {}),
     })),
     routines: data.routines.map((r) => ({ ...r, name: sanitizeText(r.name).slice(0, 80) })),
   });

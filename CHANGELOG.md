@@ -4,6 +4,8 @@
 
 - Add a phone-only Privacy Lab with camera lifecycle/deadlines, capability-gated torch/exposure, measured optical comparisons, private optional-photo observations and synthetic examples. Add a separate native iPhone advertisement-only BLE survey with per-session aliases, bounded sampling and background teardown. No camera-detection or room-safety claim; no new runtime dependencies.
 - Install Sasori's native controller through the generated SceneDelegate and place camera/Bluetooth permission descriptions at the plist root. Require exact app-process readiness events for both native pages; log-query text cannot produce a false smoke-test pass. Retain diagnostic screenshots on native readiness failure.
+- Add ten-minute Elmo Control sessions with twenty reviewed sound IDs, paced repeated sound/volume requests, quick sound pads, saved manual-arm touch reactions and 32-step/two-minute performances. Preserve the original short Quick check mode.
+- Expand civilian maker research across Ukraine, Gaza/Palestine, Tanzania, India, China and global communities, including pinned source/license decisions and a reviewed phone-to-IR pocket-bridge candidate. Hardware support for that candidate is not yet implemented.
 
 - Add a phone-ready Device hub across Elmo, standard BLE, original MiP and local TV adapters, with remembered setups, grant restoration where supported and useful failure explanations.
 - Extend the original Elmo codec with five reviewed sound IDs and volume 1–15 requests, preserving one-sound/four-volume/30-second session limits and separate reported state.
