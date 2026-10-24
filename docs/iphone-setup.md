@@ -1,6 +1,6 @@
 # iPhone setup
 
-For a button-based experimental Elmo control trial, open [Elmo Remote](https://jimedusot-beep.github.io/Project-sasori/elmo.html) in Bluefy and follow [its short guide](elmo-remote.md). The inspection procedure below remains separate; native Elmo writes and actual hardware validation are still unavailable.
+For a button-based experimental Elmo control trial, open [Elmo Remote](https://jimedusot-beep.github.io/Project-sasori/elmo.html) in Bluefy and follow [its short guide](elmo-remote.md). A new or factory-reset toy can use explicit password setup; [owner recovery](elmo-password-recovery.md) documents the original-app password display and Hasbro's physical reset, which erases personalization. Real password persistence/recovery remains unverified. The inspection procedure below remains separate; native Elmo writes and actual hardware validation are still unavailable.
 
 1. Install/open Bluefy from its official App Store listing linked by [PNN Soft](https://pnnsoft.com/portfolio/detail/bluefy-web-bluetooth-api-solution-for-ios-devices). Do not assume normal Safari exposes Web Bluetooth.
 2. Open the published HTTPS Sasori URL. First try Use simulation → Run simulated inspection. A synthetic session should finish and appear in Research records.

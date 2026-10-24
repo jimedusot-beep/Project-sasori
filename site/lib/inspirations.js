@@ -12,7 +12,7 @@ export const INSPIRATIONS = Object.freeze([
       'https://github.com/jesserockz/love2learn-elmo/blob/d397a7fb094079f6b1cac5605e95f74d1cb8d4b3/LICENSE',
     reuse: 'Protocol-fact reference; original Sasori client, checked against the acquired app',
     aspect:
-      'Known-password handshake, explicit hardware claims, fixed greeting and strict reply handling',
+      'Password handshake and opted-in first-time setup, fixed greeting and strict reply handling',
     implementation: 'site/lib/elmo-remote.js',
     reviewed: '2026-10-23',
   },

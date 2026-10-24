@@ -4,7 +4,7 @@ A mobile workbench for observing Bluetooth devices, preserving research, and dev
 
 The device workspace connects saved identities, active connection status, notification timelines, Discovery analysis, and versioned research notes. Start with [Quick connections](docs/quick-connect.md): Elmo settings are included, and another BLE toy can expose its model/firmware without manual UUID entry. Native access is available as a buildable [iPhone app](native/ios/README.md) and a local [desktop BLE helper](desktop/README.md); real-device validation remains required.
 
-**Open the [Elmo Remote](https://jimedusot-beep.github.io/Project-sasori/elmo.html) for a button-based connection, status and greeting trial. No Python or Terminal is required.** Use Chrome on a Bluetooth-equipped computer, or Bluefy on iPhone/iPad. See the [simple remote guide](docs/elmo-remote.md).
+**Open the [Elmo Remote](https://jimedusot-beep.github.io/Project-sasori/elmo.html) for a button-based connection, status and greeting trial. No Python or Terminal is required.** Use Chrome on a Bluetooth-equipped computer, or Bluefy on iPhone/iPad. The browser also provides explicit first-time password setup and [guided forgotten-password recovery](docs/elmo-password-recovery.md). Hasbro's physical reset erases personalization; real password persistence/recovery still needs verification. See the [simple remote guide](docs/elmo-remote.md).
 
 **v0.2.0 is experimental. The separate browser and desktop Elmo remotes implement a known-password handshake, input/volume queries and one greeting request. Native Elmo inspection remains separate. Shared standard BLE controls and an original MiP version/status/timed-LED adapter are also available. Real-device validation is still required.** Independent fan research; no affiliation with Hasbro or Naruto.
 
@@ -27,7 +27,7 @@ The published UUID profile is transcribed from [NonaSuomy's GATT table](https://
 
 ## What works in software
 
-- [Elmo Remote](docs/elmo-remote.md): a standalone responsive HTML app with Connect, Read status, Play greeting, Disconnect, an isolated demo and private result download. Existing-password authentication runs in browser Bluetooth; secrets are never saved. Native Elmo writes and independent physical validation remain unavailable.
+- [Elmo Remote](docs/elmo-remote.md): a standalone responsive HTML app with Connect, Read status, Play greeting, Disconnect, an isolated demo and private result download. Browser Bluetooth supports existing-password authentication and explicitly opted-in setup after the toy reports no password. In-page recovery instructions cite Hasbro's password display and physical reset. Secrets are never saved. Native Elmo writes and independent physical validation remain unavailable.
 
 - [Experimental Elmo desktop client](desktop/README.md#experimental-elmo-known-password-check): privately prompted existing password, one bounded challenge/response, strict acceptance/rejection, volume/input queries, touch monitoring and an opt-in single greeting. No automatic enrollment, reset, raw commands or credential logging. The original inspection helper remains separate.
 

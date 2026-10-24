@@ -74,9 +74,18 @@
             autocapitalize="off"
             spellcheck="false"
             aria-describedby="password-help"
-            placeholder="The password set for your toy"
+            placeholder="Existing password, or a new one for setup"
           />
           <p id="password-help" class="hint">Entered here, used locally, never saved.</p>
+          <label class="check"
+            ><input id="allow-password-setup" type="checkbox" aria-describedby="setup-help" /><span
+              >Set this password if Elmo reports none</span
+            ></label
+          >
+          <p id="setup-help" class="hint">
+            For a new or factory-reset toy. Keep a copy of your chosen password. This option sets a
+            password only after the toy reports that none is set.
+          </p>
           <label class="check"
             ><input id="show-all" type="checkbox" /><span
               >Show all Bluetooth devices if Elmo is missing</span
@@ -95,8 +104,47 @@
           <details>
             <summary>I don’t know Elmo’s password</summary>
             <p>
-              This remote needs the existing toy password. Password recovery and first-time password
-              setup are not available here. You can still
+              If the original app still opens, check its settings under
+              <strong>Elmo Toy Connection</strong> for the saved password.
+              <a
+                href="https://hasbro-new.custhelp.com/app/answers/detail/a_id/353/related/1"
+                target="_blank"
+                rel="noopener noreferrer"
+                >Hasbro’s password-display guide ↗</a
+              >
+            </p>
+            <p>
+              <strong>Forgotten-password recovery erases the toy’s saved personalization.</strong>
+              Hasbro documents this physical factory reset for Love2Learn Elmo:
+            </p>
+            <ol>
+              <li>Disconnect Sasori and leave the toy’s power switch ON.</li>
+              <li>
+                Press the factory-reset button next to the battery compartment. Listen for the reset
+                confirmation sound.
+              </li>
+              <li>
+                Enter a new password here, select
+                <strong>Set this password if Elmo reports none</strong>, then choose
+                <strong>Connect Elmo</strong>.
+              </li>
+              <li>
+                After reported acceptance, disconnect and reconnect with that password to check that
+                the toy retained it.
+              </li>
+            </ol>
+            <p>
+              <a
+                href="https://hasbro-new.custhelp.com/app/answers/detail/a_id/366/~/i-forgot-my-love2learn-elmo-app-password.-how-do-i-get-back-into-the-app%3F"
+                target="_blank"
+                rel="noopener noreferrer"
+                >Hasbro’s factory-reset instructions ↗</a
+              >
+            </p>
+            <p>
+              Reset is a physical action you perform on the toy. Sasori cannot remotely reset it or
+              guarantee an existing-password bypass. Password setup is software-tested and still
+              needs verification on your unit. You can also
               <a href="./#overview">inspect the Bluetooth connection</a> in the laboratory.
             </p>
           </details>

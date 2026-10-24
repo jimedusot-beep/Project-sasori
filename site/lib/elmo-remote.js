@@ -3,6 +3,7 @@ import {
   ELMO_RX,
   ELMO_TX,
   elmoPasswordDigest,
+  elmoPasswordSetup,
   elmoResponse,
   elmoCommand,
   decodeElmo,
@@ -35,6 +36,9 @@ export class ElmoRemote {
   #query = null;
   #timer = null;
   #authDeadline = 0;
+  #allowPasswordSetup = false;
+  #passwordSetupSent = false;
+  #challengeResponded = false;
   #run = 0;
   constructor({
     bluetooth,
@@ -178,25 +182,49 @@ export class ElmoRemote {
       return;
     }
     if (packet.kind === 'challenge') {
-      if (this.#phase !== 'waiting-challenge') {
+      if (
+        this.#phase !== 'waiting-challenge' &&
+        !(
+          ['setup-pending', 'waiting-setup-acceptance'].includes(this.#phase) &&
+          !this.#challengeResponded
+        )
+      ) {
         packet.value.fill(0);
         this.stop('changed-challenge');
         return;
       }
       this.#challenge = packet.value;
       this.#phase = 'challenge-received';
-      this.#signal('challenge');
+      this.#signal('authentication');
     } else if (packet.kind === 'password') {
       if (packet.value === 0) {
         this.report.authenticationOutcome = 'password-not-set';
-        this.stop('password-not-set');
+        if (
+          this.#allowPasswordSetup &&
+          !this.#passwordSetupSent &&
+          ['waiting-challenge', 'response-pending', 'waiting-acceptance'].includes(this.#phase)
+        ) {
+          this.report.passwordSetupOutcome = 'unset-reported';
+          this.#phase = 'setup-needed';
+          this.#signal('authentication');
+        } else
+          this.stop(this.#passwordSetupSent ? 'password-setup-not-confirmed' : 'password-not-set');
       } else if (packet.value === 2) {
         this.report.authenticationOutcome = 'rejected';
+        if (this.#passwordSetupSent) this.report.passwordSetupOutcome = 'rejected';
         this.stop('password-rejected');
-      } else if (['response-pending', 'waiting-acceptance'].includes(this.#phase)) {
+      } else if (
+        [
+          'response-pending',
+          'waiting-acceptance',
+          'setup-pending',
+          'waiting-setup-acceptance',
+        ].includes(this.#phase)
+      ) {
         this.report.authenticationOutcome = 'toy-reported-acceptance';
+        if (this.#passwordSetupSent) this.report.passwordSetupOutcome = 'toy-reported-acceptance';
         this.#phase = 'accepted';
-        this.#signal('accepted');
+        this.#signal('authentication');
       } else if (this.#phase !== 'accepted') this.stop('unsolicited-acceptance');
     } else if (this.#phase === 'accepted') {
       if (packet.kind === 'inputs') this.report.inputs = packet.value;
@@ -205,7 +233,7 @@ export class ElmoRemote {
     }
     this.#publish();
   }
-  async connect({ password, device = null, showAll = false } = {}) {
+  async connect({ password, device = null, showAll = false, allowPasswordSetup = false } = {}) {
     if (this.active) throw new ElmoRemoteError('already-connected');
     if (!this.bluetooth?.requestDevice) throw new ElmoRemoteError('browser-unavailable');
     let digest;
@@ -216,6 +244,9 @@ export class ElmoRemote {
     }
     const run = ++this.#run;
     this.#digest = digest;
+    this.#allowPasswordSetup = allowPasswordSetup === true;
+    this.#passwordSetupSent = false;
+    this.#challengeResponded = false;
     this.device = null;
     this.busy = true;
     this.state = 'choosing';
@@ -225,7 +256,9 @@ export class ElmoRemote {
       schemaVersion: 1,
       platform: 'browser',
       source: this.synthetic ? 'synthetic' : 'live',
-      adapterId: 'elmo-known-password/experimental-v1',
+      adapterId: this.#allowPasswordSetup
+        ? 'elmo-password-setup/experimental-v1'
+        : 'elmo-known-password/experimental-v1',
       modelSelection: 'Love2Learn Elmo B6572 protocol family',
       modelObserved: 'unknown',
       firmwareObserved: 'unknown',
@@ -235,6 +268,8 @@ export class ElmoRemote {
       reason: '',
       cleanup: 'pending',
       authenticationOutcome: 'not-tested',
+      passwordSetupEnabled: this.#allowPasswordSetup,
+      passwordSetupOutcome: 'not-attempted',
       helloRequested: false,
       helloQueued: false,
       volume: null,
@@ -328,26 +363,9 @@ export class ElmoRemote {
       this.#rx.addEventListener('characteristicvaluechanged', this.#notification);
       this.#publish();
       await this.#step(() => this.#rx.startNotifications(), run);
-      await this.#wait(
-        'challenge',
-        run,
-        authDeadline - performance.now(),
-        'authentication-timeout',
-      );
-      this.#guard(run);
-      const response = elmoResponse(this.#digest, this.#challenge);
-      this.#challenge.fill(0);
-      this.#challenge = null;
+      await this.#authenticate(run, authDeadline);
       this.#digest.fill(0);
       this.#digest = null;
-      this.#phase = 'response-pending';
-      try {
-        await this.#step(() => this.#tx.writeValueWithoutResponse(response), run);
-      } finally {
-        response.fill(0);
-      }
-      if (this.#phase !== 'accepted') this.#phase = 'waiting-acceptance';
-      await this.#wait('accepted', run, authDeadline - performance.now(), 'authentication-timeout');
       this.#guard(run);
       this.state = 'ready';
       this.#publish();
@@ -360,6 +378,48 @@ export class ElmoRemote {
       const safe = failure(error);
       if (run === this.#run) this.stop(safe.code);
       throw safe;
+    }
+  }
+  async #authenticate(run, authDeadline) {
+    while (this.#phase !== 'accepted') {
+      await this.#wait(
+        'authentication',
+        run,
+        authDeadline - performance.now(),
+        'authentication-timeout',
+      );
+      this.#guard(run);
+      if (this.#phase === 'accepted') break;
+      let packet, pending, waiting;
+      if (this.#phase === 'challenge-received') {
+        packet = elmoResponse(this.#digest, this.#challenge);
+        this.#challenge.fill(0);
+        this.#challenge = null;
+        this.#challengeResponded = true;
+        pending = 'response-pending';
+        waiting = 'waiting-acceptance';
+      } else if (
+        this.#phase === 'setup-needed' &&
+        this.#allowPasswordSetup &&
+        !this.#passwordSetupSent
+      ) {
+        // This persistent write requires an explicit user choice and the toy's exact unset status.
+        packet = elmoPasswordSetup(this.#digest);
+        this.#passwordSetupSent = true;
+        this.report.passwordSetupOutcome = 'write-requested';
+        pending = 'setup-pending';
+        waiting = 'waiting-setup-acceptance';
+      } else throw new ElmoRemoteError('malformed-authentication');
+      this.#publish();
+      try {
+        await this.#step(() => {
+          this.#phase = pending;
+          return this.#tx.writeValueWithoutResponse(packet);
+        }, run);
+      } finally {
+        packet.fill(0);
+      }
+      if (this.#phase === pending) this.#phase = waiting;
     }
   }
   async #read(run) {
@@ -436,11 +496,16 @@ export class ElmoRemote {
     this.#notification = this.#disconnected = null;
     this.#phase = '';
     this.#authDeadline = 0;
+    this.#allowPasswordSetup = false;
+    this.#passwordSetupSent = false;
+    this.#challengeResponded = false;
     this.#query = null;
     this.state = 'disconnected';
     this.busy = false;
     this.deadlineAt = null;
     this.report.reason = reason;
+    if (this.report.passwordSetupOutcome === 'write-requested')
+      this.report.passwordSetupOutcome = 'not-confirmed';
     this.report.endedAt = new Date().toISOString();
     this.report.outcome =
       reason === 'user-stop' && wasReady

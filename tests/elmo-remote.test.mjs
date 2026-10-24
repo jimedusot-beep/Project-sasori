@@ -8,6 +8,7 @@ import {
   ELMO_TX,
   md5Bytes,
   elmoPasswordDigest,
+  elmoPasswordSetup,
   elmoFletcher32,
   elmoResponse,
   elmoCommand,
@@ -124,6 +125,31 @@ async function subscribed(f) {
   for (let i = 0; i < 30 && !f.calls.some((c) => c[0] === 'subscribe'); i++) await pause(1);
 }
 
+function setupFixture(mode = 'accept') {
+  const f = fixture('silent');
+  let installed = false;
+  f.rx.startNotifications = async () => {
+    f.calls.push(['subscribe']);
+    f.notify(installed || mode === 'after-response' ? [0x41, 0x10, 0x20, 0x30, 0x40] : [0x40, 0]);
+    return f.rx;
+  };
+  const ordinaryWrite = f.tx.writeValueWithoutResponse;
+  f.tx.writeValueWithoutResponse = async (value) => {
+    if (value[0] === 0x40) {
+      f.calls.push(['write', Array.from(value)]);
+      if (mode === 'silent') return;
+      if (mode === 'repeat-unset') return f.notify([0x40, 0]);
+      if (mode === 'reject') return f.notify([0x40, 2]);
+      installed = true;
+      f.notify(mode === 'challenge-after-setup' ? [0x41, 0x10, 0x20, 0x30, 0x40] : [0x40, 1]);
+    } else if (value[0] === 0x41 && mode === 'after-response' && !installed) {
+      f.calls.push(['write', Array.from(value)]);
+      f.notify([0x40, 0]);
+    } else await ordinaryWrite(value);
+  };
+  return f;
+}
+
 test('browser MD5 matches independent standard implementation through padding and multi-block cases', () => {
   for (const length of [0, 1, 3, 55, 56, 63, 64, 65, 128, 1024]) {
     const bytes = Uint8Array.from({ length }, (_, i) => (i * 71 + 13) & 255);
@@ -150,6 +176,163 @@ test('browser codec matches every source-derived desktop vector, including UTF-1
   assert.notEqual(hex(elmoPasswordDigest('Spaces Stay  ')), hex(elmoPasswordDigest('Spaces Stay')));
   for (const invalid of ['', '123', 'a'.repeat(129), null])
     assert.throws(() => elmoPasswordDigest(invalid));
+});
+test('password setup matches independently computed UTF-16 low-byte MD5 and owns its packet copy', () => {
+  for (const text of [password, ' Spaces stay  ', 'Toy-\u0101-\ud83d\ude00']) {
+    const bytes = Buffer.from(
+      Array.from({ length: text.length }, (_, i) => text.charCodeAt(i) & 255),
+    );
+    const expected = Buffer.concat([Buffer.of(0x40), createHash('md5').update(bytes).digest()]);
+    const digest = elmoPasswordDigest(text),
+      packet = elmoPasswordSetup(digest);
+    assert.equal(hex(packet), expected.toString('hex'));
+    assert.equal(packet.length, 17);
+    packet.fill(0);
+    assert.notEqual(hex(digest), '0'.repeat(32));
+  }
+  for (const value of [null, [], new Uint8Array(15), new Uint8Array(17)])
+    assert.throws(() => elmoPasswordSetup(value));
+});
+test('explicit setup handles an unset toy, reports acceptance privately and reconnects with the chosen password', async () => {
+  const snapshots = [],
+    [r, f] = remote(setupFixture(), { emit: (s) => snapshots.push(s) });
+  await r.connect({ password, allowPasswordSetup: true });
+  const expected = [0x40, ...createHash('md5').update(password).digest()];
+  assert.deepEqual(
+    f.calls.filter((c) => c[0] === 'write').map((c) => c[1]),
+    [expected, [0x22], [0x20]],
+  );
+  assert.equal(r.result().passwordSetupOutcome, 'toy-reported-acceptance');
+  assert.equal(r.result().hardwareVerified, false);
+  assert.equal(r.result().authenticationVerified, false);
+  assert.equal(r.result().physicalEffectVerified, false);
+  r.stop();
+  const output = JSON.stringify([snapshots, r.result()]);
+  for (const secret of [
+    password,
+    hex(Uint8Array.from(expected.slice(1))),
+    JSON.stringify(expected),
+  ])
+    assert.ok(!output.includes(secret));
+  await r.connect({ password, device: f.device });
+  assert.equal(r.result().passwordSetupEnabled, false);
+  assert.equal(r.result().passwordSetupOutcome, 'not-attempted');
+  assert.equal(f.calls.filter((c) => c[0] === 'write' && c[1][0] === 0x40).length, 1);
+  r.stop();
+});
+test('unset status after a response and one fresh challenge after setup are supported without repeated setup', async () => {
+  for (const mode of ['after-response', 'challenge-after-setup']) {
+    const [r, f] = remote(setupFixture(mode));
+    await r.connect({ password, allowPasswordSetup: true });
+    assert.equal(r.result().passwordSetupOutcome, 'toy-reported-acceptance');
+    const types = f.calls.filter((c) => c[0] === 'write').map((c) => c[1][0]);
+    assert.deepEqual(
+      types,
+      mode === 'after-response' ? [0x41, 0x40, 0x22, 0x20] : [0x40, 0x41, 0x22, 0x20],
+    );
+    r.stop();
+  }
+});
+test('setup is disabled by default and only literal explicit opt-in permits the persistent write', async () => {
+  for (const allowPasswordSetup of [undefined, false, 'true', 1]) {
+    const [r, f] = remote(setupFixture());
+    await assert.rejects(r.connect({ password, allowPasswordSetup }));
+    assert.equal(r.result().reason, 'password-not-set');
+    assert.equal(f.calls.filter((c) => c[0] === 'write').length, 0);
+    assert.equal(r.result().passwordSetupOutcome, 'not-attempted');
+  }
+});
+test('setup opt-in cannot overwrite a rejected password or skip a malformed, early or unknown reply', async () => {
+  for (const mode of ['reject', 'early', 'unknown', 'bare', 'unknown-after-response', 'changed']) {
+    const [r, f] = remote(fixture(mode));
+    await assert.rejects(r.connect({ password, allowPasswordSetup: true }));
+    assert.ok(f.calls.filter((c) => c[0] === 'write').every((c) => c[1][0] === 0x41));
+    assert.equal(r.result().passwordSetupOutcome, 'not-attempted');
+    assert.notEqual(r.state, 'ready');
+  }
+});
+test('unaccepted, rejected and repeated unset replies never enable actions or retry password setup', async () => {
+  for (const mode of ['silent', 'reject', 'repeat-unset']) {
+    const [r, f] = remote(setupFixture(mode), { authMs: 20 });
+    await assert.rejects(r.connect({ password, allowPasswordSetup: true }));
+    assert.equal(f.calls.filter((c) => c[0] === 'write').length, 1);
+    assert.notEqual(r.result().passwordSetupOutcome, 'toy-reported-acceptance');
+    assert.notEqual(r.state, 'ready');
+    await assert.rejects(r.greet(), { code: 'not-ready' });
+  }
+});
+test('stopping at the unset report prevents setup, and stopping a pending setup ignores late acceptance', async () => {
+  const f = setupFixture();
+  const [r] = remote(f, {
+    emit: (s) => {
+      if (s.report.passwordSetupOutcome === 'unset-reported') r.stop('page-hidden');
+    },
+  });
+  await assert.rejects(r.connect({ password, allowPasswordSetup: true }));
+  assert.equal(f.calls.filter((c) => c[0] === 'write').length, 0);
+  const g = setupFixture();
+  let complete;
+  g.tx.writeValueWithoutResponse = (value) => {
+    g.calls.push(['write', Array.from(value)]);
+    return new Promise((resolve) => {
+      complete = () => {
+        g.notify([0x40, 1]);
+        resolve();
+      };
+    });
+  };
+  const [pending] = remote(g);
+  const checking = pending.connect({ password, allowPasswordSetup: true });
+  await subscribed(g);
+  pending.stop('page-hidden');
+  await assert.rejects(checking);
+  const before = JSON.stringify(pending.result());
+  complete();
+  await pause(2);
+  assert.equal(JSON.stringify(pending.result()), before);
+  assert.equal(pending.result().passwordSetupOutcome, 'not-confirmed');
+  assert.equal(g.calls.filter((c) => c[0] === 'write').length, 1);
+});
+test('unset status after authentication cannot trigger a password setup write', async () => {
+  const [r, f] = remote();
+  await r.connect({ password, allowPasswordSetup: true });
+  f.notify([0x40, 0]);
+  assert.equal(r.state, 'disconnected');
+  assert.equal(f.calls.filter((c) => c[0] === 'write' && c[1][0] === 0x40).length, 0);
+});
+test('an acceptance before the setup API call remains unsolicited and cannot enable control', async () => {
+  const f = setupFixture();
+  let injected = false;
+  const [r] = remote(f, {
+    emit: (s) => {
+      if (
+        !injected &&
+        s.state === 'authenticating' &&
+        s.report.passwordSetupOutcome === 'write-requested'
+      ) {
+        injected = true;
+        f.notify([0x40, 1]);
+      }
+    },
+  });
+  await assert.rejects(r.connect({ password, allowPasswordSetup: true }));
+  assert.equal(r.result().reason, 'unsolicited-acceptance');
+  assert.equal(f.calls.filter((c) => c[0] === 'write').length, 0);
+  assert.notEqual(r.state, 'ready');
+});
+test('late setup acceptance cannot exceed the authentication deadline', async () => {
+  const f = setupFixture();
+  f.tx.writeValueWithoutResponse = async (value) => {
+    f.calls.push(['write', Array.from(value)]);
+    await pause(25);
+    f.notify([0x40, 1]);
+  };
+  const [r] = remote(f, { authMs: 12 });
+  await assert.rejects(r.connect({ password, allowPasswordSetup: true }));
+  assert.equal(r.result().reason, 'authentication-timeout');
+  assert.equal(r.result().passwordSetupOutcome, 'not-confirmed');
+  assert.notEqual(r.result().authenticationOutcome, 'toy-reported-acceptance');
+  assert.equal(f.calls.filter((c) => c[0] === 'write').length, 1);
 });
 test('checksum negative zero, complete challenges, strict replies and fixed actions preserve the source subset', () => {
   assert.equal(elmoFletcher32(new Uint8Array()), 0xffffffff);
