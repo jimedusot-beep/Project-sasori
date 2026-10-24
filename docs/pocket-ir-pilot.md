@@ -12,12 +12,12 @@ The existing wider maker research is at [resourceful-maker-research-2026-10-24.m
 
 Primary source: [Koontzie/ir-remote](https://github.com/Koontzie/ir-remote/tree/34c848831abd6bf9e49e50ea3eed971fb245c729), inspected exact revision 34c848831abd6bf9e49e50ea3eed971fb245c729; particularly [firmware/remote_ble/remote_ble.ino](https://github.com/Koontzie/ir-remote/blob/34c848831abd6bf9e49e50ea3eed971fb245c729/firmware/remote_ble/remote_ble.ino). Repository MIT; follow dependency and file-specific license notices if using external firmware.
 
-| Purpose | UUID | Reviewed interface |
-| --- | --- | --- |
-| BLE service | b457c32b-22b1-425f-8a88-4d6dc37ba4eb | Advertised UUID |
-| Configure | d997012d-7d2b-47de-ae87-bae14df446ef | WRITE JSON containing slot, proto, code, bits |
-| Trigger | 58397514-04a3-4265-9590-9d910c4e99d2 | WRITE JSON containing slot |
-| Status | b8ddfe01-519f-430d-bd4e-aba0dd852e2c | READ/NOTIFY: ready, saved:N, sent:N, pressed:N, err:... |
+| Purpose     | UUID                                 | Reviewed interface                                      |
+| ----------- | ------------------------------------ | ------------------------------------------------------- |
+| BLE service | b457c32b-22b1-425f-8a88-4d6dc37ba4eb | Advertised UUID                                         |
+| Configure   | d997012d-7d2b-47de-ae87-bae14df446ef | WRITE JSON containing slot, proto, code, bits           |
+| Trigger     | 58397514-04a3-4265-9590-9d910c4e99d2 | WRITE JSON containing slot                              |
+| Status      | b8ddfe01-519f-430d-bd4e-aba0dd852e2c | READ/NOTIFY: ready, saved:N, sent:N, pressed:N, err:... |
 
 Supported commands are limited to slots 1–5 and protocols NEC, SAMSUNG and SONY. Sasori validates hexadecimal code width and a 1–64 bit count. The upstream board saves configured slots in nonvolatile flash; Sasori stores neither these values nor a list of Bluetooth devices on this page.
 
@@ -51,17 +51,17 @@ No motor control, toy firmware writes, Wi-Fi scanning, rolling-code replay, auto
 
 These original projects document valuable methods; no conclusion about a person's financial background or identity follows from geography.
 
-| Project and context | Reusable idea | Sasori outcome to build |
-| --- | --- | --- |
-| [Ultimate Robotics uMyo](https://github.com/ultimaterobotics/uMyo) — Ukraine-based project | Sensor-to-wireless bridge and calibration | Consented local input events feeding a reusable automation adapter |
-| [Glia](https://glia.org/pages/open-source-research-and-development) — Gaza/Palestine collaborative design | Repairable, locally fabricated devices with full documentation | Locally replaceable bridge parts, sourcing alternatives, open BOM and tests; **not** clinical-device claims |
-| [OpenFlexure vendors](https://openflexure.org/about/vendors) — including Tanzania's Bongo Tech & Research Labs | Local production, calibration, maintainability | Bench acceptance records and reproducible compatibility for every bridge revision |
-| [Vicharak Shrike](https://github.com/vicharak-in/shrike) — India | Extensible, low-cost MCU/FPGA experimentation | Optional future diagnostic hardware, not needed by today's infrared pilot |
-| [M5Stack ATOM Lite](https://docs.m5stack.com/en/homeassistant/devices/atom_lite) — Shenzhen hardware | Onboard button and IR emitter, published pin facts | Compare a small alternative IR board; **separate firmware and pin validation** |
-| [ESPHome IR/RF components](https://esphome.io/guides/setting_up_rmt_devices/) — global contributors | Typed command encoding and capturing exact IR timings | A future supervised IR learning bridge, no blind replay |
-| [sigrok PulseView](https://sigrok.org/wiki/PulseView) — open analyzer ecosystem | Protocol decoding and time-aligned traces | Import authorized hardware captures into Sasori's offline Discovery |
-| [rtl_433](https://github.com/merbanan/rtl_433) — global open source | Passive decode of compatible environmental sensor signals | Optional later receive-only sensor telemetry with proper hardware/privacy review |
-| [Koontzie IR bridge](https://github.com/Koontzie/ir-remote) — independent maker | Five persistent named IR slots over BLE | **Implemented in this branch:** the original bounded phone pilot |
+| Project and context                                                                                            | Reusable idea                                                  | Sasori outcome to build                                                                                     |
+| -------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| [Ultimate Robotics uMyo](https://github.com/ultimaterobotics/uMyo) — Ukraine-based project                     | Sensor-to-wireless bridge and calibration                      | Consented local input events feeding a reusable automation adapter                                          |
+| [Glia](https://glia.org/pages/open-source-research-and-development) — Gaza/Palestine collaborative design      | Repairable, locally fabricated devices with full documentation | Locally replaceable bridge parts, sourcing alternatives, open BOM and tests; **not** clinical-device claims |
+| [OpenFlexure vendors](https://openflexure.org/about/vendors) — including Tanzania's Bongo Tech & Research Labs | Local production, calibration, maintainability                 | Bench acceptance records and reproducible compatibility for every bridge revision                           |
+| [Vicharak Shrike](https://github.com/vicharak-in/shrike) — India                                               | Extensible, low-cost MCU/FPGA experimentation                  | Optional future diagnostic hardware, not needed by today's infrared pilot                                   |
+| [M5Stack ATOM Lite](https://docs.m5stack.com/en/homeassistant/devices/atom_lite) — Shenzhen hardware           | Onboard button and IR emitter, published pin facts             | Compare a small alternative IR board; **separate firmware and pin validation**                              |
+| [ESPHome IR/RF components](https://esphome.io/guides/setting_up_rmt_devices/) — global contributors            | Typed command encoding and capturing exact IR timings          | A future supervised IR learning bridge, no blind replay                                                     |
+| [sigrok PulseView](https://sigrok.org/wiki/PulseView) — open analyzer ecosystem                                | Protocol decoding and time-aligned traces                      | Import authorized hardware captures into Sasori's offline Discovery                                         |
+| [rtl_433](https://github.com/merbanan/rtl_433) — global open source                                            | Passive decode of compatible environmental sensor signals      | Optional later receive-only sensor telemetry with proper hardware/privacy review                            |
+| [Koontzie IR bridge](https://github.com/Koontzie/ir-remote) — independent maker                                | Five persistent named IR slots over BLE                        | **Implemented in this branch:** the original bounded phone pilot                                            |
 
 ## Ranked next steps after the pilot
 

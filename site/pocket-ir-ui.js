@@ -1,8 +1,4 @@
-import {
-  PocketIRSession,
-  validatePocketConfig,
-  validatePocketSlot,
-} from './lib/pocket-ir.js';
+import { PocketIRSession, validatePocketConfig, validatePocketSlot } from './lib/pocket-ir.js';
 
 const $ = (id) => document.getElementById(id);
 const savedThisSession = new Set();
@@ -29,8 +25,7 @@ const session = new PocketIRSession({
   },
   onStatus: (status) => {
     record(status.message);
-    if (status.type === 'saved' && session.connected)
-      savedThisSession.add(status.slot);
+    if (status.type === 'saved' && session.connected) savedThisSession.add(status.slot);
     render();
   },
 });
@@ -49,8 +44,11 @@ function render() {
   const stored = savedThisSession.has(Number($('slot').value));
   $('transmit').disabled = !authorized || !connected || !free || !stored;
   $('slot-status').textContent = stored
-    ? 'Slot ' + $('slot').value + ' was acknowledged as stored in this connection. One manual test is available.'
-    : 'No stored acknowledgment for slot ' + $('slot').value +
+    ? 'Slot ' +
+      $('slot').value +
+      ' was acknowledged as stored in this connection. One manual test is available.'
+    : 'No stored acknowledgment for slot ' +
+      $('slot').value +
       ' in this connection. Configure and wait for the bridge before transmitting.';
 }
 
@@ -70,11 +68,13 @@ async function perform(operation) {
   }
 }
 
-$('connect').addEventListener('click', () => perform(async () => {
-  if (!$('owner-check').checked) return;
-  savedThisSession.clear();
-  await session.connect();
-}));
+$('connect').addEventListener('click', () =>
+  perform(async () => {
+    if (!$('owner-check').checked) return;
+    savedThisSession.clear();
+    await session.connect();
+  }),
+);
 
 $('disconnect').addEventListener('click', () => {
   session.disconnect();
@@ -82,25 +82,29 @@ $('disconnect').addEventListener('click', () => {
   render();
 });
 
-$('configure').addEventListener('click', () => perform(async () => {
-  if (!$('owner-check').checked || !session.connected) return;
-  const config = validatePocketConfig({
-    slot: chosenSlot(),
-    proto: $('proto').value,
-    code: $('code').value.trim(),
-    bits: Number($('bits').value),
-  });
-  // Previously stored code for this slot may now be changing. Require a fresh ack.
-  savedThisSession.delete(config.slot);
-  render();
-  await session.configure(config);
-}));
+$('configure').addEventListener('click', () =>
+  perform(async () => {
+    if (!$('owner-check').checked || !session.connected) return;
+    const config = validatePocketConfig({
+      slot: chosenSlot(),
+      proto: $('proto').value,
+      code: $('code').value.trim(),
+      bits: Number($('bits').value),
+    });
+    // Previously stored code for this slot may now be changing. Require a fresh ack.
+    savedThisSession.delete(config.slot);
+    render();
+    await session.configure(config);
+  }),
+);
 
-$('transmit').addEventListener('click', () => perform(async () => {
-  const slot = chosenSlot();
-  if (!$('owner-check').checked || !savedThisSession.has(slot) || !session.connected) return;
-  await session.transmit(slot);
-}));
+$('transmit').addEventListener('click', () =>
+  perform(async () => {
+    const slot = chosenSlot();
+    if (!$('owner-check').checked || !savedThisSession.has(slot) || !session.connected) return;
+    await session.transmit(slot);
+  }),
+);
 
 $('slot').addEventListener('change', render);
 $('owner-check').addEventListener('change', render);

@@ -43,7 +43,10 @@ export function parsePocketStatus(value) {
       new Uint8Array(value.buffer, value.byteOffset, value.byteLength),
     );
   }
-  if (value.length > 120 || [...value].some((ch) => ch.charCodeAt(0) < 32 || ch.charCodeAt(0) === 127))
+  if (
+    value.length > 120 ||
+    [...value].some((ch) => ch.charCodeAt(0) < 32 || ch.charCodeAt(0) === 127)
+  )
     return { type: 'unrecognized', message: 'Unrecognized bridge status.' };
   if (value === 'ready') return { type: 'ready', message: 'Bridge reports ready.' };
   const match = /^(saved|sent|pressed):([1-5])$/.exec(value);
@@ -52,7 +55,10 @@ export function parsePocketStatus(value) {
     return {
       type: match[1],
       slot: Number(match[2]),
-      message: names[match[1]] + ' · slot ' + match[2] +
+      message:
+        names[match[1]] +
+        ' · slot ' +
+        match[2] +
         (match[1] === 'sent' ? ' (not proof that an appliance responded).' : '.'),
     };
   }
@@ -111,8 +117,10 @@ export class PocketIRSession {
       this.triggerChar = await service.getCharacteristic(POCKET_IR_UUIDS.trigger);
       this.statusChar = await service.getCharacteristic(POCKET_IR_UUIDS.status);
       if (epoch !== this.epoch) return;
-      if (typeof this.configChar.writeValueWithResponse !== 'function' ||
-          typeof this.triggerChar.writeValueWithResponse !== 'function')
+      if (
+        typeof this.configChar.writeValueWithResponse !== 'function' ||
+        typeof this.triggerChar.writeValueWithResponse !== 'function'
+      )
         throw new Error('This bridge does not expose the required write-with-response controls.');
       this.onNotification = (event) => {
         if (epoch === this.epoch && this.connected)
@@ -142,8 +150,11 @@ export class PocketIRSession {
       await this.configChar.writeValueWithResponse(
         new TextEncoder().encode(JSON.stringify(config)),
       );
-      this.onState('Configuration request written for slot ' + config.slot +
-        '. Check for saved status before sending.');
+      this.onState(
+        'Configuration request written for slot ' +
+          config.slot +
+          '. Check for saved status before sending.',
+      );
     } finally {
       this.busy = false;
     }
@@ -157,8 +168,11 @@ export class PocketIRSession {
       await this.triggerChar.writeValueWithResponse(
         new TextEncoder().encode(JSON.stringify({ slot })),
       );
-      this.onState('Trigger request written for slot ' + slot +
-        '. Observe the appliance; a sent status is not an effect confirmation.');
+      this.onState(
+        'Trigger request written for slot ' +
+          slot +
+          '. Observe the appliance; a sent status is not an effect confirmation.',
+      );
     } finally {
       this.busy = false;
     }

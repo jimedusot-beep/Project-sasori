@@ -14,12 +14,17 @@ const asView = (text) => {
 };
 
 test('the IR adapter accepts only bounded slots, protocol, hex codes and bit lengths', () => {
-  assert.deepEqual(validatePocketConfig({
-    slot: 5, proto: 'SAMSUNG', code: 'e0e040bf', bits: 32,
-  }), { slot: 5, proto: 'SAMSUNG', code: '0xE0E040BF', bits: 32 });
+  assert.deepEqual(
+    validatePocketConfig({
+      slot: 5,
+      proto: 'SAMSUNG',
+      code: 'e0e040bf',
+      bits: 32,
+    }),
+    { slot: 5, proto: 'SAMSUNG', code: '0xE0E040BF', bits: 32 },
+  );
   assert.equal(validatePocketSlot(1), 1);
-  for (const slot of [0, 6, 1.5, '1', NaN])
-    assert.throws(() => validatePocketSlot(slot));
+  for (const slot of [0, 6, 1.5, '1', NaN]) assert.throws(() => validatePocketSlot(slot));
   for (const candidate of [
     { slot: 1, proto: 'UNKNOWN', code: '12', bits: 8 },
     { slot: 1, proto: 'NEC', code: 'GG', bits: 32 },
@@ -35,7 +40,9 @@ test('the IR adapter accepts only bounded slots, protocol, hex codes and bit len
 
 test('status parser distinguishes attempted send from real-world outcome', () => {
   assert.deepEqual(parsePocketStatus(asView('saved:3')), {
-    type: 'saved', slot: 3, message: 'Stored · slot 3.',
+    type: 'saved',
+    slot: 3,
+    message: 'Stored · slot 3.',
   });
   assert.match(parsePocketStatus(asView('sent:2')).message, /not proof/);
   assert.equal(parsePocketStatus(asView('pressed:1')).type, 'pressed');
@@ -61,9 +68,10 @@ function fixture() {
       writeValueWithResponse: async (bytes) => {
         c.writes.push(new TextDecoder().decode(bytes));
       },
-      emit: (text) => observers.get('characteristicvaluechanged')?.({
-        target: { value: asView(text) },
-      }),
+      emit: (text) =>
+        observers.get('characteristicvaluechanged')?.({
+          target: { value: asView(text) },
+        }),
     };
     chars.set(uuid, c);
     return c;
@@ -81,7 +89,9 @@ function fixture() {
         },
       };
     },
-    disconnect: () => { gatt.connected = false; },
+    disconnect: () => {
+      gatt.connected = false;
+    },
   };
   const device = {
     id: 'fake-device',
@@ -118,7 +128,10 @@ test('explicit pairing, write-only named config, then one single-slot trigger', 
   assert.equal(f.chars.get(POCKET_IR_UUIDS.config).writes.length, 0);
   await s.configure({ slot: 2, proto: 'SONY', code: '0xA90', bits: 12 });
   assert.deepEqual(JSON.parse(f.chars.get(POCKET_IR_UUIDS.config).writes[0]), {
-    slot: 2, proto: 'SONY', code: '0xA90', bits: 12,
+    slot: 2,
+    proto: 'SONY',
+    code: '0xA90',
+    bits: 12,
   });
   f.chars.get(POCKET_IR_UUIDS.status).emit('saved:2');
   assert.equal(statuses.at(-1).type, 'saved');
@@ -136,7 +149,10 @@ test('stale Bluetooth chooser is discarded if user leaves before selection', asy
   const f = fixture();
   let release;
   const bluetooth = {
-    requestDevice: () => new Promise((resolve) => { release = resolve; }),
+    requestDevice: () =>
+      new Promise((resolve) => {
+        release = resolve;
+      }),
   };
   const s = new PocketIRSession({ bluetooth });
   const task = s.connect();
