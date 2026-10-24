@@ -23,7 +23,6 @@ const option = (value, label) => {
 const store = new ResearchStore();
 let activeRecords = [];
 let groups = [];
-let isDemo = false;
 let busy = true;
 
 function message(value) {
@@ -133,7 +132,6 @@ function download(value, name) {
 async function refresh() {
   const records = await store.listDiscoveries();
   activeRecords = records;
-  isDemo = false;
   renderAtlas();
   message(
     records.length + ' Discovery captures available in this browser. ' +
@@ -178,7 +176,6 @@ async function perform(action) {
 }
 $('demo').addEventListener('click', () => perform(async () => {
   activeRecords = demoRecords();
-  isDemo = true;
   renderAtlas();
   message('Synthetic demonstration only. Demo captures are in memory and have not been saved.');
 }));
