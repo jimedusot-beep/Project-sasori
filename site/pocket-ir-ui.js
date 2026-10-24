@@ -1,3 +1,4 @@
+import { setupIRImport } from './pocket-ir-import-ui.js';
 import { PocketIRSession, createPocketDemo } from './lib/pocket-ir.js';
 import { POCKET_PROFILES } from './lib/pocket-ir-profiles.js';
 import {
@@ -14,7 +15,8 @@ let data = emptyPocketData(),
   demo = false,
   session = null,
   preparedId = '',
-  attempts = 0;
+  attempts = 0,
+  irImport = null;
 try {
   data = await store.getPocketData();
 } catch {
@@ -75,7 +77,10 @@ function render() {
       const key = document.createElement('button');
       key.type = 'button';
       key.textContent = button.label;
-      key.className = button.id === 'power_toggle' ? 'remote-key power' : 'remote-key';
+      key.className =
+        button.id === 'power_toggle' || /^power$/i.test(button.label)
+          ? 'remote-key power'
+          : 'remote-key';
       key.disabled = !allowed || !ready || !free;
       key.addEventListener('click', () =>
         perform(async () => {
@@ -88,16 +93,20 @@ function render() {
       return key;
     }),
   );
+  irImport?.refresh();
 }
+
 async function perform(operation) {
   if (acting) return;
   acting = true;
   render();
   try {
     await operation();
+    return { ok: true };
   } catch (error) {
     $('connection').textContent = error.message || 'Request failed. Reconnect and try again.';
     record($('connection').textContent);
+    return { ok: false, message: $('connection').textContent };
   } finally {
     acting = false;
     render();
@@ -124,6 +133,7 @@ function makeSession(isDemo) {
 function stop(reason) {
   preparedId = '';
   session?.disconnect(reason);
+  irImport?.cancelRead();
   render();
 }
 async function persist(next) {
@@ -239,10 +249,25 @@ $('delete').addEventListener('click', () =>
 );
 $('clear-events').addEventListener('click', () => $('events').replaceChildren());
 document.addEventListener('visibilitychange', () => {
-  if (document.hidden) stop('Page hidden. Reconnect and prepare again.');
+  if (document.hidden) {
+    stop('Page hidden. Reconnect and prepare again.');
+    irImport?.clear();
+  }
 });
 window.addEventListener('pagehide', () => {
   stop('Page closed.');
+  irImport?.clear();
+});
+irImport = setupIRImport({
+  canUse: () => !acting && !session?.busy,
+  canSave: () => writable && !acting && !session?.busy,
+  saveProfile: (profile) =>
+    perform(async () => {
+      const next = importPocketProfile(JSON.stringify(profile), data);
+      await persist(next);
+      preparedId = '';
+      session?.clearPrepared();
+    }),
 });
 options();
 render();

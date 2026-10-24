@@ -35,6 +35,7 @@ test('inspection scripts have no write API and shipped scripts use no raw remote
     'site/elmo-ui.js',
     'site/hub-ui.js',
     'site/pocket-ir-ui.js',
+    'site/pocket-ir-import-ui.js',
     'site/companion-ui.js',
     'site/elmo-packets.mjs',
     ...(await readdir('site/lib')).filter((x) => x.endsWith('.js')).map((x) => 'site/lib/' + x),

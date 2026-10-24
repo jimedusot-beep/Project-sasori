@@ -83,6 +83,85 @@
             >
           </p>
         </section>
+        <section class="panel compact ir-library" aria-labelledby="ir-library-title">
+          <div class="eyebrow">ADD ANOTHER REMOTE</div>
+          <h2 id="ir-library-title">Reuse a remote file.</h2>
+          <p class="small">
+            Import a Flipper <strong>.ir</strong> file from your own remote capture or a matching
+            community model. No Flipper device, hex editing, or account needed. Choose up to five
+            buttons for this bridge.
+          </p>
+          <div class="ir-import-grid">
+            <div>
+              <label for="ir-file">Open a local .ir file (128 KB maximum)</label>
+              <input type="file" id="ir-file" accept=".ir,text/plain" />
+              <div class="button-row">
+                <button id="ir-example" type="button">Load Sony file example</button
+                ><button
+                  id="ir-paste-toggle"
+                  type="button"
+                  aria-expanded="false"
+                  aria-controls="ir-paste"
+                >
+                  Paste file text
+                </button>
+              </div>
+              <p class="small">
+                <a
+                  href="https://github.com/Lucaslhm/Flipper-IRDB"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  >Find community remote files ↗</a
+                >
+                · Download the exact model's .ir file, then open it here. Matching a protocol does
+                not establish device compatibility.
+              </p>
+              <div id="ir-paste" hidden>
+                <label for="ir-text">Flipper IR file text</label
+                ><textarea
+                  id="ir-text"
+                  rows="7"
+                  maxlength="131072"
+                  spellcheck="false"
+                  autocomplete="off"
+                ></textarea>
+                <button id="ir-preview" type="button">Preview file text</button>
+              </div>
+              <p class="small">
+                Converts NEC, NECext, Samsung32, SIRC, SIRC15 and SIRC20. RAW timings and other
+                protocols stay unavailable on this bridge.
+              </p>
+            </div>
+            <div>
+              <p id="ir-status" class="small" role="status" aria-live="polite">No file loaded.</p>
+              <a
+                id="ir-example-credit"
+                class="small"
+                target="_blank"
+                rel="noopener noreferrer"
+                hidden
+                >CC0 example source ↗</a
+              >
+              <fieldset id="ir-picker" hidden>
+                <legend>Review supported buttons</legend>
+                <div id="ir-signals" tabindex="0" aria-label="Imported remote signals"></div>
+              </fieldset>
+              <p id="ir-count" class="small">0 / 5 buttons selected</p>
+              <label for="ir-name">Exact model or setup name</label
+              ><input
+                id="ir-name"
+                maxlength="80"
+                autocomplete="off"
+                placeholder="My projector remote"
+              />
+              <div class="button-row">
+                <button id="ir-save" class="primary" type="button" disabled>
+                  Save selected buttons</button
+                ><button id="ir-clear" type="button">Clear draft</button>
+              </div>
+            </div>
+          </div>
+        </section>
         <section class="panel compact">
           <h2>Keep a useful setup</h2>
           <label for="setup-name">Setup name</label

@@ -27,6 +27,7 @@ a:focus-visible,
 button:focus-visible,
 input:focus-visible,
 .events:focus-visible,
+#ir-signals:focus-visible,
 select:focus-visible {
   outline: 3px solid #a5f6d9;
   outline-offset: 3px;
@@ -252,6 +253,50 @@ button.remote-key.power {
 .compact {
   min-height: 0;
 }
+.ir-library {
+  grid-column: 1 / -1;
+}
+.ir-library h2 {
+  margin-top: 8px;
+}
+.ir-import-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 28px;
+}
+#ir-picker {
+  border: 1px solid #71847c;
+  border-radius: 9px;
+  min-width: 0;
+  margin: 12px 0;
+}
+#ir-signals {
+  max-height: 320px;
+  overflow: auto;
+}
+.ir-choice {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 48px;
+  margin: 0;
+  padding: 8px 4px;
+}
+.ir-choice span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.ir-choice input {
+  flex: none;
+  width: 20px;
+  height: 20px;
+}
+.ir-choice small {
+  display: block;
+  font-size: 12px;
+  font-weight: 400;
+  color: #b7c8c0;
+}
 details {
   border-top: 1px solid #41564f;
   margin-top: 18px;
@@ -268,6 +313,10 @@ textarea {
   font-size: 13px;
 }
 @media (max-width: 790px) {
+  .ir-import-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
   .work-grid {
     grid-template-columns: 1fr;
   }

@@ -6,5 +6,14 @@
     "hardware/WIRING.md": "3012e05c6de53fd537f694eaa2abc20b6e9cb750325f8b0d548c043b46a8daba",
     "data/db/tvs/samsung.json": "627999eeefb5950be660b318b605eda66149d04dc375dcb8b50487d074d3a561",
     "data/db/tvs/lg.json": "755fd1612386dfc79a0d53bddb387ac586f02a9dae28c638b04d3b5b6c45cc38"
+  },
+  "importExample": {
+    "repository": "https://github.com/Lucaslhm/Flipper-IRDB",
+    "commit": "d126fb1b6f1e114c52b4a8c19839ea65e3a9c24d",
+    "path": "TVs/Sony/Sony_Bravia.ir",
+    "sha256": "9a26d10ccb731721bbc0dfc5802aadb3abd9524bc9acba9c270ef5e4ec7c60dd",
+    "gitBlob": "f8b0828d048a9f9d630af6ab4488a6e2cc9681f7",
+    "license": "CC0-1.0",
+    "selectedSignals": ["Power", "Vol_up", "Vol_dn", "Input", "Mute", "Ch_next"]
   }
 }
