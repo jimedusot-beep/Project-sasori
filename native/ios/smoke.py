@@ -16,20 +16,20 @@ def verify_workspace(device, run=command, pause=time.sleep, screenshot="build/sa
         run("xcrun", "simctl", "launch", device, "org.sasori.laboratory")
     except subprocess.TimeoutExpired:
         print("simctl launch timed out; checking independent app-render evidence.", flush=True)
-    marker = "Sasori native interface ready"
-    print("Waiting for the native Bluetooth workspace to render.", flush=True)
+    markers = ("Sasori native interface ready", "Sasori native privacy interface ready")
+    print("Waiting for the laboratory and Privacy Lab native bridge to render.", flush=True)
     for attempt in range(40):
         pause(2)
         logs = run("xcrun", "simctl", "spawn", device, "log", "show", "--last", "10m",
-                       "--style", "compact", "--predicate", 'eventMessage CONTAINS "' + marker + '"')
-        if marker in logs:
+                       "--style", "compact", "--predicate", 'eventMessage CONTAINS "Sasori native"')
+        if all(marker in logs for marker in markers):
             break
     else:
-        raise RuntimeError("The native Bluetooth workspace did not supply render evidence.")
+        raise RuntimeError("The laboratory and Privacy Lab native bridge did not supply render evidence.")
     pause(2)
     Path(screenshot).parent.mkdir(parents=True, exist_ok=True)
     run("xcrun", "simctl", "io", device, "screenshot", screenshot)
-    print("Sasori simulator app rendered the native Bluetooth workspace. No BLE device was accessed.")
+    print("Sasori simulator rendered the laboratory and Privacy Lab native bridge. No BLE device was accessed.")
 
 def main():
     runtimes = json.loads(command("xcrun", "simctl", "list", "runtimes", "--json"))["runtimes"]

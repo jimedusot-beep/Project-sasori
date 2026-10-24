@@ -57,6 +57,8 @@ const camera = new PrivacyCamera({
 });
 const survey = new PrivacySurvey({
   emit: (state, result, reason) => {
+    // An inactive native runner must not replace the displayed synthetic observation.
+    if (surveySource === 'synthetic' && state === 'stopped') return;
     surveyResult = result;
     $('ble-start').disabled =
       !globalThis.SasoriNativeSurvey || ['starting', 'scanning'].includes(state);
@@ -130,6 +132,7 @@ $('camera-start').addEventListener(
     try {
       await video.play();
     } catch {
+      if (run !== cameraRun || camera.state !== 'live') return;
       camera.stop();
       throw new Error('preview-unavailable');
     }
@@ -267,7 +270,7 @@ function input(kind, measurements, observationSource) {
 async function refresh() {
   records = await book.list();
   $('notebook-list').replaceChildren();
-  for (const record of [...records].reverse()) {
+  for (const record of [...records].sort((a, b) => b.createdAt.localeCompare(a.createdAt))) {
     const item = document.createElement('li'),
       title = document.createElement('strong'),
       note = document.createElement('p'),

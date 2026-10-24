@@ -44,7 +44,14 @@ public class SasoriSurveyPlugin: CAPPlugin, CAPBridgedPlugin, CBCentralManagerDe
         if let observer = backgroundObserver { NotificationCenter.default.removeObserver(observer) }
     }
     private func elapsed() -> Int {
-        return min(35000, max(0, Int(((ended ?? ProcessInfo.processInfo.systemUptime) - started) * 1000)))
+        return max(0, Int(((ended ?? ProcessInfo.processInfo.systemUptime) - started) * 1000))
+    }
+    @discardableResult private func enforceDeadline() -> Bool {
+        if (state == "starting" || state == "scanning") && ProcessInfo.processInfo.systemUptime - started >= 30 {
+            finish("deadline")
+            return true
+        }
+        return false
     }
     private func snapshot() -> [String: Any] {
         let devices: [[String: Any]] = observations.values.sorted { $0.alias < $1.alias }.map {
@@ -73,7 +80,9 @@ public class SasoriSurveyPlugin: CAPPlugin, CAPBridgedPlugin, CBCentralManagerDe
             self.ended = nil
             self.state = "starting"
             self.reason = ""
-            self.timer = Timer.scheduledTimer(withTimeInterval: 30, repeats: false) { [weak self] _ in self?.finish("deadline") }
+            let deadline = Timer(timeInterval: 30, repeats: false) { [weak self] _ in self?.finish("deadline") }
+            self.timer = deadline
+            RunLoop.main.add(deadline, forMode: .common)
             if let central = self.manager { self.centralManagerDidUpdateState(central) }
             else { self.manager = CBCentralManager(delegate: self, queue: .main) }
             call.resolve(self.snapshot())
@@ -82,6 +91,7 @@ public class SasoriSurveyPlugin: CAPPlugin, CAPBridgedPlugin, CBCentralManagerDe
     @objc public func getSurvey(_ call: CAPPluginCall) {
         DispatchQueue.main.async { [weak self] in
             guard let self = self, call.getString("sessionId") == self.sessionId else { call.reject("Expired survey."); return }
+            self.enforceDeadline()
             call.resolve(self.snapshot())
         }
     }
@@ -93,6 +103,7 @@ public class SasoriSurveyPlugin: CAPPlugin, CAPBridgedPlugin, CBCentralManagerDe
         }
     }
     public func centralManagerDidUpdateState(_ central: CBCentralManager) {
+        guard !enforceDeadline() else { return }
         if central.state == .poweredOn && state == "starting" {
             state = "scanning"
             central.scanForPeripherals(withServices: nil, options: [CBCentralManagerScanOptionAllowDuplicatesKey: true])
@@ -101,6 +112,7 @@ public class SasoriSurveyPlugin: CAPPlugin, CAPBridgedPlugin, CBCentralManagerDe
         }
     }
     public func centralManager(_ central: CBCentralManager, didDiscover peripheral: CBPeripheral, advertisementData: [String: Any], rssi RSSI: NSNumber) {
+        guard !enforceDeadline() else { return }
         guard state == "scanning", RSSI.intValue >= -127, RSSI.intValue <= 0 else { return }
         let now = elapsed(), value = RSSI.intValue
         if observations[peripheral.identifier] == nil {

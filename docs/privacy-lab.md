@@ -23,6 +23,8 @@ Each device receives a fresh `signal-N` alias per session. Latest/minimum/maximu
 
 The Swift plugin keeps peripheral identifiers private. Raw manufacturer bytes are never exposed. Native simulator compilation and browser fake-plugin tests do not establish real-radio behavior.
 
+The native deadline uses monotonic uptime checks before starting a scan, accepting an advertisement and returning a poll, plus a timer in common run-loop modes. OS scheduling can delay teardown; a delayed final duration is not hidden by clamping it to 30 seconds. The JavaScript facade rejects malformed or excessively late reports. Tracking-mode and real-radio deadline checks still require the owner trial below.
+
 ## Local evidence and export
 
 - Enter a label (80 characters) and note (2,000 characters), then save an optical observation/note or stopped survey. Measurements and source class are explicit; independent hardware verification remains false.

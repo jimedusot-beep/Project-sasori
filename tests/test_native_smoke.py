@@ -21,7 +21,7 @@ class NativeSmokeTests(unittest.TestCase):
                 raise subprocess.TimeoutExpired(args, 120)
             if "log" in args:
                 self.assertIn("10m", args)
-                return "Sasori native interface ready"
+                return "Sasori native interface ready\nSasori native privacy interface ready"
             return ""
 
         with tempfile.TemporaryDirectory() as root:
@@ -39,6 +39,14 @@ class NativeSmokeTests(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError, "render evidence"):
             smoke.verify_workspace("new-simulator", run=run, pause=lambda _: None)
 
+    def test_privacy_bridge_must_render_even_if_the_original_laboratory_is_ready(self):
+        def run(*args):
+            self.assertNotIn("screenshot", args)
+            return "Sasori native interface ready"
+
+        with self.assertRaisesRegex(RuntimeError, "render evidence"):
+            smoke.verify_workspace("new-simulator", run=run, pause=lambda _: None)
+
     def test_other_launch_errors_and_failed_screenshots_propagate(self):
         def launch_failure(*args):
             raise subprocess.CalledProcessError(1, args)
@@ -48,7 +56,7 @@ class NativeSmokeTests(unittest.TestCase):
 
         def screenshot_failure(*args):
             if "log" in args:
-                return "Sasori native interface ready"
+                return "Sasori native interface ready\nSasori native privacy interface ready"
             if "screenshot" in args:
                 raise subprocess.CalledProcessError(1, args)
             return ""
