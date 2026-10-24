@@ -25,6 +25,12 @@ def verify_workspace(device, run=command, pause=time.sleep, screenshot="build/sa
         if all(marker in logs for marker in markers):
             break
     else:
+        print("Native readiness diagnostics:\n" + logs, flush=True)
+        Path(screenshot).parent.mkdir(parents=True, exist_ok=True)
+        try:
+            run("xcrun", "simctl", "io", device, "screenshot", screenshot)
+        except (subprocess.CalledProcessError, subprocess.TimeoutExpired):
+            print("Diagnostic screenshot unavailable.", flush=True)
         raise RuntimeError("The laboratory and Privacy Lab native bridge did not supply render evidence.")
     pause(2)
     Path(screenshot).parent.mkdir(parents=True, exist_ok=True)

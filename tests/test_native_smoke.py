@@ -33,7 +33,6 @@ class NativeSmokeTests(unittest.TestCase):
         def run(*args):
             if args[2] == "launch":
                 raise subprocess.TimeoutExpired(args, 120)
-            self.assertNotIn("screenshot", args)
             return "no readiness marker"
 
         with self.assertRaisesRegex(RuntimeError, "render evidence"):
@@ -41,7 +40,6 @@ class NativeSmokeTests(unittest.TestCase):
 
     def test_privacy_bridge_must_render_even_if_the_original_laboratory_is_ready(self):
         def run(*args):
-            self.assertNotIn("screenshot", args)
             return "Sasori native interface ready"
 
         with self.assertRaisesRegex(RuntimeError, "render evidence"):
