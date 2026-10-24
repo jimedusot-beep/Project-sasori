@@ -100,7 +100,7 @@ test('compares byte changes and exports only nonidentifying aggregates', () => {
 
 test('imported, synthetic and metadata-only rows remain explicit non-verifications', () => {
   const a = fixture('11 22');
-  const b = fixture('11 33', { importedAt: new Date().toISOString(), evidence: 'owner-observed' });
+  const b = { ...fixture('11 33', { evidence: 'owner-observed' }), importedAt: new Date().toISOString() };
   const meta = fixture('11 33', { payloadsIncluded: false, values: null });
   const [group] = buildSignalAtlas([a, b, meta]);
   assert.deepEqual(group.counts, {
