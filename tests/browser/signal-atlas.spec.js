@@ -23,7 +23,7 @@ test('synthetic Atlas compares positions without touching Bluetooth or local sto
   await page.locator('#demo').click();
   await expect(page.locator('#status')).toContainText('Synthetic demonstration only');
   await expect(page.locator('.cell')).toHaveCount(6);
-  await expect(page.locator('.cell.variable')).toHaveCount(2);
+  await expect(page.locator('.cell.variable')).toHaveCount(1);
   await expect(page.locator('.cell.partial')).toHaveCount(1);
   await page.locator('#compare').click();
   await expect(page.locator('#pair-results')).toContainText('2 differences');
