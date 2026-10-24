@@ -4,9 +4,9 @@ A mobile workbench for observing Bluetooth devices, preserving research, and dev
 
 The device workspace connects saved identities, active connection status, notification timelines, Discovery analysis, and versioned research notes. Start with [Quick connections](docs/quick-connect.md): Elmo settings are included, and another BLE toy can expose its model/firmware without manual UUID entry. Native access is available as a buildable [iPhone app](native/ios/README.md) and a local [desktop BLE helper](desktop/README.md); real-device validation remains required.
 
-**Open the [Elmo Remote](https://jimedusot-beep.github.io/Project-sasori/elmo.html) for a button-based connection, status and greeting trial. No Python or Terminal is required.** Use Chrome on a Bluetooth-equipped computer, or Bluefy on iPhone/iPad. The browser also provides explicit first-time password setup and [guided forgotten-password recovery](docs/elmo-password-recovery.md). Hasbro's physical reset erases personalization; real password persistence/recovery still needs verification. See the [simple remote guide](docs/elmo-remote.md).
+**Open the [Device hub](https://jimedusot-beep.github.io/Project-sasori/hub.html) for remembered setups, Elmo sound/volume/touch controls and saved routines.** Use Bluefy on iPhone/iPad or a compatible Bluetooth browser. Bluetooth controls need no Python or Terminal. [Full phone directions](docs/device-hub.md) include demos, reconnection, password setup/recovery and cancellation. The simpler [Elmo Remote](https://jimedusot-beep.github.io/Project-sasori/elmo.html) remains available.
 
-**v0.2.0 is experimental. The separate browser and desktop Elmo remotes implement a known-password handshake, input/volume queries and one greeting request. Native Elmo inspection remains separate. Shared standard BLE controls and an original MiP version/status/timed-LED adapter are also available. Real-device validation is still required.** Independent fan research; no affiliation with Hasbro or Naruto.
+**The experimental hub supports Elmo, standard BLE, original MiP and local TV adapters.** Elmo has five reviewed built-in sound IDs, volume requests and touch-triggered routines. A [local TV companion](docs/tv-remote.md) provides Roku, configured Home Assistant media-player and learned IR-remote controls through the same layout. TV control requires a computer running the helper; IR additionally requires a compatible physical hub. These are implemented software paths with synthetic tests, not verified physical-device results. Native Elmo inspection remains separate. Independent fan research; no affiliation with Hasbro or Naruto.
 
 [Universal controls](docs/universal-controls.md) provides one connection-and-action workspace, remembered local device references, and reusable setup backups across supported families. Select the protocol/model, try its offline demo, then connect your matching device. **Run connection check** records a repeatable Identify → Status → Find/LED trial with physical-effect/recovery observations. The [adapter and validation guide](docs/device-action-validation.md) explains exact MiP bytes, evidence limits, and private Elmo app-source intake. Custom Elmo authentication, movement and playback remain unverified.
 
@@ -27,6 +27,8 @@ The published UUID profile is transcribed from [NonaSuomy's GATT table](https://
 
 ## What works in software
 
+- [Device hub](docs/device-hub.md): a shared Connect → Control → Routine experience across four families, restored browser grants where supported, useful fixed failure explanations, one-time migration of earlier control setups, private local bindings and portable backups. [Saved routines](docs/device-hub.md#save-and-run-a-routine) are explicit, cancellable and bounded to eight steps/20 seconds. Imports never run actions.
+- [TV and universal remote](docs/tv-remote.md): an original Python standard-library companion with manual browser pairing, local Roku metadata/key mappings, Home Assistant capability-based media controls and named learned IR buttons. Optional Home Assistant configuration stays on the companion computer. No automatic network scan or physical IR emitter is present in the web page.
 - [Elmo Remote](docs/elmo-remote.md): a standalone responsive HTML app with Connect, Read status, Play greeting, Disconnect, an isolated demo and private result download. Browser Bluetooth supports existing-password authentication and explicitly opted-in setup after the toy reports no password. In-page recovery instructions cite Hasbro's password display and physical reset. Secrets are never saved. Native Elmo writes and independent physical validation remain unavailable.
 
 - [Experimental Elmo desktop client](desktop/README.md#experimental-elmo-known-password-check): privately prompted existing password, one bounded challenge/response, strict acceptance/rejection, volume/input queries, touch monitoring and an opt-in single greeting. No automatic enrollment, reset, raw commands or credential logging. The original inspection helper remains separate.
@@ -87,6 +89,8 @@ The site serves on port 4173. Live Web Bluetooth requires HTTPS or an eligible l
 
 ## Documentation
 
+- [Device hub: complete phone directions, remembered connections and routines](docs/device-hub.md)
+- [TV companion: Roku, Home Assistant and learned IR setup](docs/tv-remote.md)
 - [Architecture and module APIs](docs/architecture.md)
 - [Supported control families, real-device check workflow and private Elmo source intake](docs/device-action-validation.md)
 - [Protocol recorder, trace format, and adapter catalog](docs/protocol-recorder.md), [source implementation register](docs/research/adapter-inspirations.md)

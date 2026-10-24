@@ -9,6 +9,7 @@ import { validateToy, MAX_TOYS } from './toys.js';
 import { emptyControlSetups, validateControlSetups } from './control-setups.js';
 import { validateTrials } from './action-trials.js';
 import { validateDiscovery, MAX_DISCOVERIES, MAX_DISCOVERY_BYTES } from './discovery.js';
+import { emptyHubData, validateHubData } from './hub-records.js';
 const request = (req) =>
   new Promise((resolve, reject) => {
     req.onsuccess = () => resolve(req.result);
@@ -30,6 +31,7 @@ export class ResearchStore {
     this.settings = {};
     this.controlSetups = emptyControlSetups();
     this.actionTrials = [];
+    this.hubData = emptyHubData();
     this.persistent = false;
     this.warning = '';
     this.corrupt = [];
@@ -220,6 +222,38 @@ export class ResearchStore {
       this.db.transaction('settings', 'readonly').objectStore('settings').get('standard-controls'),
     );
     return value ? validateControlSetups(value) : emptyControlSetups();
+  }
+  async getHubData() {
+    if (this.closed) throw new Error(this.warning);
+    if (!this.persistent) return structuredClone(this.hubData);
+    const value = await request(
+      this.db.transaction('settings', 'readonly').objectStore('settings').get('device-hub'),
+    );
+    return value ? validateHubData(value) : emptyHubData();
+  }
+  async setHubData(value) {
+    if (this.closed) throw new Error(this.warning);
+    const clean = validateHubData(value),
+      next = { ...clean, revision: clean.revision + 1 };
+    if (!this.persistent) {
+      if (this.hubData.revision !== clean.revision)
+        throw new Error('Hub changed in another window. Reload before saving.');
+      this.hubData = structuredClone(next);
+      return next;
+    }
+    const tx = this.db.transaction('settings', 'readwrite'),
+      done = completed(tx);
+    done.catch(() => {});
+    const target = tx.objectStore('settings'),
+      current = await request(target.get('device-hub'));
+    if ((current?.revision ?? 0) !== clean.revision) {
+      tx.abort();
+      await done.catch(() => {});
+      throw new Error('Hub changed in another window. Reload before saving.');
+    }
+    target.put(next, 'device-hub');
+    await done;
+    return next;
   }
   async setControlSetups(value) {
     if (this.closed) throw new Error(this.warning);

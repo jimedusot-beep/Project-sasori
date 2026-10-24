@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="sasori-runtime" content="hosted" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'"
+    />
+    <meta name="referrer" content="no-referrer" />
+    <title>Companion setup · Sasori</title>
+    <link rel="icon" href="icon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="hub.css" />
+    <script type="module" src="companion-ui.js"></script>
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="hub.html"
+        ><img src="icon.svg" width="36" height="36" alt="" /><span
+          >SASORI<small>LOCAL COMPANION</small></span
+        ></a
+      ><a href="hub.html">Device hub ↗</a>
+    </header>
+    <main>
+      <div class="intro">
+        <div>
+          <p class="eyebrow">OPTIONAL / HOME ASSISTANT</p>
+          <h1>Your TV integrations.<br /><span>One remote.</span></h1>
+          <p>Configure this on the companion computer at localhost.</p>
+        </div>
+      </div>
+      <section class="panel" aria-labelledby="setup-title">
+        <h2 id="setup-title">Connect Home Assistant.</h2>
+        <p>
+          Roku’s direct local adapter needs no Home Assistant setup. For other configured media
+          players or an IR hub, add your local Home Assistant connection here.
+        </p>
+        <p id="setup-message" class="notice" role="status">Checking the local companion…</p>
+        <label for="setup-pin">Companion pairing code</label
+        ><input
+          id="setup-pin"
+          type="password"
+          inputmode="numeric"
+          maxlength="6"
+          autocomplete="off"
+          disabled
+        /><label for="ha-url">Local Home Assistant URL</label
+        ><input
+          id="ha-url"
+          type="url"
+          placeholder="http://192.168.1.10:8123"
+          autocomplete="off"
+          disabled
+        /><label for="ha-token">Home Assistant long-lived access token</label
+        ><input
+          id="ha-token"
+          type="password"
+          maxlength="8192"
+          autocomplete="off"
+          spellcheck="false"
+          disabled
+        />
+        <p class="hint">
+          Used by the companion. Cleared from this page after Save. Never included in hub backups or
+          result reports.
+        </p>
+        <label class="check"
+          ><input id="ha-remember" type="checkbox" disabled />Remember on this computer in a private
+          configuration file</label
+        >
+        <p class="hint">
+          Without this option, the connection lasts until the companion stops. Saving new settings
+          disconnects existing companion TV sessions.
+        </p>
+        <button id="save-ha" type="button" class="primary" disabled>
+          Save and check connection
+        </button>
+        <p>
+          <a
+            href="https://contributors.home-assistant.io/core/internals/rest-api/"
+            target="_blank"
+            rel="noopener noreferrer"
+            >Home Assistant token and REST API instructions ↗</a
+          >
+        </p>
+      </section>
+      <p class="experiment-note">
+        Use your configured devices and integrations. Device actions and actual TV responses still
+        need testing on your hardware.
+      </p>
+    </main>
+  </body>
+</html>
