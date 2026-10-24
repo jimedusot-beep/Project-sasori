@@ -538,3 +538,26 @@ footer {
     scroll-behavior: auto !important;
   }
 }
+
+.sound-pads {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin: 18px 0 10px;
+}
+.sound-pads button {
+  font-size: 13px;
+  padding: 12px 8px;
+}
+.reaction-mappings {
+  color: var(--accent);
+  padding-left: 20px;
+}
+#reactions-panel .inline > div {
+  flex: 1;
+  min-width: 0;
+}
+input,
+select {
+  font-size: 16px;
+}

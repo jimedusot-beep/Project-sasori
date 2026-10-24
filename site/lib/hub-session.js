@@ -1,7 +1,7 @@
 import { ElmoRemote, createElmoDemo } from './elmo-remote.js';
 import { DeviceControls } from './device-controls.js';
 import { TVRemote } from './tv-remote.js';
-import { hubFamily, hubAction } from './hub-catalog.js';
+import { hubFamily, hubAction, ELMO_INPUTS } from './hub-catalog.js';
 import { hubFailure } from './hub-records.js';
 import { recordId } from './records.js';
 
@@ -76,6 +76,12 @@ export class HubSession {
       inputSequence: raw.report?.inputSequence || 0,
       soundRequestedId: raw.report?.soundRequestedId ?? null,
       soundQueued: raw.report?.soundQueued || false,
+      soundRequests: raw.report?.soundRequests || 0,
+      soundWrites: raw.report?.soundWrites || 0,
+      soundReadyIn: raw.soundReadyIn || 0,
+      soundLimit: raw.soundLimit || 1,
+      volumeLimit: raw.volumeLimit || 4,
+      sessionMode: raw.report?.sessionMode || 'check',
       volumeChanges: raw.report?.volumeChanges || 0,
       passwordSetupOutcome: raw.report?.passwordSetupOutcome || 'not-attempted',
       reason: raw.report?.reason || raw.reason || '',
@@ -109,12 +115,15 @@ export class HubSession {
     if (this.familyId === 'elmo-l2l/v1')
       return (
         intent === 'status' ||
-        (intent === 'sound' && s.soundRequestedId === null) ||
-        (intent === 'volume' && s.volumeChanges < 4)
+        (intent === 'sound' && s.soundRequests < s.soundLimit && this.readyIn('sound') === 0) ||
+        (intent === 'volume' && s.volumeChanges < s.volumeLimit)
       );
     if (this.familyId === 'tv-local/v1')
       return intent === 'status' || (intent === 'key' && s.keys.includes(args.key));
     return s.capabilities[intent] === true;
+  }
+  readyIn(intent) {
+    return this.familyId === 'elmo-l2l/v1' ? this.backend.readyIn(intent) : 0;
   }
   async connect(options = {}) {
     if (['connected', 'connecting'].includes(this.snapshot().state))
@@ -168,11 +177,13 @@ export class HubSession {
   stop(reason = 'user-stop') {
     this.backend.stop(reason);
   }
-  simulateTouch() {
+  simulateTouch(input = 'nose') {
     if (!this.synthetic || !this.demoBluetooth)
       throw new Error('A simulated Elmo connection is required.');
+    const index = ELMO_INPUTS.indexOf(input);
+    if (index < 0) throw new Error('Choose a known input.');
     this.demoBluetooth.simulateInput(0);
-    this.demoBluetooth.simulateInput(0x40);
+    this.demoBluetooth.simulateInput(1 << index);
   }
   result(ownerObservation = 'not-tested') {
     const s = this.snapshot();
@@ -188,6 +199,9 @@ export class HubSession {
       passwordSetupOutcome: s.passwordSetupOutcome,
       soundRequestedId: s.soundRequestedId,
       soundQueued: s.soundQueued,
+      soundRequests: s.soundRequests,
+      soundWrites: s.soundWrites,
+      sessionMode: s.sessionMode,
       volumeReported: s.volume,
       volumeRequested: s.volumeRequested,
       volumeChanges: s.volumeChanges,

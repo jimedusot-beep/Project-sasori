@@ -64,6 +64,11 @@
             <p id="browser-help" class="hint"></p>
           </div>
           <div id="elmo-options">
+            <label for="elmo-mode">Session type</label
+            ><select id="elmo-mode">
+              <option value="control">Control session · up to 10 minutes</option>
+              <option value="check">Quick check · 30 seconds, one sound</option>
+            </select>
             <label for="hub-password">Elmo password</label
             ><input
               id="hub-password"
@@ -232,8 +237,18 @@
               ><button id="hub-sound" type="button" class="sound-button">Play sound ♫</button>
             </div>
             <p class="hint">
-              One sound request per connection. Listen to the toy to confirm playback.
+              <span id="sound-budget"
+                >Control session supports repeated requests with a four-second gap.</span
+              >
+              Listen to the toy to confirm playback.
             </p>
+            <div
+              id="sound-pads"
+              class="sound-pads"
+              role="group"
+              aria-label="Quick sound controls"
+            ></div>
+            <p id="sound-count" class="hint" role="status"></p>
             <label for="volume-choice">Requested volume (1–15)</label>
             <div class="inline">
               <input id="volume-choice" type="number" min="1" max="15" step="1" value="5" /><button
@@ -247,9 +262,52 @@
             <p id="volume-note" class="hint">Reported volume: unknown.</p>
             <h3>Touch inputs</h3>
             <ul id="touch-inputs" class="sensor-list" aria-label="Reported Elmo inputs"></ul>
+            <div id="demo-input-field" hidden>
+              <label for="demo-input">Demo touch input</label
+              ><select id="demo-input"></select>
+            </div>
             <button id="simulate-touch" type="button" class="quiet" hidden>
               Simulate a nose press
             </button>
+            <details id="reactions-panel">
+              <summary>Live touch reactions</summary>
+              <p>
+                Assign sounds to inputs, then arm reactions for this control session. Release and
+                press an input to trigger it again. Busy or closely spaced presses are skipped.
+              </p>
+              <div class="inline">
+                <div>
+                  <label for="reaction-input">Touch input</label
+                  ><select id="reaction-input"></select>
+                </div>
+                <div>
+                  <label for="reaction-sound">Sound response</label
+                  ><select id="reaction-sound"></select>
+                </div>
+              </div>
+              <div class="action-row">
+                <button id="map-reaction" class="secondary" type="button">
+                  Add / replace mapping</button
+                ><button id="reaction-starter" class="quiet" type="button">
+                  Use playful mappings</button
+                ><button id="clear-reactions" class="quiet" type="button">Clear mappings</button>
+              </div>
+              <ul id="reaction-mappings" class="reaction-mappings"></ul>
+              <div class="action-row">
+                <button id="arm-reactions" class="primary" type="button" disabled>
+                  Arm touch reactions</button
+                ><button id="disarm-reactions" class="danger" type="button" disabled>Disarm</button
+                ><button id="save-reactions" class="quiet" type="button">
+                  Save mappings with setup
+                </button>
+              </div>
+              <p id="reaction-status" class="message" role="status" aria-live="polite">
+                Reactions are disarmed. Nothing runs automatically.
+              </p>
+              <button id="reaction-result" class="quiet" type="button" disabled>
+                Save reaction result ↓
+              </button>
+            </details>
           </div>
           <div id="tv-controls" hidden>
             <div class="tv-nav">
@@ -317,7 +375,7 @@
       <section class="panel routine-panel" aria-labelledby="routine-title">
         <div class="panel-head">
           <span class="eyebrow">03 / AUTOMATE</span
-          ><span class="badge">MANUAL START · 20 SECOND LIMIT</span>
+          ><span class="badge">MANUAL START · 2 MINUTE LIMIT</span>
         </div>
         <h2 id="routine-title">Your saved routines.</h2>
         <p>Reuse a few supported actions. Routines start only when you press Run.</p>
@@ -350,7 +408,7 @@
               </div>
               <div id="step-wait-field" hidden>
                 <label for="step-wait">Wait milliseconds</label
-                ><input id="step-wait" type="number" min="50" max="5000" step="50" value="1000" />
+                ><input id="step-wait" type="number" min="50" max="30000" step="50" value="1000" />
               </div>
               <div id="step-touch-field" hidden>
                 <label for="step-touch">Input to wait for</label
@@ -364,6 +422,14 @@
             </div>
             <div>
               <h3>Steps</h3>
+              <div id="performance-field">
+                <label for="performance-preset">Ready-made performance</label
+                ><select id="performance-preset">
+                  <option value="touch">Touch → hello</option>
+                  <option value="comedy">Little comedy routine</option>
+                  <option value="music">Clap and music</option>
+                </select>
+              </div>
               <ol id="routine-steps"></ol>
               <div class="backup-actions">
                 <button id="remove-step" type="button" class="quiet">Remove last step</button
@@ -373,8 +439,9 @@
                 </button>
               </div>
               <p class="hint">
-                Up to 8 steps, one sound and one touch trigger. Touch triggers require a new release
-                → press while this page stays open.
+                Up to 32 steps, twelve sounds and four touch triggers. Sound requests are paced
+                automatically in Control sessions. Touch triggers require a new release → press
+                while this page stays open.
               </p>
             </div>
           </div>

@@ -72,7 +72,7 @@ class SessionFixture {
 test('extended Elmo codecs permit only catalog IDs and exact 1–15 integer volume bytes', () => {
   assert.deepEqual(
     ELMO_SOUNDS.map((s) => s.id),
-    [9, 94, 444, 445, 448],
+    [9, 94, 444, 445, 448, 7, 8, 11, 95, 96, 110, 111, 350, 446, 447, 449, 450, 451, 452, 453],
   );
   assert.deepEqual([...elmoSoundCommand(444)], [0x10, 0xbc, 1]);
   assert.deepEqual([...elmoVolumeCommand(3)], [0x23, 3]);
@@ -150,8 +150,8 @@ test('routine validation drops unknown fields and rejects raw commands, cross-fa
   assert.ok(!JSON.stringify(good).includes('never-kept'));
   for (const steps of [
     [action('raw', { hex: 'ff' })],
-    [action('sound', { id: 9 }), action('sound', { id: 444 })],
-    Array(9).fill(action('status')),
+    Array(13).fill(action('sound', { id: 9 })),
+    Array(33).fill(action('status')),
     [{ kind: 'wait', ms: 999999 }],
     [{ kind: 'touch', input: 'motor', timeoutMs: 1000 }],
   ])
