@@ -43,7 +43,7 @@ export function parsePocketStatus(value) {
       new Uint8Array(value.buffer, value.byteOffset, value.byteLength),
     );
   }
-  if (value.length > 120 || /[\u0000-\u001f\u007f]/.test(value))
+  if (value.length > 120 || [...value].some((ch) => ch.charCodeAt(0) < 32 || ch.charCodeAt(0) === 127))
     return { type: 'unrecognized', message: 'Unrecognized bridge status.' };
   if (value === 'ready') return { type: 'ready', message: 'Bridge reports ready.' };
   const match = /^(saved|sent|pressed):([1-5])$/.exec(value);
