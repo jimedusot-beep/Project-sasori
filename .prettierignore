@@ -1,4 +1,6 @@
 node_modules
+build
+hardware/pocket-ir/UPSTREAM-WIRING.md
 package-lock.json
 playwright-report
 test-results
