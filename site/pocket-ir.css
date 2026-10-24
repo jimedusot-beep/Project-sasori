@@ -26,6 +26,7 @@ a:hover {
 a:focus-visible,
 button:focus-visible,
 input:focus-visible,
+.events:focus-visible,
 select:focus-visible {
   outline: 3px solid #a5f6d9;
   outline-offset: 3px;
