@@ -1,0 +1,33 @@
+name: Format pocket IR draft
+
+on:
+  push:
+    branches:
+      - feature/pocket-ir-bridge-pilot-2026-10-24
+    paths:
+      - .github/workflows/format-pocket-ir-draft.yml
+
+permissions:
+  contents: write
+
+jobs:
+  format-draft:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - name: Format new pilot files
+        run: npx prettier --write docs/pocket-ir-pilot.md site/hub.html site/lib/pocket-ir.js site/pocket-ir-ui.js site/pocket-ir.css site/pocket-ir.html tests/pocket-ir.test.mjs
+      - name: Commit mechanical formatting
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add docs/pocket-ir-pilot.md site/hub.html site/lib/pocket-ir.js site/pocket-ir-ui.js site/pocket-ir.css site/pocket-ir.html tests/pocket-ir.test.mjs
+          if ! git diff --cached --quiet; then
+            git commit -m 'style: apply repository Prettier to pocket IR pilot'
+            git push origin HEAD:feature/pocket-ir-bridge-pilot-2026-10-24
+          fi
