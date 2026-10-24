@@ -1,5 +1,13 @@
-import { MAX_IR_BYTES, parseFlipperIR, profileFromFlipperIR } from './lib/flipper-ir.js';
-import { IR_EXAMPLE_NAME, IR_EXAMPLE_SOURCE, IR_EXAMPLE_TEXT } from './lib/flipper-ir-example.js';
+import {
+  MAX_IR_BYTES,
+  parseFlipperIR,
+  profileFromFlipperIR,
+} from './lib/flipper-ir.js?v=ir-import-20261024';
+import {
+  IR_EXAMPLE_NAME,
+  IR_EXAMPLE_SOURCE,
+  IR_EXAMPLE_TEXT,
+} from './lib/flipper-ir-example.js?v=ir-import-20261024';
 import { recordId } from './lib/records.js';
 
 export function setupIRImport({ canUse, canSave, saveProfile }) {

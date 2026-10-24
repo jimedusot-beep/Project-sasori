@@ -239,3 +239,27 @@ test('expanded import preview fits a phone and meets keyboard/contrast/label che
   );
   await expect(page.locator('#ir-signals')).toHaveAttribute('tabindex', '0');
 });
+
+test('returning browsers bypass stale unversioned remote scripts', async ({ page }) => {
+  await page.route('**/pocket-ir-ui.js*', (route) => {
+    if (!new URL(route.request().url()).search)
+      return route.fulfill({
+        contentType: 'text/javascript',
+        body: "document.getElementById('connection').textContent = 'Previous cached build';",
+      });
+    return route.continue();
+  });
+  await page.route('**/pocket-ir-import-ui.js*', (route) => {
+    if (!new URL(route.request().url()).search)
+      return route.fulfill({
+        contentType: 'text/javascript',
+        body: "export function setupIRImport() { throw new Error('Previous cached importer'); }",
+      });
+    return route.continue();
+  });
+  await open(page);
+  await example(page);
+  await page.locator('#ir-save').click();
+  await expect(page.locator('#profile option:checked')).toHaveText('Sony Bravia example');
+  await expect(page.locator('#ir-status')).toContainText('Saved 5 named buttons');
+});
