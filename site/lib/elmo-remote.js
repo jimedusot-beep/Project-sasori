@@ -6,6 +6,8 @@ import {
   elmoPasswordSetup,
   elmoResponse,
   elmoCommand,
+  elmoSoundCommand,
+  elmoVolumeCommand,
   decodeElmo,
 } from './elmo-codec.js';
 
@@ -227,7 +229,10 @@ export class ElmoRemote {
         this.#signal('authentication');
       } else if (this.#phase !== 'accepted') this.stop('unsolicited-acceptance');
     } else if (this.#phase === 'accepted') {
-      if (packet.kind === 'inputs') this.report.inputs = packet.value;
+      if (packet.kind === 'inputs') {
+        this.report.inputs = packet.value;
+        this.report.inputSequence++;
+      }
       if (packet.kind === 'volume' && this.#query === 'volume') this.report.volume = packet.value;
       if (packet.kind === this.#query) this.#signal(this.#query);
     }
@@ -272,6 +277,11 @@ export class ElmoRemote {
       passwordSetupOutcome: 'not-attempted',
       helloRequested: false,
       helloQueued: false,
+      soundRequestedId: null,
+      soundQueued: false,
+      volumeRequested: null,
+      volumeChanges: 0,
+      inputSequence: 0,
       volume: null,
       inputs: null,
       queries: {},
@@ -422,8 +432,8 @@ export class ElmoRemote {
       if (this.#phase === pending) this.#phase = waiting;
     }
   }
-  async #read(run) {
-    for (const intent of ['volume', 'inputs']) {
+  async #read(run, intents = ['volume', 'inputs']) {
+    for (const intent of intents) {
       this.#guard(run);
       this.#query = intent;
       this.#signals.delete(intent);
@@ -460,14 +470,57 @@ export class ElmoRemote {
   async greet() {
     if (this.state !== 'ready' || this.busy || this.report.helloRequested)
       throw new ElmoRemoteError('not-ready');
+    return this.playSound(9);
+  }
+  async playSound(id) {
+    let packet;
+    try {
+      packet = elmoSoundCommand(id);
+    } catch {
+      throw new ElmoRemoteError('unsupported-sound');
+    }
+    if (this.state !== 'ready' || this.busy) throw new ElmoRemoteError('not-ready');
+    if (this.report.soundRequestedId !== null) throw new ElmoRemoteError('sound-limit');
     const run = this.#run;
     this.busy = true;
-    this.report.helloRequested = true;
+    this.report.soundRequestedId = id;
+    if (id === 9) this.report.helloRequested = true;
     this.#publish();
     try {
-      await this.#step(() => this.#tx.writeValueWithoutResponse(elmoCommand('hello')), run);
+      await this.#step(() => this.#tx.writeValueWithoutResponse(packet), run);
       this.#guard(run);
-      this.report.helloQueued = true;
+      this.report.soundQueued = true;
+      if (id === 9) this.report.helloQueued = true;
+    } catch (error) {
+      if (run === this.#run) this.stop(failure(error).code);
+      throw failure(error);
+    } finally {
+      if (run === this.#run) {
+        this.busy = false;
+        this.#publish();
+      }
+    }
+  }
+  async setVolume(level) {
+    let packet;
+    try {
+      packet = elmoVolumeCommand(level);
+    } catch {
+      throw new ElmoRemoteError('invalid-volume');
+    }
+    if (this.state !== 'ready' || this.busy) throw new ElmoRemoteError('not-ready');
+    if (this.report.volumeChanges >= 4) throw new ElmoRemoteError('volume-limit');
+    const run = this.#run;
+    this.busy = true;
+    this.report.volumeRequested = level;
+    this.report.volumeChanges++;
+    this.#publish();
+    try {
+      await this.#step(() => this.#tx.writeValueWithoutResponse(packet), run);
+      this.#guard(run);
+      // A later query is an observation, not an acknowledgment of the setting write.
+      await this.#read(run, ['volume']);
+      this.#guard(run);
     } catch (error) {
       if (run === this.#run) this.stop(failure(error).code);
       throw failure(error);
@@ -532,6 +585,8 @@ export function createElmoDemo() {
     tx = { uuid: ELMO_TX, properties: { writeWithoutResponse: true } };
   rx.uuid = ELMO_RX;
   rx.properties = { notify: true };
+  let volume = 5,
+    inputs = 0x41;
   const notify = (bytes) => {
     rx.value = new DataView(Uint8Array.from(bytes).buffer);
     rx.dispatchEvent(new Event('characteristicvaluechanged'));
@@ -543,8 +598,9 @@ export function createElmoDemo() {
   tx.writeValueWithoutResponse = async (value) => {
     const bytes = Array.from(value);
     if (bytes[0] === 0x41) notify(bytes.join(',') === '65,10,142,18,236' ? [0x40, 1] : [0x40, 2]);
-    if (bytes.join(',') === '34') notify([0x22, 5]);
-    if (bytes.join(',') === '32') notify([0x20, 0x41]);
+    if (bytes[0] === 0x23 && bytes.length === 2) volume = bytes[1];
+    if (bytes.join(',') === '34') notify([0x22, volume]);
+    if (bytes.join(',') === '32') notify([0x20, inputs]);
   };
   const device = new EventTarget();
   device.name = 'Demo Elmo';
@@ -561,5 +617,11 @@ export function createElmoDemo() {
       this.connected = false;
     },
   };
-  return { requestDevice: async () => device };
+  return {
+    requestDevice: async () => device,
+    simulateInput(mask) {
+      inputs = mask;
+      notify([0x20, inputs]);
+    },
+  };
 }

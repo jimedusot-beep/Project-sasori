@@ -1,5 +1,7 @@
 # Sasori desktop BLE helper
 
+For TV controls from your phone, use the separate [local TV companion guide](../docs/tv-remote.md). `sasori_hub.py` serves the shared device hub and fixed Roku/Home Assistant/learned-IR APIs, using only the Python standard library. Its optional localhost configuration screen keeps Home Assistant credentials on the companion computer. It does not change the BLE inspection tools described below.
+
 The original `sasori_ble.py` is an owner-run Python/Bleak inspection tool. It uses your computer's Bluetooth adapter, asks you to select a nearby device, and creates a Sasori session JSON file. That inspection tool has no application-write API. A separate experimental `sasori_elmo.py` now offers the source-derived known-password Elmo check below. Neither tool runs an HTTP server or accepts remote commands.
 
 Use Python 3.12+ with platform Bluetooth support:
@@ -39,7 +41,7 @@ In Sasori open **Research records → Import research file** and choose the JSON
 
 Exports omit raw bytes by default. Explicit --retain-payloads retains private packet hex; review and secure that file yourself. Output must be outside the repository and is created exclusively with owner-only permissions where supported. Existing files and symlink targets are never overwritten. Regular Sasori metadata backups omit raw values again.
 
-Bluetooth connection/subscription is not Elmo authentication. A silent capture is inconclusive. Serial/USB/IR/RF live adapters are not implemented; use offline Discovery for separately captured observations.
+Bluetooth connection/subscription is not Elmo authentication. A silent capture is inconclusive. Serial/USB/RF live adapters are not implemented; use offline Discovery for separately captured observations. Live learned IR is available separately through the TV companion and a configured physical Home Assistant IR hub.
 
 ## Tests
 

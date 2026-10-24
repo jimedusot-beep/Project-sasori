@@ -27,6 +27,11 @@ for (let attempt = 1; attempt <= 4; attempt++) {
       'elmo.html',
       'elmo.css',
       'elmo-ui.js',
+      'hub.html',
+      'hub.css',
+      'hub-ui.js',
+      'companion.html',
+      'companion-ui.js',
     ])
       await check(file);
     console.log('Verified deployed HTTPS site and ' + checked.size + ' assets at ' + base);

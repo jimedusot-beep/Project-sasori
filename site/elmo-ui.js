@@ -76,7 +76,7 @@ function render(next = state) {
   $('elmo-demo').disabled = working;
   $('elmo-choose').hidden = !lastLiveDevice;
   $('elmo-choose').disabled = working || !supported;
-  $('elmo-greet').disabled = !connected || state.busy || !!report?.helloRequested;
+  $('elmo-greet').disabled = !connected || state.busy || report?.soundRequestedId != null;
   $('elmo-status').disabled = !connected || state.busy;
   $('elmo-disconnect').disabled = !working;
   $('elmo-save').disabled = working || !report;

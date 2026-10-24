@@ -3,6 +3,14 @@
 export const ELMO_SERVICE = 'dab91435-b5a1-e29c-b041-bcd562613bdf';
 export const ELMO_RX = 'dab91382-b5a1-e29c-b041-bcd562613bdf';
 export const ELMO_TX = 'dab91383-b5a1-e29c-b041-bcd562613bdf';
+// Numeric IDs are protocol facts from the pinned community catalog; no audio or transcripts.
+export const ELMO_SOUNDS = Object.freeze([
+  Object.freeze({ id: 9, label: 'Greeting' }),
+  Object.freeze({ id: 94, label: 'Clap sound' }),
+  Object.freeze({ id: 444, label: 'Laugh' }),
+  Object.freeze({ id: 445, label: 'Another laugh' }),
+  Object.freeze({ id: 448, label: 'Giggle' }),
+]);
 export const ELMO_INPUTS = Object.freeze([
   'left_hand',
   'right_hand',
@@ -125,6 +133,18 @@ export function elmoPasswordSetup(digest) {
   packet[0] = 0x40;
   packet.set(digest, 1);
   return packet;
+}
+
+export function elmoSoundCommand(id) {
+  if (!Number.isSafeInteger(id) || !ELMO_SOUNDS.some((sound) => sound.id === id))
+    throw new Error('Choose a supported Elmo sound.');
+  return Uint8Array.of(0x10, id & 255, id >>> 8);
+}
+
+export function elmoVolumeCommand(level) {
+  if (!Number.isSafeInteger(level) || level < 1 || level > 15)
+    throw new Error('Elmo volume must be an integer from 1 to 15.');
+  return Uint8Array.of(0x23, level);
 }
 
 export function elmoCommand(intent) {

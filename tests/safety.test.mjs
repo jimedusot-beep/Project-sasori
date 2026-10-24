@@ -25,7 +25,7 @@ test('UUID validation requires a concrete full identifier and excludes Nordic DF
   assert.throws(() => normalizeUUID('180A'));
   assert.throws(() => normalizeUUID('00001532-1212-efde-1523-785feabcd123'));
 });
-test('inspection scripts have no write API and all shipped scripts lack credentials or remote senders', async () => {
+test('inspection scripts have no write API and shipped scripts use no raw remote sender or HTML injection', async () => {
   const paths = [
     'site/app.js',
     'site/discovery-ui.js',
@@ -33,6 +33,8 @@ test('inspection scripts have no write API and all shipped scripts lack credenti
     'site/controls-ui.js',
     'site/recorder-ui.js',
     'site/elmo-ui.js',
+    'site/hub-ui.js',
+    'site/companion-ui.js',
     'site/elmo-packets.mjs',
     ...(await readdir('site/lib')).filter((x) => x.endsWith('.js')).map((x) => 'site/lib/' + x),
   ];
@@ -58,4 +60,14 @@ test('inspection scripts have no write API and all shipped scripts lack credenti
   assert.match(remote, /connect-src 'none'/);
   assert.match(remote, /form-action 'none'/);
   assert.match(remote, /autocomplete="off"/);
+  for (const path of ['site/hub.html', 'site/companion.html']) {
+    const html = await readFile(path, 'utf8');
+    assert.match(html, /connect-src 'self'/);
+    assert.match(html, /form-action 'none'/);
+    assert.doesNotMatch(html, /connect-src[^;]*https?:/);
+  }
+  const tv = await readFile('site/lib/tv-remote.js', 'utf8');
+  assert.match(tv, /if \(!API_PATHS\.has\(path\)\)/);
+  assert.match(tv, /this\.fetcher\('\/api\/tv\/disconnect'/);
+  assert.doesNotMatch(tv, /https?:\/\//);
 });

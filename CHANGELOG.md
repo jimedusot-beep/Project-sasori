@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Add a phone-ready Device hub across Elmo, standard BLE, original MiP and local TV adapters, with remembered setups, grant restoration where supported and useful failure explanations.
+- Extend the original Elmo codec with five reviewed sound IDs and volume 1–15 requests, preserving one-sound/four-volume/30-second session limits and separate reported state.
+- Add saved family-specific routines with explicit start, fresh touch triggers, eight-step/20-second bounds, cancellation and private synthetic/live result receipts.
+- Add an original standard-library local TV companion: paired browsers, fixed Roku/Home Assistant media actions, optional private localhost configuration and learned IR through compatible hardware. Include complete phone/helper directions and primary protocol citations. Physical behavior remains unverified.
 - Restructure device connections around selected identity, actual active connection state, recent sessions, browser setup, capture timeline, and direct notification handoff to Discovery.
 - Extend saved profiles with model/revision/firmware, snapshot inspection transport and measured GATT duration, and collect non-imported live capture candidates without claiming physical verification.
 - Preserve the last five previous research title/note versions in local records and metadata backups.

@@ -1,0 +1,409 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+    <meta name="theme-color" content="#111918" />
+    <meta name="sasori-runtime" content="hosted" />
+    <meta
+      name="description"
+      content="One Sasori hub for your toys, Bluetooth gadgets, TV remotes and saved routines."
+    />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'"
+    />
+    <meta name="referrer" content="no-referrer" />
+    <title>Device Hub · Project Sasori</title>
+    <link rel="icon" href="icon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="hub.css" />
+    <script type="module" src="hub-ui.js"></script>
+  </head>
+  <body>
+    <a class="skip" href="#workspace">Skip to controls</a>
+    <header class="topbar">
+      <a class="brand" href="hub.html"
+        ><img src="icon.svg" alt="" width="36" height="36" /><span
+          >SASORI<small>YOUR DEVICES. YOUR CONTROLS.</small></span
+        ></a
+      ><a href="index.html">Full laboratory ↗</a>
+    </header>
+    <main id="workspace">
+      <div class="intro">
+        <div>
+          <p class="eyebrow">THE DEVICE HUB</p>
+          <h1>Connect. Control.<br /><span>Make it yours.</span></h1>
+          <p>Your toys and small remotes, with a setup you can use again.</p>
+        </div>
+        <div class="intro-note"><span class="dot"></span>One selected device at a time.</div>
+      </div>
+      <div class="family-grid" id="families" role="group" aria-label="Device families"></div>
+      <p class="hint" id="family-hint"></p>
+      <div id="storage-notice" class="notice" role="status" hidden></div>
+      <div class="hub-grid">
+        <section class="panel setup-panel" aria-labelledby="setup-title">
+          <div class="panel-head">
+            <span class="eyebrow">01 / CONNECT</span><span class="badge" id="source">LIVE</span>
+          </div>
+          <h2 id="setup-title">Your device.</h2>
+          <label for="saved-setup">Saved setup</label>
+          <div class="inline">
+            <select id="saved-setup">
+              <option value="">New device</option></select
+            ><button id="new-setup" type="button" class="quiet">New</button>
+          </div>
+          <label for="device-label">Device label</label
+          ><input id="device-label" maxlength="80" value="My Elmo" autocomplete="off" />
+          <div id="ble-options">
+            <label for="device-prefix"
+              >Bluetooth name starts with <span class="optional">(optional)</span></label
+            ><input id="device-prefix" maxlength="60" value="Elmo" autocomplete="off" /><label
+              class="check"
+              ><input id="show-all" type="checkbox" />Show all Bluetooth devices</label
+            >
+            <p id="browser-help" class="hint"></p>
+          </div>
+          <div id="elmo-options">
+            <label for="hub-password">Elmo password</label
+            ><input
+              id="hub-password"
+              type="password"
+              minlength="4"
+              maxlength="128"
+              autocomplete="off"
+              autocapitalize="off"
+              spellcheck="false"
+              placeholder="Existing password, or new for setup"
+            />
+            <p class="hint">Used locally and cleared after Connect. Passwords are never saved.</p>
+            <label class="check"
+              ><input id="allow-setup" type="checkbox" />Set this password if Elmo reports
+              none</label
+            >
+            <details>
+              <summary>I don’t know Elmo’s password</summary>
+              <p>
+                If the original app opens, its settings under
+                <strong>Elmo Toy Connection</strong> can show the password. For forgotten-password
+                recovery, Hasbro documents a physical reset.
+              </p>
+              <p>
+                <strong>Reset erases saved personalization.</strong> Disconnect, keep Elmo switched
+                ON, press the factory-reset button next to the battery compartment, and listen for
+                confirmation. Enter a new password here and select the setup checkbox.
+              </p>
+              <p>
+                <a
+                  href="https://hasbro-new.custhelp.com/app/answers/detail/a_id/366/~/i-forgot-my-love2learn-elmo-app-password.-how-do-i-get-back-into-the-app%3F"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  >Hasbro’s recovery instructions ↗</a
+                >
+                · <a href="elmo.html">Original Elmo remote ↗</a>
+              </p>
+              <p>
+                After reported setup acceptance, reconnect with setup unchecked to test password
+                retention. Wireless bypass and physical behavior remain unverified.
+              </p>
+            </details>
+          </div>
+          <div id="tv-options" hidden>
+            <div id="tv-hosted" class="notice">
+              <strong>TV controls need the local companion.</strong>
+              <p>
+                Use Roku’s local API, your configured Home Assistant media players, or an IR hub
+                with learned buttons. Your phone stays on the same network as the companion.
+              </p>
+              <label for="companion-address">Companion address</label
+              ><input
+                id="companion-address"
+                type="url"
+                placeholder="http://192.168.1.20:8765"
+                autocomplete="off"
+              /><button id="open-companion" class="secondary" type="button">
+                Open local TV hub ↗
+              </button>
+              <p>
+                <a
+                  href="https://github.com/jimedusot-beep/Project-sasori/blob/main/docs/tv-remote.md"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  >Companion setup and supported controls ↗</a
+                >
+              </p>
+              <p class="hint">
+                A web page cannot emit infrared by itself. An IR hub is needed for ordinary infrared
+                remotes.
+              </p>
+            </div>
+            <div id="tv-local" hidden>
+              <p class="hint">
+                <a href="companion.html">Configure Home Assistant on the companion computer ↗</a>
+              </p>
+              <label for="tv-driver">Connection method</label
+              ><select id="tv-driver">
+                <option value="roku">Roku local network</option>
+                <option value="ha-media">Home Assistant media player</option>
+                <option value="ha-remote">Home Assistant learned IR remote</option></select
+              ><label for="tv-target" id="tv-target-label">Roku local IPv4 address</label
+              ><input
+                id="tv-target"
+                maxlength="160"
+                autocomplete="off"
+                placeholder="192.168.1.40"
+              />
+              <div id="ir-device-field" hidden>
+                <label for="ir-device">Learned IR device label</label
+                ><input id="ir-device" maxlength="60" value="sasori-tv" autocomplete="off" />
+                <p class="hint">Use the same label when learning and sending buttons.</p>
+              </div>
+              <label for="companion-pin"
+                >Companion pairing code <span class="optional">(first connection)</span></label
+              ><input
+                id="companion-pin"
+                type="password"
+                inputmode="numeric"
+                maxlength="6"
+                autocomplete="off"
+                placeholder="6 digits shown on your computer"
+              /><button id="find-ha" type="button" class="quiet">
+                List configured Home Assistant devices</button
+              ><label for="ha-entities" id="ha-entities-label" hidden>Configured device</label
+              ><select id="ha-entities" hidden></select>
+              <p class="hint">
+                Home Assistant credentials stay in the companion. Its token is never entered on this
+                page.
+              </p>
+            </div>
+          </div>
+          <div class="connect-actions">
+            <button id="hub-connect" class="primary" type="button">Connect device →</button
+            ><button id="hub-demo" class="secondary" type="button">Try offline demo</button>
+          </div>
+          <button id="choose-again" class="quiet" type="button" hidden>
+            Choose another device next time
+          </button>
+          <p id="saved-note" class="hint">
+            Setups are saved on this browser. A saved setup does not connect automatically.
+          </p>
+          <p id="last-result" class="hint"></p>
+          <div class="backup-actions">
+            <button id="save-setup" class="quiet" type="button">Save setup</button
+            ><button id="remove-setup" class="quiet" type="button" disabled>Remove setup</button
+            ><button id="hub-export" class="quiet" type="button">Export hub backup</button
+            ><label class="file-button" for="hub-import"
+              >Import backup<input id="hub-import" type="file" accept=".json,application/json"
+            /></label>
+          </div>
+        </section>
+        <section class="panel controls-panel" aria-labelledby="controls-title">
+          <div class="panel-head">
+            <span class="eyebrow">02 / CONTROL</span><span id="remaining" class="hint"></span>
+          </div>
+          <div class="state-heading">
+            <span class="device-mark" aria-hidden="true">↔</span>
+            <div>
+              <p id="connected-name" class="eyebrow">YOUR DEVICE</p>
+              <h2 id="controls-title">Ready when you are.</h2>
+            </div>
+          </div>
+          <p id="connection-message" class="message" role="status" aria-live="polite">
+            Choose a device family, then connect or try its demo.
+          </p>
+          <p id="demo-banner" class="demo-banner" hidden>
+            DEMO · Synthetic responses. No physical device is connected or commanded.
+          </p>
+          <div id="failure-help" class="notice" hidden>
+            <strong id="failure-title"></strong>
+            <p id="failure-hint"></p>
+          </div>
+          <div class="readings">
+            <div><span>CONNECTION</span><strong id="connection-state">Not connected</strong></div>
+            <div><span>LAST REPORTED STATE</span><strong id="device-state">Unknown</strong></div>
+          </div>
+          <div id="generic-actions" class="action-row" hidden>
+            <button id="hub-identify" class="secondary" type="button">Identify</button
+            ><button id="hub-alert" class="secondary" type="button">Find / light</button>
+          </div>
+          <div id="elmo-controls">
+            <label for="sound-choice">Built-in catalog sound</label>
+            <div class="inline">
+              <select id="sound-choice"></select
+              ><button id="hub-sound" type="button" class="sound-button">Play sound ♫</button>
+            </div>
+            <p class="hint">
+              One sound request per connection. Listen to the toy to confirm playback.
+            </p>
+            <label for="volume-choice">Requested volume (1–15)</label>
+            <div class="inline">
+              <input id="volume-choice" type="number" min="1" max="15" step="1" value="5" /><button
+                id="hub-volume"
+                type="button"
+                class="secondary"
+              >
+                Apply volume
+              </button>
+            </div>
+            <p id="volume-note" class="hint">Reported volume: unknown.</p>
+            <h3>Touch inputs</h3>
+            <ul id="touch-inputs" class="sensor-list" aria-label="Reported Elmo inputs"></ul>
+            <button id="simulate-touch" type="button" class="quiet" hidden>
+              Simulate a nose press
+            </button>
+          </div>
+          <div id="tv-controls" hidden>
+            <div class="tv-nav">
+              <button type="button" class="secondary" data-tv-key="home">Home</button
+              ><button type="button" class="secondary" data-tv-key="up" aria-label="TV up">↑</button
+              ><button type="button" class="secondary" data-tv-key="back">Back</button
+              ><button type="button" class="secondary" data-tv-key="left" aria-label="TV left">
+                ←</button
+              ><button type="button" class="primary" data-tv-key="select">OK</button
+              ><button type="button" class="secondary" data-tv-key="right" aria-label="TV right">
+                →</button
+              ><button type="button" class="secondary" data-tv-key="previous">
+                Rewind / previous</button
+              ><button type="button" class="secondary" data-tv-key="down" aria-label="TV down">
+                ↓</button
+              ><button type="button" class="secondary" data-tv-key="next">Forward / next</button>
+            </div>
+            <div class="tv-utility">
+              <button type="button" class="secondary" data-tv-key="volume-down">Volume −</button
+              ><button type="button" class="secondary" data-tv-key="mute">Mute</button
+              ><button type="button" class="secondary" data-tv-key="volume-up">Volume +</button
+              ><button type="button" class="secondary" data-tv-key="play">Play / pause</button
+              ><button type="button" class="secondary" data-tv-key="power-on">Power on</button
+              ><button type="button" class="secondary" data-tv-key="power-off">Power off</button>
+            </div>
+            <p class="hint">
+              Only the connected adapter’s available buttons are enabled. A sent request does not
+              confirm the TV responded.
+            </p>
+            <details id="ir-learning" hidden>
+              <summary>Learn a button from my original IR remote</summary>
+              <p>
+                Use a compatible configured IR hub. Choose a button, start learning, then point the
+                original remote at the hub and press that button when the hub signals.
+              </p>
+              <label for="learn-key">Button to learn</label
+              ><select id="learn-key"></select
+              ><button id="learn-button" type="button" class="secondary">Start IR learning</button>
+              <p class="hint">
+                Codes stay in Home Assistant. Learning requires the physical hub and original
+                remote; Sasori does not learn RF signals.
+              </p>
+            </details>
+          </div>
+          <div class="action-row bottom-actions">
+            <button id="hub-status" type="button" class="secondary">Read status</button
+            ><button id="hub-stop" type="button" class="danger" disabled>
+              Stop &amp; disconnect
+            </button>
+          </div>
+          <p class="hint">
+            Stop cancels pending steps and disconnects. It cannot undo a sound or TV command already
+            sent.
+          </p>
+          <label for="owner-observation">Did the physical device respond?</label
+          ><select id="owner-observation">
+            <option value="not-tested">Not checked</option>
+            <option value="heard-or-saw-effect">Yes, I heard or saw the effect</option>
+            <option value="no-effect">No effect observed</option></select
+          ><button id="hub-result" type="button" class="quiet" disabled>
+            Save connection result ↓
+          </button>
+        </section>
+      </div>
+      <section class="panel routine-panel" aria-labelledby="routine-title">
+        <div class="panel-head">
+          <span class="eyebrow">03 / AUTOMATE</span
+          ><span class="badge">MANUAL START · 20 SECOND LIMIT</span>
+        </div>
+        <h2 id="routine-title">Your saved routines.</h2>
+        <p>Reuse a few supported actions. Routines start only when you press Run.</p>
+        <label for="saved-routine">Routine for this device family</label>
+        <div class="inline">
+          <select id="saved-routine">
+            <option value="">Choose a saved routine</option></select
+          ><button id="run-routine" type="button" class="primary" disabled>Run routine</button
+          ><button id="cancel-routine" type="button" class="danger" disabled>Cancel</button>
+        </div>
+        <p id="routine-progress" class="message" role="status" aria-live="polite">
+          Connect a matching device before running a routine.
+        </p>
+        <details id="routine-builder">
+          <summary>Create or edit a routine</summary>
+          <div class="builder-grid">
+            <div>
+              <label for="routine-name">Routine name</label
+              ><input id="routine-name" maxlength="80" value="My routine" /><label
+                for="routine-step"
+                >Next step</label
+              ><select id="routine-step"></select>
+              <div id="step-sound-field" hidden>
+                <label for="step-sound">Sound</label
+                ><select id="step-sound"></select>
+              </div>
+              <div id="step-volume-field" hidden>
+                <label for="step-volume">Volume</label
+                ><input id="step-volume" type="number" min="1" max="15" step="1" value="3" />
+              </div>
+              <div id="step-wait-field" hidden>
+                <label for="step-wait">Wait milliseconds</label
+                ><input id="step-wait" type="number" min="50" max="5000" step="50" value="1000" />
+              </div>
+              <div id="step-touch-field" hidden>
+                <label for="step-touch">Input to wait for</label
+                ><select id="step-touch"></select>
+              </div>
+              <div id="step-key-field" hidden>
+                <label for="step-key">Remote button</label
+                ><select id="step-key"></select>
+              </div>
+              <button id="add-step" type="button" class="secondary">Add step</button>
+            </div>
+            <div>
+              <h3>Steps</h3>
+              <ol id="routine-steps"></ol>
+              <div class="backup-actions">
+                <button id="remove-step" type="button" class="quiet">Remove last step</button
+                ><button id="clear-steps" type="button" class="quiet">Clear steps</button
+                ><button id="starter-routine" type="button" class="quiet">
+                  Load starter routine
+                </button>
+              </div>
+              <p class="hint">
+                Up to 8 steps, one sound and one touch trigger. Touch triggers require a new release
+                → press while this page stays open.
+              </p>
+            </div>
+          </div>
+          <div class="backup-actions">
+            <button id="save-routine" type="button" class="primary">Save routine</button
+            ><button id="remove-routine" type="button" class="quiet">Remove saved routine</button>
+          </div>
+        </details>
+        <button id="routine-result" type="button" class="quiet" disabled>
+          Save routine result ↓
+        </button>
+      </section>
+      <p class="experiment-note">
+        Experimental support · Software tests do not establish compatibility, physical effects or
+        recovery on your device. Saved setups and routines stay in this browser; export backups for
+        safekeeping. Credentials and private device bindings are omitted from hub backups.
+      </p>
+    </main>
+    <footer>
+      <span>PROJECT SASORI / DEVICE HUB</span
+      ><a
+        href="https://github.com/jimedusot-beep/Project-sasori/blob/main/docs/device-hub.md"
+        target="_blank"
+        rel="noopener noreferrer"
+        >Directions, sources &amp; test status ↗</a
+      >
+    </footer>
+    <noscript
+      ><p>Enable JavaScript to use the hub. No connection starts automatically.</p></noscript
+    >
+  </body>
+</html>
