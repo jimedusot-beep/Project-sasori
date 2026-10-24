@@ -117,6 +117,8 @@ test('paste import treats names as text and clear/background discard drafts with
   await saveExample(page);
   await page.locator('#ir-paste-toggle').click();
   await page.locator('#ir-text').fill(fileHeader + signal('<img src=x>'));
+  await expect(page.locator('#ir-save')).toBeDisabled();
+  await expect(page.locator('#ir-status')).toContainText('Text changed');
   await page.locator('#ir-preview').click();
   await expect(page.locator('#ir-signals')).toContainText('<img src=x>');
   await expect(page.locator('#ir-signals img')).toHaveCount(0);

@@ -63,6 +63,7 @@ export function setupIRImport({ canUse, canSave, saveProfile }) {
   }
   function show(raw, label, example = false) {
     const parsed = parseFlipperIR(raw); // Parse completely before changing the current draft.
+    $('ir-text').value = raw;
     draft = { parsed, id: 'ir-' + recordId() };
     savedSignature = '';
     $('ir-name').value = label.replace(/[<>]/g, '').trim().slice(0, 80) || 'Imported remote';
@@ -191,6 +192,16 @@ export function setupIRImport({ canUse, canSave, saveProfile }) {
   });
   $('ir-clear').addEventListener('click', clear);
   $('ir-name').addEventListener('input', refresh);
+  $('ir-text').addEventListener('input', () => {
+    cancelRead();
+    draft = null;
+    savedSignature = '';
+    $('ir-signals').replaceChildren();
+    $('ir-picker').hidden = true;
+    $('ir-example-credit').hidden = true;
+    $('ir-status').textContent = 'Text changed. Preview file text before saving.';
+    refresh();
+  });
   $('ir-paste-toggle').addEventListener('click', () => {
     $('ir-paste').hidden = !$('ir-paste').hidden;
     $('ir-paste-toggle').setAttribute('aria-expanded', String(!$('ir-paste').hidden));

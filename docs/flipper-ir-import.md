@@ -4,7 +4,7 @@ The [Pocket Remote](https://jimedusot-beep.github.io/Project-sasori/pocket-ir.ht
 
 ## Full phone workflow
 
-1. Open Pocket Remote. Scroll to **Reuse a remote file**.
+1. Open Pocket Remote. Tap **Add a remote from a file**, or scroll to **Reuse a remote file**.
 2. For an immediate example, tap **Load Sony file example**. It loads six credited community signals, with five convertible buttons and one unsupported RAW signal. This does not connect or send IR.
 3. For your own remote, obtain a matching `.ir` file from your own capture or the linked [community repository](https://github.com/Lucaslhm/Flipper-IRDB). Save the actual raw `.ir` text file to your phone's Files/Downloads, then tap **Open a local .ir file** and choose it. An HTML GitHub page or ZIP is not an IR file. Alternatively copy the full file text, including `Filetype` and `Version`, tap **Paste file text**, paste, and press **Preview file text**.
 4. Review the named buttons and compatibility messages. Up to five convertible buttons are preselected. Uncheck those you do not want and choose replacements; saving is disabled for zero or more than five selections. Unsupported signals stay disabled. A protocol match does not prove that a file matches your appliance.
@@ -33,7 +33,7 @@ RAW timings and other parsed protocols are listed with reasons and cannot be sel
 
 ## Limits and failure handling
 
-- 128 KB UTF-8 text, at most 128 signals, printable ASCII signal names of at most 80 characters, and at most 1,024 durations per RAW record. Unknown/duplicate fields, invalid headers, malformed hex and out-of-range supported signals reject the file. A malformed file cannot replace an existing saved setup or leave a previous draft enabled under its error.
+- 128 KB UTF-8 text, at most 128 signals, printable ASCII signal names of at most 80 characters, and at most 1,024 durations per RAW record. Unknown/duplicate fields, invalid headers, malformed hex and out-of-range supported signals reject the file. A malformed file cannot replace an existing saved setup or leave a previous draft enabled under its error. Editing pasted source invalidates the previous preview until Preview is pressed again.
 - Local file reads have a 15-second deadline. Clear, a replacement read, Stop, backgrounding, or page close cancels/invalidates an outstanding read. A late callback cannot restore an old draft over a newer preview.
 - The saved catalog uses the existing versioned IndexedDB record: 20 custom profiles, 64 KB, revision conflict checks, no database upgrade or capture migration. Read-only/corrupt storage disables saving. Failed saving preserves the previously selected setup. Each successful save still requires manual Prepare before use.
 - File text is temporary. Saved profiles retain selected encoded commands, labels, a new local profile ID, and an explicit imported/unverified source description. They do not include the full file, raw timings, original filename as a separate field, Bluetooth IDs, credentials, or source URLs. Your suggested setup name starts from the filename and is editable before saving.
