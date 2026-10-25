@@ -84,6 +84,7 @@ main {
   max-height: 360px;
   overflow-y: auto;
 }
+.history-wrap:focus-visible { outline: 3px solid var(--copper); outline-offset: 3px; }
 .history-wrap table {
   width: 100%;
   border-collapse: collapse;
