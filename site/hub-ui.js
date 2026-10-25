@@ -163,6 +163,27 @@ async function restoreGrant(setup) {
     /* Missing grants use the ordinary chooser on the next manual Connect. */
   }
 }
+// Keep everyday actions close to the device chooser; advanced settings stay available.
+function mountSimpleMode() {
+  const quickAuth = $('quick-credentials');
+  const password = $('hub-password');
+  const passwordLabel = document.querySelector('label[for="hub-password"]');
+  const passwordHelp = password.nextElementSibling;
+  quickAuth.append(passwordLabel, password, passwordHelp);
+  $('quick-actions').append($('hub-connect').parentElement);
+  const advanced = document.createElement('details');
+  advanced.id = 'connection-advanced';
+  advanced.className = 'connection-advanced';
+  const summary = document.createElement('summary');
+  summary.textContent = 'More connection options (Bluetooth filter, session length, password setup)';
+  advanced.append(summary);
+  const setup = document.querySelector('.setup-panel');
+  setup.insertBefore(advanced, $('ble-options'));
+  advanced.append($('ble-options'), $('elmo-options'));
+  // Optional device identification remains available, without delaying first use.
+  const recognition = document.querySelector('[aria-label="Find a supported Bluetooth adapter"]');
+  document.querySelector('.hub-grid').after(recognition);
+}
 function setFamily(id) {
   familyId = hubFamily(id).id;
   for (const [key, button] of familyButtons)
@@ -170,6 +191,7 @@ function setFamily(id) {
   $('family-hint').textContent = hubFamily(id).hint;
   $('ble-options').hidden = id === 'tv-local/v1';
   $('elmo-options').hidden = id !== 'elmo-l2l/v1';
+  $('quick-credentials').hidden = id !== 'elmo-l2l/v1';
   $('elmo-controls').hidden = id !== 'elmo-l2l/v1';
   $('tv-options').hidden = id !== 'tv-local/v1';
   $('tv-controls').hidden = id !== 'tv-local/v1';
@@ -278,8 +300,15 @@ function endResult(s) {
 }
 function receive(session, value) {
   if (session !== current) return;
+  const becameConnected = value.state === 'connected' && snapshot?.state !== 'connected';
   snapshot = value;
   render();
+  if (becameConnected && document.visibilityState === 'visible') {
+    requestAnimationFrame(() => {
+      if (current === session && connected())
+        $('hub-control-view').scrollIntoView({ block: 'start', behavior: 'instant' });
+    });
+  }
   if (
     connectionSaved &&
     !endSaved &&
@@ -484,6 +513,35 @@ function render() {
         ? 'Reconnect device →'
         : 'Connect device →';
   $('hub-demo').disabled = !ready || lockedNow;
+  $('hub-connect').setAttribute(
+    'aria-describedby',
+    'quick-guidance',
+  );
+  const blockedReason = familyId === 'tv-local/v1'
+    ? 'TV connection requires the local computer companion. You can try the demo here.'
+    : !bluetoothAvailable
+      ? 'Bluetooth is unavailable in this browser. On iPhone use Bluefy; the offline demo works now.'
+      : familyId === 'elmo-l2l/v1'
+        ? 'Enter the existing Elmo password, then connect. Your password is never saved.'
+        : 'Connect opens a chooser for your selected device. Nothing connects automatically.';
+  $('quick-guidance').textContent = connected()
+    ? s.synthetic
+      ? 'DEMO · No physical device contacted. Try a control below.'
+      : 'CONNECTED · Only available controls are enabled. Check the physical response.'
+    : s?.state === 'connecting'
+      ? 'Connecting to your selected device…'
+      : blockedReason;
+  $('hub-connect').title = $('hub-connect').disabled ? blockedReason : '';
+  $('sticky-session').hidden = !active() && !detecting;
+  $('sticky-state').textContent = s?.state === 'connecting'
+    ? 'Connecting…'
+    : detecting
+      ? 'Identifying selected device…'
+      : s?.synthetic
+        ? 'DEMO · not a real device'
+        : 'CONNECTED · ' + hubFamily(familyId).name;
+  $('quick-stop').disabled = !active() && !detecting;
+
   $('choose-again').hidden = !cachedDevice;
   $('choose-again').disabled = lockedNow;
   $('save-setup').disabled = !ready || readOnly || lockedNow;
@@ -823,6 +881,7 @@ $('hub-password').addEventListener('keydown', (event) => {
     $('hub-connect').click();
   }
 });
+$('quick-stop').addEventListener('click', () => $('hub-stop').click());
 $('hub-stop').addEventListener('click', () => {
   if (detecting) cancelDetection();
   reactions.disarm();
@@ -1137,6 +1196,7 @@ setInterval(() => {
   countdown();
   renderSoundButtons();
 }, 500);
+mountSimpleMode();
 setFamily(familyId);
 render();
 async function init() {
