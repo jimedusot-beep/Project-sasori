@@ -25,5 +25,6 @@ jobs:
           git add docs/simple-mode.md
           if ! git diff --cached --quiet; then
             git commit -m 'style: format Simple Mode documentation'
+            git pull --rebase origin feature/simple-mode-first-run-2026-10-25
             git push origin HEAD:feature/simple-mode-first-run-2026-10-25
           fi
