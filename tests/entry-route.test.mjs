@@ -8,23 +8,31 @@ const script = await readFile(new URL('../site/entry.js', import.meta.url), 'utf
 function run(url) {
   const location = new URL(url);
   let redirected = null;
-  vm.runInNewContext(script, {
-    location: {
-      protocol: location.protocol,
-      hostname: location.hostname,
-      pathname: location.pathname,
-      hash: location.hash,
-      href: location.href,
-      replace: (target) => { redirected = target; },
+  vm.runInNewContext(
+    script,
+    {
+      location: {
+        protocol: location.protocol,
+        hostname: location.hostname,
+        pathname: location.pathname,
+        hash: location.hash,
+        href: location.href,
+        replace: (target) => {
+          redirected = target;
+        },
+      },
+      URL,
     },
-    URL,
-  }, { timeout: 200 });
+    { timeout: 200 },
+  );
   return redirected;
 }
 
 test('public project root opens the Hub, but no device connection is attempted', () => {
-  assert.equal(run('https://jimedusot-beep.github.io/Project-sasori/'),
-    'https://jimedusot-beep.github.io/Project-sasori/hub.html');
+  assert.equal(
+    run('https://jimedusot-beep.github.io/Project-sasori/'),
+    'https://jimedusot-beep.github.io/Project-sasori/hub.html',
+  );
 });
 
 test('existing full-lab, anchored, native and localhost entry links remain unchanged', () => {
@@ -35,5 +43,6 @@ test('existing full-lab, anchored, native and localhost entry links remain uncha
     'http://127.0.0.1:4173/',
     'capacitor://localhost/',
     'https://different.github.io/Project-sasori/',
-  ]) assert.equal(run(url), null, url);
+  ])
+    assert.equal(run(url), null, url);
 });
