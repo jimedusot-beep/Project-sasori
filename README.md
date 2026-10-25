@@ -22,7 +22,7 @@ The broader [community scan](docs/research/community-scan-2026-10-23.md) recover
 
 ## Try Sasori
 
-Open [Sasori Simple Mode](https://jimedusot-beep.github.io/Project-sasori/) to choose a device, connect or try an offline demo. Open the [full Research Lab](https://jimedusot-beep.github.io/Project-sasori/index.html) for inspection and engineering tools. HTTPS deployment and all 15 assets were verified on October 21, 2026. See [verification results](docs/verification.md) for the evidence and remaining hardware limits.
+Open [Sasori Simple Mode](https://jimedusot-beep.github.io/Project-sasori/) to choose a device, connect or try an offline demo. Open the [full Research Lab](https://jimedusot-beep.github.io/Project-sasori/index.html) for inspection and engineering tools. The Simple Mode release and its 67 deployed assets were verified on October 25, 2026. See [verification results](docs/verification.md) for the evidence and remaining hardware limits.
 
 1. Open the site and turn on **Use simulation** to explore without hardware.
 2. Tap **Run simulated inspection**. Three synthetic notifications appear; the finished session saves locally.
@@ -120,3 +120,7 @@ The site serves on port 4173. Live Web Bluetooth requires HTTPS or an eligible l
 - [Contributing](CONTRIBUTING.md), [security reporting](SECURITY.md), [MIT license](LICENSE)
 
 The earlier dossier is preserved as a dated research record. The current source register and protocol document supersede its statements that no published Elmo UUID table has been found.
+
+## My Projects
+
+[Open My Projects](https://jimedusot-beep.github.io/Project-sasori/projects.html) for a searchable overview of saved devices, routines, experiments, Discovery records and trace notebooks. Each workspace keeps its own data format and backup. See the [backup and restore guide](docs/projects.md) and the [Simple Mode release evidence](docs/simple-mode-release-2026-10-25.md). Private automatic sync remains future work.
