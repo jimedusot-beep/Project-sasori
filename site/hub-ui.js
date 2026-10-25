@@ -174,6 +174,9 @@ function mountSimpleMode() {
   const passwordHelp = password.nextElementSibling;
   quickAuth.append(passwordLabel, password, passwordHelp);
   $('quick-actions').append($('hub-connect').parentElement);
+  const labLink = document.querySelector('.quick-launch .quiet-link');
+  labLink.classList.add('research-action');
+  $('quick-actions').append(labLink);
   const advanced = document.createElement('details');
   advanced.id = 'connection-advanced';
   advanced.className = 'connection-advanced';
