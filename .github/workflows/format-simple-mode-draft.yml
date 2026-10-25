@@ -1,0 +1,30 @@
+name: Format Simple Mode Draft
+on:
+  push:
+    branches:
+      - feature/simple-mode-first-run-2026-10-25
+    paths:
+      - .github/workflows/format-simple-mode-draft.yml
+permissions:
+  contents: write
+jobs:
+  format-draft:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - name: Format scoped work
+        run: npx prettier --write site/entry.js site/index.html site/hub.html site/hub-ui.js site/hub.css tests/browser/simple-mode.spec.js
+      - name: Commit mechanical formatting
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add site/entry.js site/index.html site/hub.html site/hub-ui.js site/hub.css tests/browser/simple-mode.spec.js
+          if ! git diff --cached --quiet; then
+            git commit -m 'style: format Simple Mode source'
+            git push origin HEAD:feature/simple-mode-first-run-2026-10-25
+          fi
