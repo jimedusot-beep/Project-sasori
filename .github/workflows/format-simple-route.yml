@@ -1,0 +1,28 @@
+name: Format Simple Mode Route Test
+on:
+  push:
+    branches: [feature/simple-mode-first-run-2026-10-25]
+    paths: [.github/workflows/format-simple-route.yml]
+permissions:
+  contents: write
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - run: npx prettier --write tests/entry-route.test.mjs
+      - name: Save formatting
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add tests/entry-route.test.mjs
+          if ! git diff --cached --quiet; then
+            git commit -m 'style: format route regression test'
+            git pull --rebase origin feature/simple-mode-first-run-2026-10-25
+            git push origin HEAD:feature/simple-mode-first-run-2026-10-25
+          fi
