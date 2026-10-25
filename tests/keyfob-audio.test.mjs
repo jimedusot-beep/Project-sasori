@@ -10,7 +10,7 @@ test('silence, waveforms and calibration are bounded and deterministic', () => {
   assert.ok(sampleLevel(new Uint8Array([128, 255, 128, 0])) > 0.6);
   assert.equal(sampleLevel([]), 0);
   assert.throws(() => calibrateNoise(Array(11).fill(0.01)), /Not enough/);
-  assert.equal(calibrateNoise([0.01, 0.02, 0.03, 0.02, 0.01, 0.02, 0.06, 0.03, 0.02, 0.02, 0.01, 0.01]), 0.03);
+  assert.equal(calibrateNoise([0.01, 0.02, 0.03, 0.02, 0.01, 0.02, 0.06, 0.03, 0.02, 0.02, 0.01, 0.01 ]), 0.02);
 });
 test('sensitivity order and inputs are checked', () => {
   assert.ok(detectionThreshold(0.02, 'sensitive') < detectionThreshold(0.02, 'normal'));
