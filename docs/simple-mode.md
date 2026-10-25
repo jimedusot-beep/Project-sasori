@@ -12,6 +12,8 @@ The everyday entry sequence is now:
 4. On connection or demo readiness, the page scrolls to relevant controls. The **Stop & disconnect** bar remains at the top while a session is active or connecting, even if you scroll.
 5. Use available actions, confirm the actual outcome on owned hardware, then stop. A software acknowledgment is not physical-effect verification.
 
+Phone layouts keep all three first-use actions in the initial viewport at the tested 360 × 740 and 390 × 844 sizes. Empty saved-setup selectors are hidden; returning users see them near the top. After connection, keyboard focus moves to the controls heading without a second scroll.
+
 The top navigation has four everyday destinations: **Devices**, **Automations**, **Discovery**, **Projects**. Discovery links to the Signal Atlas, Projects to the existing research notebook; the complete engineering laboratory stays one explicit link away. Direct Elmo and Pocket Remote pages are preserved for expert users.
 
 ### More connection options
@@ -46,3 +48,16 @@ For each task record: success (yes/assisted/no), duration in seconds, taps/click
 ### Promotion threshold (proposed)
 
 Run at least five participants on each platform, identify every task with fewer than four independent completions, and address recurring navigation blockers before promoting the UI as beginner-validated. Repeat the five tasks after modifications and preserve anonymous aggregate findings. This is a proposed acceptance target, not existing user testing.
+
+## Release review scope
+
+PR #40 is the focused hosted-web Simple Mode release. Native iOS keeps its working
+bundled Research Lab entry and fixed Core Bluetooth capabilities. The browser Device
+Hub currently uses Web Bluetooth and its Elmo/Furby controls are not supported by the
+native allowlist. Routing the native app to that Hub without a capability-aware native
+adapter would remove working native inspection. That migration is a separate follow-up;
+the simulator smoke test must continue to verify the existing native workspace.
+
+The five-task human protocol above remains unexecuted unless actual participant and
+physical-device evidence is supplied. Screenshots and Playwright checks measure software
+layout and behavior only. Experimental Pocket IR remains owner-built, unverified hardware.

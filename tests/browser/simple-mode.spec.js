@@ -37,6 +37,7 @@ test('first-use Simple Mode exposes Connect, Demo and Research with a short devi
   await expect(page.locator('#sticky-session')).toBeVisible();
   await expect(page.locator('#sticky-state')).toContainText('DEMO');
   await expect(page.locator('#hub-control-view')).toBeInViewport();
+  await expect(page.locator('#controls-title')).toBeFocused();
   await expect(page.locator('#hub-sound')).toBeEnabled();
   await page.locator('#hub-sound').click();
   await expect(page.locator('#connection-message')).toContainText('Sound request sent');
@@ -94,4 +95,32 @@ test('full Research Lab remains directly accessible to advanced users', async ({
   await page.getByRole('link', { name: 'Open Research Lab' }).click();
   await expect(page).toHaveURL(/index\.html$/);
   await expect(page.locator('#page-overview')).toBeVisible();
+});
+
+test('first-use actions fit phone, tablet and desktop widths and produce visual evidence', async ({
+  page,
+}, info) => {
+  for (const viewport of [
+    { width: 360, height: 740 },
+    { width: 390, height: 844 },
+    { width: 768, height: 1024 },
+    { width: 1440, height: 1000 },
+  ]) {
+    await page.setViewportSize(viewport);
+    await page.goto('/hub.html');
+    await expect(page.locator('#hub-demo')).toBeEnabled();
+    for (const selector of ['#hub-connect', '#hub-demo', '.research-action']) {
+      await expect(page.locator(selector)).toBeInViewport({ ratio: 1 });
+      expect(
+        await page.locator(selector).evaluate((el) => el.getBoundingClientRect().height),
+      ).toBeGreaterThanOrEqual(44);
+    }
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(
+      true,
+    );
+    await page.screenshot({
+      path: info.outputPath('simple-mode-' + viewport.width + '.png'),
+      fullPage: true,
+    });
+  }
 });

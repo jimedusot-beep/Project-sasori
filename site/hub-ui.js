@@ -140,6 +140,8 @@ function renderLists() {
   for (const s of data.setups)
     $('saved-setup').append(option(s.id, s.label + ' · ' + hubFamily(s.familyId).name));
   $('saved-setup').value = chosen;
+  document.querySelector('label[for="saved-setup"]').hidden = !data.setups.length;
+  $('saved-setup').parentElement.hidden = !data.setups.length;
   const previous = $('saved-routine').value;
   $('saved-routine').replaceChildren(option('', 'Choose a saved routine'));
   for (const r of data.routines.filter((r) => r.familyId === familyId))
@@ -312,8 +314,10 @@ function receive(session, value) {
   render();
   if (becameConnected && document.visibilityState === 'visible') {
     requestAnimationFrame(() => {
-      if (current === session && connected())
+      if (current === session && connected()) {
         $('hub-control-view').scrollIntoView({ block: 'start', behavior: 'instant' });
+        $('controls-title').focus({ preventScroll: true });
+      }
     });
   }
   if (

@@ -759,3 +759,66 @@ select {
   text-decoration: none;
   font-weight: 700;
 }
+
+/* Keep first-use actions in view on ordinary phone screens. */
+@media (max-width: 760px) {
+  .intro {
+    padding: 12px 0 8px;
+  }
+  .intro .eyebrow {
+    display: none;
+  }
+  .intro h1 {
+    font-size: 28px;
+    line-height: 1.15;
+    margin: 0 0 7px;
+  }
+  .intro h1 br {
+    display: none;
+  }
+  .intro h1 span::before {
+    content: ' ';
+  }
+  .intro p {
+    font-size: 14px;
+  }
+  .family-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 7px;
+  }
+  .family-button {
+    min-height: 52px;
+    padding: 8px 6px;
+    font-size: 12px;
+    line-height: 1.25;
+  }
+  .family-button small {
+    display: none;
+  }
+  #family-hint {
+    margin: 7px 0;
+    font-size: 12px;
+  }
+  .quick-launch {
+    padding: 12px;
+    margin-top: 8px;
+  }
+  .quick-launch-header h2 {
+    font-size: 21px;
+  }
+  .quick-actions button {
+    flex-basis: 110px;
+  }
+  #quick-credentials p {
+    font-size: 11px;
+    line-height: 1.35;
+  }
+  #quick-guidance {
+    font-size: 12px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
