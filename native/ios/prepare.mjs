@@ -21,7 +21,11 @@ const appGroup = Object.keys(groups).find(
   (key) => !key.endsWith('_comment') && (groups[key].path === 'App' || groups[key].name === 'App'),
 );
 if (!appGroup) throw new Error('Generated App source group not found.');
-for (const name of ['SasoriBluetoothPlugin.swift', 'SasoriViewController.swift']) {
+for (const name of [
+  'SasoriBluetoothPlugin.swift',
+  'SasoriSurveyPlugin.swift',
+  'SasoriViewController.swift',
+]) {
   await cp(root + 'Sources/' + name, root + 'ios/App/App/' + name);
   if (!project.hasFile(name))
     project.addSourceFile(name, { target: project.getFirstTarget().uuid }, appGroup);

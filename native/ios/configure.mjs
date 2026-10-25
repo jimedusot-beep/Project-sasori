@@ -11,24 +11,32 @@ export function nativeConfiguration({ scene, plist }) {
     /<key>NSMicrophoneUsageDescription<\/key>\s*<string>[\s\S]*?<\/string>/g,
     '',
   );
+  const withoutCamera = withoutMicrophone.replace(
+    /<key>NSCameraUsageDescription<\/key>\s*<string>[\s\S]*?<\/string>/g,
+    '',
+  );
+  if (withoutCamera.includes('<key>NSCameraUsageDescription</key>'))
+    throw new Error('Unsupported native camera permission entry');
   if (withoutMicrophone.includes('<key>NSMicrophoneUsageDescription</key>'))
     throw new Error('Unsupported native microphone permission entry');
   if (withoutMicrophone.includes('<key>NSBluetoothAlwaysUsageDescription</key>'))
     throw new Error('Unsupported native Bluetooth permission entry');
-  const index = withoutMicrophone.lastIndexOf('</dict>');
-  if (index < 0 || !withoutMicrophone.includes('<plist'))
-    throw new Error('Unsupported native plist');
+  const index = withoutCamera.lastIndexOf('</dict>');
+  if (index < 0 || !withoutCamera.includes('<plist')) throw new Error('Unsupported native plist');
   const permission =
     '<key>NSBluetoothAlwaysUsageDescription</key><string>Sasori uses Bluetooth only when you choose a device to inspect or control through supported actions.</string>';
   const microphonePermission =
     '<key>NSMicrophoneUsageDescription</key><string>Sasori uses the microphone only when you start a local sound-detection experiment. Audio is not saved or uploaded.</string>';
+  const cameraPermission =
+    '<key>NSCameraUsageDescription</key><string>Sasori uses the camera only when you explicitly start a local optical comparison. Photos are stored only if you choose.</string>';
   return {
     scene: configuredScene,
     plist:
-      withoutMicrophone.slice(0, index) +
+      withoutCamera.slice(0, index) +
       permission +
       microphonePermission +
-      withoutMicrophone.slice(index),
+      cameraPermission +
+      withoutCamera.slice(index),
   };
 }
 

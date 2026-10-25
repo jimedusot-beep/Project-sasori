@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+    <meta name="theme-color" content="#132327" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; media-src 'self' blob:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"
+    />
+    <meta name="referrer" content="no-referrer" />
+    <title>Privacy Lab · Project Sasori</title>
+    <link rel="icon" href="icon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="privacy.css" />
+    <script type="module" src="privacy-ui.js"></script>
+  </head>
+  <body>
+    <a class="skip" href="#workspace">Skip to tools</a>
+    <header><a href="hub.html">SASORI / DEVICE HUB</a><span>PHONE PRIVACY LAB</span></header>
+    <main id="workspace">
+      <p class="eyebrow">OBSERVE · COMPARE · RECORD</p>
+      <h1>Measure what your phone can see.</h1>
+      <p class="lead">
+        Inspect details, compare lighting changes and survey Bluetooth advertisements. Keep the
+        evidence on your phone.
+      </p>
+      <p class="boundary">
+        Experimental tools. A reflection or nearby radio is not proof of a hidden camera. An empty
+        result cannot establish that a room is free of recording devices.
+      </p>
+      <div class="tools">
+        <section aria-labelledby="optics-title">
+          <p class="eyebrow">01 / OPTICAL COMPARISON</p>
+          <h2 id="optics-title">Look closer. Compare frames.</h2>
+          <p>
+            Start the rear camera, hold it steady and capture A. Change the lighting or viewing
+            angle deliberately, then capture B. Exposure and movement affect the result. No
+            microphone is requested.
+          </p>
+          <div class="buttons">
+            <button id="camera-start">Start camera</button
+            ><button id="camera-stop" disabled>Stop camera</button
+            ><button id="optics-demo">Try synthetic example</button>
+          </div>
+          <p id="camera-status" role="status">Camera off. Nothing is being captured.</p>
+          <div class="viewer">
+            <video
+              id="inspection-video"
+              autoplay
+              muted
+              playsinline
+              aria-label="Live inspection camera"
+              hidden
+            ></video
+            ><canvas
+              id="inspection-image"
+              width="320"
+              height="240"
+              aria-label="Captured inspection frame"
+            ></canvas>
+          </div>
+          <label for="view-zoom">View magnification <output id="zoom-value">1×</output></label
+          ><input id="view-zoom" type="range" min="1" max="4" step="0.25" value="1" />
+          <p class="hint">
+            Magnification changes the view only; comparison uses the whole captured frame.
+          </p>
+          <div class="buttons">
+            <button id="torch" disabled>Turn light on</button
+            ><button id="capture-a" disabled>Capture A</button
+            ><button id="capture-b" disabled>Capture B & compare</button>
+          </div>
+          <p id="torch-status" class="hint">
+            Torch control is available only when the camera reports support. No automatic flashing.
+          </p>
+          <label for="exposure">Exposure compensation</label
+          ><input id="exposure" type="range" min="-1" max="1" step="0.1" value="0" disabled />
+          <p id="exposure-status" class="hint">
+            Camera exposure control unavailable until a supported camera starts.
+          </p>
+          <canvas
+            id="comparison-map"
+            width="320"
+            height="240"
+            aria-label="Brightness change grid: orange cells increased to high brightness; blue cells changed by at least 20 levels"
+            hidden
+          ></canvas>
+          <p id="optics-result" role="status">No comparison yet.</p>
+          <p class="hint">
+            Each of 192 cells measures mean brightness. Orange = at least 235/255 with an increase
+            of 20; blue = other changes of at least 20. These are display thresholds, not a
+            validated lens-detection rule.
+          </p>
+        </section>
+        <div class="side">
+          <section aria-labelledby="ble-title">
+            <p class="eyebrow">02 / BLUETOOTH SURVEY</p>
+            <h2 id="ble-title">Observe advertising devices.</h2>
+            <p>
+              Native iPhone mode samples advertisements for up to 30 seconds. Move slowly and
+              compare signal measurements. Devices may be outside your room; signal strength is not
+              a distance estimate.
+            </p>
+            <div class="buttons">
+              <button id="ble-start" disabled>Start native survey</button
+              ><button id="ble-stop" disabled>Stop survey</button
+              ><button id="ble-demo">Try survey example</button>
+            </div>
+            <p id="ble-status" role="status">Checking native support…</p>
+            <ul id="ble-results" aria-label="Observed Bluetooth signals"></ul>
+            <p class="hint">
+              Aliases are new each session. No connections, authentication or commands. Advertised
+              names and service identifiers are shown locally only; notebook exports omit them.
+            </p>
+            <button id="save-survey" disabled>Save survey observation</button>
+          </section>
+          <section aria-labelledby="evidence-title">
+            <p class="eyebrow">03 / PRIVATE NOTEBOOK</p>
+            <h2 id="evidence-title">Keep the observation.</h2>
+            <label for="observation-label">Observation label</label
+            ><input id="observation-label" maxlength="80" value="Room observation" />
+            <label for="observation-note">What did you observe?</label
+            ><textarea
+              id="observation-note"
+              maxlength="2000"
+              rows="4"
+              placeholder="Object, location, lighting, viewing angle and what changed"
+            ></textarea>
+            <label class="check"
+              ><input id="keep-photo" type="checkbox" /> Keep the current photo on this
+              browser</label
+            >
+            <p class="hint">
+              Photos can contain private details. Notes and measurements save without a photo by
+              default. Local storage can be cleared or evicted; export records you need.
+            </p>
+            <button id="save-observation">Save optical observation / note</button>
+            <p id="notebook-status" role="status">Loading local notebook…</p>
+            <div class="buttons">
+              <button id="export-notes" disabled>Export notes & measurements</button
+              ><button id="export-photos" disabled>Export including retained photos</button>
+            </div>
+            <ul id="notebook-list" aria-label="Saved observations"></ul>
+          </section>
+        </div>
+      </div>
+      <section class="research" aria-labelledby="research-title">
+        <h2 id="research-title">What these experiments establish</h2>
+        <p>
+          The optical tool measures image differences. The native tool measures BLE advertisements.
+          Neither identifies an offline recorder, verifies a camera lens or certifies a room. Try
+          known camera lenses and ordinary reflective objects under the same conditions; record
+          misses and false alarms. Leave smoke alarms and other safety equipment intact.
+        </p>
+        <p>
+          Research inspiration:
+          <a href="https://github.com/guardianproject/haven" rel="noreferrer">Haven</a>,
+          <a href="https://phyphox.org/" rel="noreferrer">phyphox</a>,
+          <a
+            href="https://www.usenix.org/conference/usenixsecurity22/presentation/sharma-rahul"
+            rel="noreferrer"
+            >Lumos</a
+          >
+          and <a href="https://github.com/frizensami/lapd" rel="noreferrer">LAPD</a>. Algorithms
+          here are original experimental measurements, not ports of those detectors.
+        </p>
+      </section>
+    </main>
+    <footer>PROJECT SASORI · LOCAL OBSERVATIONS · NO CLOUD UPLOAD</footer>
+  </body>
+</html>
