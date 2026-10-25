@@ -14,7 +14,7 @@ Use Node 22+, a Mac with Xcode 26+, and an iPhone/iPad running iOS 16+. From the
 
 In Xcode select the **App** target, set your bundle identifier/signing team, select your connected iPhone/iPad, and run. Signing and device provisioning belong to your Apple account. An unsigned simulator build is verified in GitHub Actions; that build cannot be installed as a signed iPhone app. Real Bluetooth behavior requires a physical device.
 
-The build copies the site into a local bundle and adds a bundled Capacitor bootstrap. The generator creates a Swift Package Manager Xcode project, registers SasoriBluetoothPlugin through a custom bridge controller, adds its Swift sources, and supplies the Bluetooth permission description. Generation is repeatable; it does not overwrite an existing user's signing team.
+The build copies the site into a local bundle and adds a bundled Capacitor bootstrap. The generator creates a Swift Package Manager Xcode project, registers SasoriBluetoothPlugin through a custom bridge controller, adds its Swift sources, and supplies the Bluetooth and microphone permission descriptions. The microphone prompt is requested only after the user opens the phone-only Key-Fob Audio Lab and taps Start; no audio is saved or uploaded. Generation is repeatable; it does not overwrite an existing user's signing team.
 
 Generated www, ios, build products, and dependencies are ignored by Git. Make application changes in the shared site or Sources; rerun build and prepare. Capacitor/core/ios/cli are pinned to 8.5.3. The project-generation tool's UUID dependency is overridden to the patched compatible 11.1.1 release.
 
