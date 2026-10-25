@@ -175,7 +175,8 @@ function mountSimpleMode() {
   advanced.id = 'connection-advanced';
   advanced.className = 'connection-advanced';
   const summary = document.createElement('summary');
-  summary.textContent = 'More connection options (Bluetooth filter, session length, password setup)';
+  summary.textContent =
+    'More connection options (Bluetooth filter, session length, password setup)';
   advanced.append(summary);
   const setup = document.querySelector('.setup-panel');
   setup.insertBefore(advanced, $('ble-options'));
@@ -513,17 +514,15 @@ function render() {
         ? 'Reconnect device →'
         : 'Connect device →';
   $('hub-demo').disabled = !ready || lockedNow;
-  $('hub-connect').setAttribute(
-    'aria-describedby',
-    'quick-guidance',
-  );
-  const blockedReason = familyId === 'tv-local/v1'
-    ? 'TV connection requires the local computer companion. You can try the demo here.'
-    : !bluetoothAvailable
-      ? 'Bluetooth is unavailable in this browser. On iPhone use Bluefy; the offline demo works now.'
-      : familyId === 'elmo-l2l/v1'
-        ? 'Enter the existing Elmo password, then connect. Your password is never saved.'
-        : 'Connect opens a chooser for your selected device. Nothing connects automatically.';
+  $('hub-connect').setAttribute('aria-describedby', 'quick-guidance');
+  const blockedReason =
+    familyId === 'tv-local/v1'
+      ? 'TV connection requires the local computer companion. You can try the demo here.'
+      : !bluetoothAvailable
+        ? 'Bluetooth is unavailable in this browser. On iPhone use Bluefy; the offline demo works now.'
+        : familyId === 'elmo-l2l/v1'
+          ? 'Enter the existing Elmo password, then connect. Your password is never saved.'
+          : 'Connect opens a chooser for your selected device. Nothing connects automatically.';
   $('quick-guidance').textContent = connected()
     ? s.synthetic
       ? 'DEMO · No physical device contacted. Try a control below.'
@@ -533,13 +532,14 @@ function render() {
       : blockedReason;
   $('hub-connect').title = $('hub-connect').disabled ? blockedReason : '';
   $('sticky-session').hidden = !active() && !detecting;
-  $('sticky-state').textContent = s?.state === 'connecting'
-    ? 'Connecting…'
-    : detecting
-      ? 'Identifying selected device…'
-      : s?.synthetic
-        ? 'DEMO · not a real device'
-        : 'CONNECTED · ' + hubFamily(familyId).name;
+  $('sticky-state').textContent =
+    s?.state === 'connecting'
+      ? 'Connecting…'
+      : detecting
+        ? 'Identifying selected device…'
+        : s?.synthetic
+          ? 'DEMO · not a real device'
+          : 'CONNECTED · ' + hubFamily(familyId).name;
   $('quick-stop').disabled = !active() && !detecting;
 
   $('choose-again').hidden = !cachedDevice;

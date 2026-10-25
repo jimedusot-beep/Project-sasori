@@ -579,11 +579,15 @@ select {
   padding: 12px 6px;
   border-radius: 9px;
 }
-.simple-nav a:hover, .simple-nav a:focus-visible, .simple-nav a[aria-current="page"] {
+.simple-nav a:hover,
+.simple-nav a:focus-visible,
+.simple-nav a[aria-current='page'] {
   background: #263b29;
   color: var(--accent);
 }
-.intro { padding: 24px 0 16px; }
+.intro {
+  padding: 24px 0 16px;
+}
 .quick-launch {
   background: #1e2d25;
   border: 1px solid var(--line);
@@ -598,25 +602,45 @@ select {
   align-items: center;
   justify-content: space-between;
 }
-.quick-launch-header h2 { margin: 0; }
+.quick-launch-header h2 {
+  margin: 0;
+}
 .quick-launch .quiet-link {
   font-weight: 600;
   font-size: 12px;
   color: var(--accent);
   padding: 8px 0;
 }
-#quick-credentials { margin-top: 8px; max-width: 450px; }
-#quick-credentials label { display: block; margin: 8px 0 5px; }
-#quick-credentials input { display: block; width: 100%; min-height: 44px; }
-#quick-credentials p { margin: 7px 0 0; }
+#quick-credentials {
+  margin-top: 8px;
+  max-width: 450px;
+}
+#quick-credentials label {
+  display: block;
+  margin: 8px 0 5px;
+}
+#quick-credentials input {
+  display: block;
+  width: 100%;
+  min-height: 44px;
+}
+#quick-credentials p {
+  margin: 7px 0 0;
+}
 .quick-actions .connect-actions {
   display: flex;
   gap: 10px;
   flex-wrap: wrap;
   margin: 12px 0 8px;
 }
-.quick-actions button { min-height: 48px; flex: 1 1 165px; }
-#quick-guidance { margin: 4px 0 0; min-height: 18px; }
+.quick-actions button {
+  min-height: 48px;
+  flex: 1 1 165px;
+}
+#quick-guidance {
+  margin: 4px 0 0;
+  min-height: 18px;
+}
 .connection-advanced {
   border: 1px solid var(--line);
   border-radius: 9px;
@@ -629,7 +653,9 @@ select {
   font-weight: 650;
   padding: 4px 0;
 }
-.connection-advanced[open] > summary { margin-bottom: 10px; }
+.connection-advanced[open] > summary {
+  margin-bottom: 10px;
+}
 .sticky-session {
   position: sticky;
   top: 0;
@@ -643,26 +669,68 @@ select {
   background: #16241f;
   border: 1px solid #9ab2a2;
   border-radius: 11px;
-  box-shadow: 0 8px 18px rgba(0,0,0,.24);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.24);
 }
-.sticky-session > span { font-size: 13px; font-weight: 700; }
-.sticky-session button { min-height: 44px; margin: 0; white-space: normal; }
-.sticky-session[hidden], #quick-credentials[hidden] { display: none !important; }
-#hub-control-view { scroll-margin-top: 95px; }
-#automations { scroll-margin-top: 24px; }
-@media(max-width: 760px) {
-  .topbar { flex-wrap: wrap; gap: 9px; padding-top: 12px; padding-bottom: 12px; }
-  .simple-nav { width: 100%; }
-  .simple-nav a { font-size: 12px; padding: 10px 3px; }
-  .intro { padding: 18px 0 12px; }
-  .intro h1 { margin-bottom: 9px; }
-  .quick-launch { padding: 15px; }
-  .quick-actions button { flex: 1 1 145px; }
-  .hub-grid > .controls-panel { order: -1; }
-  .hub-grid > .setup-panel { order: 1; }
+.sticky-session > span {
+  font-size: 13px;
+  font-weight: 700;
 }
-@media(max-width: 365px) {
-  .simple-nav a { font-size: 11px; }
-  .sticky-session { flex-wrap: wrap; }
-  .sticky-session button { width: 100%; }
+.sticky-session button {
+  min-height: 44px;
+  margin: 0;
+  white-space: normal;
+}
+.sticky-session[hidden],
+#quick-credentials[hidden] {
+  display: none !important;
+}
+#hub-control-view {
+  scroll-margin-top: 95px;
+}
+#automations {
+  scroll-margin-top: 24px;
+}
+@media (max-width: 760px) {
+  .topbar {
+    flex-wrap: wrap;
+    gap: 9px;
+    padding-top: 12px;
+    padding-bottom: 12px;
+  }
+  .simple-nav {
+    width: 100%;
+  }
+  .simple-nav a {
+    font-size: 12px;
+    padding: 10px 3px;
+  }
+  .intro {
+    padding: 18px 0 12px;
+  }
+  .intro h1 {
+    margin-bottom: 9px;
+  }
+  .quick-launch {
+    padding: 15px;
+  }
+  .quick-actions button {
+    flex: 1 1 145px;
+  }
+  .hub-grid > .controls-panel {
+    order: -1;
+  }
+  .hub-grid > .setup-panel {
+    order: 1;
+  }
+}
+@media (max-width: 365px) {
+  .simple-nav a {
+    font-size: 11px;
+  }
+  .sticky-session {
+    flex-wrap: wrap;
+  }
+  .sticky-session button {
+    width: 100%;
+  }
 }
