@@ -747,3 +747,15 @@ select {
   min-width: 0;
   flex: 1 1 180px;
 }
+
+.quick-actions .research-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 8px 14px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  text-decoration: none;
+  font-weight: 700;
+}
