@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+    <meta name="theme-color" content="#111918" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"
+    />
+    <meta name="referrer" content="no-referrer" />
+    <title>My Projects · Project Sasori</title>
+    <link rel="icon" href="icon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="hub.css?v=simple-projects-20261025" />
+    <link rel="stylesheet" href="projects.css" />
+    <script type="module" src="projects-ui.js"></script>
+  </head>
+  <body>
+    <a class="skip" href="#workspace">Skip to projects</a>
+    <header class="topbar">
+      <a class="brand" href="hub.html"
+        ><img src="icon.svg" alt="" width="36" height="36" /><span
+          >SASORI<small>YOUR DEVICES. YOUR CONTROLS.</small></span
+        ></a
+      >
+      <nav class="simple-nav" aria-label="Main navigation">
+        <a href="hub.html">Devices</a><a href="hub.html#automations">Automations</a
+        ><a href="signal-atlas.html">Discovery</a
+        ><a href="projects.html" aria-current="page">Projects</a>
+      </nav>
+    </header>
+    <main id="workspace">
+      <div class="intro">
+        <div>
+          <h1>My Projects</h1>
+          <p>Your saved setups, experiments and observations, together in one view.</p>
+        </div>
+        <button id="project-refresh" class="secondary" disabled>Refresh projects</button>
+      </div>
+      <p id="project-storage" class="notice" role="status">Opening local storage…</p>
+      <p id="project-warning" class="notice" role="status" hidden></p>
+      <p class="hint">
+        This overview reads existing workspaces. Each keeps its own format and storage limits. No
+        devices are connected, and no data is merged or changed here.
+      </p>
+      <label for="project-search">Find saved work</label
+      ><input
+        id="project-search"
+        type="search"
+        maxlength="160"
+        placeholder="Search titles, models or descriptions…"
+      />
+      <p id="project-summary" role="status" aria-live="polite">Reading local workspaces…</p>
+      <div id="project-sections" class="projects-grid"></div>
+      <section class="panel" aria-labelledby="backup-title">
+        <h2 id="backup-title">Back up and restore</h2>
+        <p>
+          Export from the workspace that created the data. On your other browser or device, open
+          that same workspace and import its matching file. Importing never connects a device.
+        </p>
+        <div class="project-backups">
+          <p>
+            <a href="hub.html#setup-title">Device Hub backup ↗</a><br />Saved device setups, touch
+            mappings and routines. Passwords and connection authority are omitted; enter credentials
+            again when connecting.
+          </p>
+          <p>
+            <a href="index.html#sessions">Research records backup ↗</a><br />Sessions, notes and
+            saved protocol traces. Ordinary notebook backups omit raw bytes. Check free-form notes
+            before sharing.
+          </p>
+          <p>
+            <a href="index.html#discovery">Discovery metadata backup ↗</a><br />Saved capture
+            summaries. Discovery exports omit raw values and audio. Original recordings must be kept
+            separately.
+          </p>
+          <p>
+            <a href="index.html#toys">Inspection profile backup ↗</a><br />Sourced UUID profiles.
+            These are separate from Hub device setups.
+          </p>
+          <p>
+            <a href="index.html#universal">Advanced controls backup and trial reports ↗</a
+            ><br />Standard/MiP/Furby setups and validation records use their own formats.
+          </p>
+          <p>
+            <a href="pocket-ir.html">Custom Pocket IR profile export ↗</a><br />Export custom
+            profiles separately. These require the specific owner-built bridge; an imported profile
+            cannot prove physical compatibility.
+          </p>
+        </div>
+        <details>
+          <summary>Restore failed, data missing, or another tab changed a save?</summary>
+          <p>
+            Keep the original file and browser data. Check the file type, format/version, storage
+            limit and destination workspace. A validation failure must not partially replace saved
+            work. Read that workspace’s recovery message and use a fresh copy of the original
+            backup.
+          </p>
+          <p>
+            If another tab changed a save, export your work if possible, reload and retry from the
+            latest version. Do not clear browser storage to resolve a conflict. Pages, the native
+            app, Bluefy, Safari and a local companion may have separate stores.
+          </p>
+          <p>
+            Invalid records stay in their original store until you explicitly choose a recovery
+            action. This overview never deletes or repairs them automatically.
+          </p>
+        </details>
+        <p class="hint">
+          Automatic private cross-device sync is future work. It needs authentication, per-owner
+          authorization, encryption, conflict handling, deletion and recovery. These manual exports
+          do not implement sync.
+        </p>
+        <a href="index.html">Open full Research Lab ↗</a>
+      </section>
+    </main>
+    <footer>
+      PROJECT SASORI <span>Local work. Explicit actions. Evidence before claims.</span>
+    </footer>
+    <noscript
+      ><p>
+        JavaScript is needed to read local projects. Workspace and backup links remain available
+        above.
+      </p></noscript
+    >
+  </body>
+</html>

@@ -41,3 +41,20 @@ These checks do not establish iPhone radio permissions, real peripheral compatib
 The MiP LED also has an independent two-second off timer and best-effort off on disconnect. It finishes off rather than restoring a prior color/pattern, and physical cleanup cannot be guaranteed after radio loss. The [real-device check workflow](../../docs/device-action-validation.md) records command timing and owner observations without promoting simulated or imported reports to verified hardware support.
 
 Implementation references: [Capacitor native code](https://capacitorjs.com/docs/ios/custom-code), [Swift Package Manager](https://capacitorjs.com/docs/ios/spm), and [Apple Core Bluetooth](https://developer.apple.com/documentation/corebluetooth).
+
+## Startup verification correction
+
+Capacitor 8.5.3's generated SceneDelegate instantiates a bridge controller directly.
+Preparation therefore configures its `rootViewController` as `SasoriViewController`,
+in addition to preserving storyboard compatibility, so the original Bluetooth plugin
+instance is registered. The Bluetooth permission description is inserted in the root
+Info.plist dictionary, including when re-preparing a project with an older nested entry.
+
+Simulator readiness now requires an exact structured log event from the App process,
+plus the rendered native workspace and Capacitor's plugin-availability check. A query
+containing the readiness text, another process, or a launch timeout cannot pass alone.
+This verifies startup/registration without requesting Bluetooth permission or scanning;
+physical iPhone and toy behavior still require separate tests. The unrelated Privacy
+Lab PR remains separate.
+
+The bundle injects native.js before the laboratory module while preserving its cache-version query. An absent or duplicate entry fails the build; it cannot silently ship a web-only page inside the native app.

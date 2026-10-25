@@ -21,10 +21,24 @@ def verify_workspace(device, run=command, pause=time.sleep, screenshot="build/sa
     for attempt in range(40):
         pause(2)
         logs = run("xcrun", "simctl", "spawn", device, "log", "show", "--last", "10m",
-                       "--style", "compact", "--predicate", 'eventMessage CONTAINS "' + marker + '"')
-        if marker in logs:
+                       "--style", "json", "--predicate", 'process == "App" AND eventMessage BEGINSWITH "Sasori native"')
+        try:
+            entries = json.loads(logs)
+            seen = {entry["eventMessage"].strip() for entry in entries
+                    if isinstance(entry, dict)
+                    and str(entry.get("processImagePath", "")).endswith("/App")
+                    and isinstance(entry.get("eventMessage"), str)}
+        except (ValueError, TypeError):
+            seen = set()
+        if marker in seen:
             break
     else:
+        print("Native readiness diagnostics:\n" + logs, flush=True)
+        Path(screenshot).parent.mkdir(parents=True, exist_ok=True)
+        try:
+            run("xcrun", "simctl", "io", device, "screenshot", screenshot)
+        except (subprocess.CalledProcessError, subprocess.TimeoutExpired):
+            print("Diagnostic screenshot unavailable.", flush=True)
         raise RuntimeError("The native Bluetooth workspace did not supply render evidence.")
     pause(2)
     Path(screenshot).parent.mkdir(parents=True, exist_ok=True)

@@ -14,7 +14,7 @@ The everyday entry sequence is now:
 
 Phone layouts keep all three first-use actions in the initial viewport at the tested 360 × 740 and 390 × 844 sizes. Empty saved-setup selectors are hidden; returning users see them near the top. After connection, keyboard focus moves to the controls heading without a second scroll.
 
-The top navigation has four everyday destinations: **Devices**, **Automations**, **Discovery**, **Projects**. Discovery links to the Signal Atlas, Projects to the existing research notebook; the complete engineering laboratory stays one explicit link away. Direct Elmo and Pocket Remote pages are preserved for expert users.
+The top navigation has four everyday destinations: **Devices**, **Automations**, **Discovery**, **Projects**. Discovery links to the Signal Atlas, Projects to the consolidated local-work overview; the complete engineering laboratory stays one explicit link away. Direct Elmo and Pocket Remote pages are preserved for expert users.
 
 ### More connection options
 
