@@ -16,7 +16,8 @@ export function nativeConfiguration({ scene, plist }) {
   if (withoutMicrophone.includes('<key>NSBluetoothAlwaysUsageDescription</key>'))
     throw new Error('Unsupported native Bluetooth permission entry');
   const index = withoutMicrophone.lastIndexOf('</dict>');
-  if (index < 0 || !withoutMicrophone.includes('<plist')) throw new Error('Unsupported native plist');
+  if (index < 0 || !withoutMicrophone.includes('<plist'))
+    throw new Error('Unsupported native plist');
   const permission =
     '<key>NSBluetoothAlwaysUsageDescription</key><string>Sasori uses Bluetooth only when you choose a device to inspect or control through supported actions.</string>';
   const microphonePermission =

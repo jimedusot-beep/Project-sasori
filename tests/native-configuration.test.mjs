@@ -31,10 +31,7 @@ test('repeat generation moves old nested permission entries to root without dupl
     1,
   );
   assert.ok(!second.plist.includes('<string>old</string>'));
-  assert.equal(
-    (second.plist.match(/<key>NSMicrophoneUsageDescription<\/key>/g) || []).length,
-    1,
-  );
+  assert.equal((second.plist.match(/<key>NSMicrophoneUsageDescription<\/key>/g) || []).length, 1);
 });
 test('unsupported native templates fail rather than silently generating a generic bridge', () => {
   assert.throws(() => nativeConfiguration({ scene: 'unknown scene template', plist }), /bootstrap/);
