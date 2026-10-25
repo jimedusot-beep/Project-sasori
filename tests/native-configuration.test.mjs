@@ -14,6 +14,9 @@ test('native startup uses the custom controller and permission belongs to the ro
   assert.ok(rootPermission < result.plist.lastIndexOf('</dict>'));
   assert.ok(result.plist.includes('<key>Other</key><string>keep</string>'));
   assert.ok(!result.plist.includes('NSCameraUsageDescription'));
+  const microphonePermission = result.plist.indexOf('<key>NSMicrophoneUsageDescription</key>');
+  assert.ok(microphonePermission > result.plist.indexOf('</dict>'));
+  assert.ok(microphonePermission < result.plist.lastIndexOf('</dict>'));
 });
 test('repeat generation moves old nested permission entries to root without duplicates', () => {
   const old = plist.replace(
@@ -28,6 +31,10 @@ test('repeat generation moves old nested permission entries to root without dupl
     1,
   );
   assert.ok(!second.plist.includes('<string>old</string>'));
+  assert.equal(
+    (second.plist.match(/<key>NSMicrophoneUsageDescription<\/key>/g) || []).length,
+    1,
+  );
 });
 test('unsupported native templates fail rather than silently generating a generic bridge', () => {
   assert.throws(() => nativeConfiguration({ scene: 'unknown scene template', plist }), /bootstrap/);
