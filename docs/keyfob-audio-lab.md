@@ -11,7 +11,7 @@ Open **[Key-Fob Audio Lab](../site/keyfob-lab.html)** from Sasori in Safari on i
 
 ## Repeatable protocol
 
-1. Open the Sasori lab on your phone using HTTPS. Press **Start microphone + calibrate**, accept access and stay silent for 2.4 seconds. Set **Normal** sensitivity first.
+1. Open the Sasori lab on your phone using HTTPS. Press **Start listening (instant)**, accept microphone access and click your key fob once. The Live sound energy meter should react **before** you run trials. Start at threshold 45 / 255; move the slider left to hear quieter clicks. Room noise measurement is optional.
 2. Put the fob about a hand's width from your phone. Keep the distance and room unchanged.
 3. Choose **Unlock**. Tap **Run 1 trial**, wait for the 3-second countdown. Press the remote once only during **GO** (2 seconds). Repeat five times.
 4. Repeat five trials for **Lock**.
@@ -35,3 +35,9 @@ Every trial records one _declared_ condition, whether any sound exceeded thresho
 The analyzer uses Web Audio's `getUserMedia` and a high-pass filter followed by RMS/edge-threshold detection. Foreground JavaScript timers are not laboratory instruments; noise cancellation and auto-gain settings are requests rather than guarantees. The page suspends testing and closes the microphone when hidden. The packaged native iOS app includes an explicit microphone permission description, but a physical iPhone permission test is still outstanding. Some embedded browsers may not expose microphone permissions; use Safari over HTTPS if needed. A real physical phone acceptance test is still required.
 
 The page does not attempt 433 MHz radio access and should not be presented as a successful RF attack. For proof of RF behavior, genuinely compatible radio measurement equipment would be required (outside the phone-only experiment's scope).
+
+## Microphone troubleshooting (Safari on iPhone)
+
+If tapping **Start listening** fails, open the URL in the Safari app rather than inside ChatGPT or another embedded browser, and check the site microphone permission. If the browser says it is listening but **Live sound energy** stays at zero even when you clap, the audio analyser isn't receiving samples (a known issue in some iOS WebViews). Do not interpret this as proof that your key fob makes no sound. If the meter moves but the counter stays at zero, move the sensitivity threshold to the left and press again. The counter is a general sound-energy threshold, not fob-specific classification.
+
+The original inspiration, [ClapSplash](https://github.com/uzairdeveloper223/ClapSplash), uses an unfiltered frequency-analyser stream, FFT size 512 and a debounce timer. We independently implemented the equivalent basic measurement algorithm with phone-specific diagnostics; no upstream UI, assets, or audio code were copied.
