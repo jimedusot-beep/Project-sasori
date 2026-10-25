@@ -1,12 +1,12 @@
 import {
   CONDITIONS,
-  sampleLevel,
+  frequencyBandEnergy,
+  shouldTriggerClick,
   calibrateNoise,
-  detectionThreshold,
   recordTrial,
   summarizeTrials,
   csvForTrials,
-} from './lib/keyfob-audio.js?v=keyfob-audio-1';
+} from './lib/keyfob-audio.js?v=keyfob-audio-2';
 
 const $ = (id) => document.getElementById(id);
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -16,15 +16,14 @@ let stream = null,
   analyser = null,
   buffer = null;
 let source = null,
-  highpass = null,
   animation = 0;
 let phase = 'off',
   generation = 0,
   calibrated = false,
   background = 0;
-let threshold = 0.022,
-  wasAbove = false,
-  lastEventAt = -Infinity;
+let threshold = 45,
+  lastEventAt = -Infinity,
+  liveClicks = 0;
 let calibrationSamples = [],
   capture = null,
   trials = [],
@@ -48,33 +47,50 @@ function controls() {
   for (const id of ['export-json', 'export-csv', 'clear-trials']) $(id).disabled = !trials.length;
 }
 function thresholdUpdate() {
-  threshold = detectionThreshold(background, $('sensitivity').value);
+  threshold = Number($('sensitivity').value);
+  $('threshold-value').textContent = String(threshold);
   $('level-label').textContent =
-    'Background: ' +
-    background.toFixed(3) +
-    ' · Threshold: ' +
-    threshold.toFixed(3) +
-    ' · Orange line is the trigger level';
-  $('threshold-marker').style.left = Math.min(100, threshold * 500) + '%';
+    'Room noise: ' +
+    background.toFixed(1) +
+    ' / 255 · Detection threshold: ' +
+    threshold +
+    ' / 255';
+  $('threshold-marker').style.left = (threshold / 255) * 100 + '%';
 }
+
 function meterLoop() {
   if (!analyser || !buffer) return;
-  analyser.getByteTimeDomainData(buffer);
-  const value = sampleLevel(buffer);
+  // Frequency detection reproduces the working ClapSplash signal path:
+  // short FFT, no mandatory high-pass filter, and adjustable average band energy.
+  analyser.getByteFrequencyData(buffer);
+  const value = frequencyBandEnergy(buffer);
+  const now = performance.now();
   if (phase === 'calibrating') calibrationSamples.push(value);
-  if (phase === 'capturing' && capture) {
-    capture.peak = Math.max(capture.peak, value);
-    const now = performance.now();
-    if (value > capture.threshold && !wasAbove && now - lastEventAt >= 260) {
+  if (phase === 'capturing' && capture) capture.peak = Math.max(capture.peak, value);
+  if (
+    (phase === 'ready' || phase === 'capturing') &&
+    shouldTriggerClick(value, threshold, now, lastEventAt)
+  ) {
+    lastEventAt = now;
+    liveClicks++;
+    $('live-events').textContent =
+      'Live clicks detected: ' + liveClicks + ' · Last sound heard now';
+    if (phase === 'capturing' && capture) {
       capture.events.push(Math.min(2000, Math.max(0, Math.round(now - capture.started))));
-      lastEventAt = now;
     }
   }
-  wasAbove = value > threshold;
   frameNumber++;
-  if (frameNumber % 3 === 0) $('level-bar').style.width = Math.min(100, value * 500) + '%';
+  if (frameNumber % 3 === 0) {
+    $('level-bar').style.width = (value / 255) * 100 + '%';
+    $('live-energy').textContent = 'Live sound energy: ' + Math.round(value) + ' / 255';
+    if (value === 0 && frameNumber > 180) {
+      $('live-energy').textContent +=
+        ' · No signal from analyzer. Clap to test; try Safari if it stays zero.';
+    }
+  }
   animation = requestAnimationFrame(meterLoop);
 }
+
 async function stop() {
   generation++;
   phase = 'off';
@@ -86,12 +102,12 @@ async function stop() {
   stream = null;
   analyser = null;
   source = null;
-  highpass = null;
   buffer = null;
   const closing = audioContext;
   audioContext = null;
   if (closing && closing.state !== 'closed') await closing.close().catch(() => {});
   $('level-bar').style.width = '0%';
+  $('live-energy').textContent = 'Microphone off · no sound readings';
   $('trial-status').textContent = 'Microphone stopped';
   controls();
 }
@@ -102,9 +118,9 @@ async function calibrate() {
   calibrationSamples = [];
   phase = 'calibrating';
   controls();
-  status('Calibrating for 2.4 seconds. Do not press or tap anything.');
+  status('Measuring room noise for 1.2 seconds. Keep quiet.');
   $('trial-status').textContent = 'Quiet please… calibrating';
-  await sleep(2400);
+  await sleep(1200);
   if (token !== generation || !analyser) return;
   try {
     background = calibrateNoise(calibrationSamples);
@@ -112,7 +128,7 @@ async function calibrate() {
     thresholdUpdate();
     phase = 'ready';
     status(
-      'Microphone on. Calibrated using ' +
+      'Microphone on. Room noise measured using ' +
         calibrationSamples.length +
         ' sound readings. Audio stays on this phone; nothing is recorded or uploaded.',
     );
@@ -136,16 +152,16 @@ async function start() {
       throw new Error('Microphone requires HTTPS (or localhost) and a supported browser.');
     const AudioEngine = window.AudioContext || window.webkitAudioContext;
     if (!AudioEngine) throw new Error('Web Audio is unavailable in this browser.');
-    granted = await navigator.mediaDevices.getUserMedia({
-      audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false },
-      video: false,
-    });
+    // Use the same simple microphone request that worked on the original demo.
+    // Disabling phone gain/noise processing may hide quiet mechanical clicks.
+    granted = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
     if (token !== generation) {
       granted.getTracks().forEach((track) => track.stop());
       return;
     }
     context = new AudioEngine();
-    await context.resume();
+    // Do not block on resume(): some iOS browsers postpone it after permission.
+    if (context.state === 'suspended') void context.resume().catch(() => {});
     if (token !== generation) {
       granted.getTracks().forEach((track) => track.stop());
       await context.close();
@@ -154,19 +170,25 @@ async function start() {
     stream = granted;
     audioContext = context;
     source = context.createMediaStreamSource(stream);
-    highpass = context.createBiquadFilter();
-    highpass.type = 'highpass';
-    highpass.frequency.value = 900;
     analyser = context.createAnalyser();
-    analyser.fftSize = 2048;
-    analyser.smoothingTimeConstant = 0;
-    buffer = new Uint8Array(analyser.fftSize);
-    source.connect(highpass);
-    highpass.connect(analyser);
-    // No connection to speakers: avoids feedback and never transmits radio commands.
+    analyser.fftSize = 512;
+    analyser.smoothingTimeConstant = 0.2;
+    buffer = new Uint8Array(analyser.frequencyBinCount);
+    source.connect(analyser);
+    // No speaker output, recording, upload, RF receive, or car control.
+    thresholdUpdate();
+    liveClicks = 0;
+    lastEventAt = -Infinity;
+    $('live-events').textContent = 'Live clicks detected: 0';
+    calibrated = true; // Live listening is available immediately; noise measurement is optional.
     phase = 'ready';
     meterLoop();
-    await calibrate();
+    status(
+      'Listening now. Press the key fob and watch Live clicks detected. ' +
+        'If the meter stays at zero, clap and try Safari directly.',
+    );
+    $('trial-status').textContent = 'Live test first, then choose a condition';
+    controls();
   } catch (error) {
     if (granted && granted !== stream) granted.getTracks().forEach((track) => track.stop());
     if (context && context !== audioContext) await context.close().catch(() => {});
@@ -192,7 +214,6 @@ async function runTrial() {
   }
   capture = { events: [], peak: 0, threshold, started: performance.now() };
   lastEventAt = -Infinity;
-  wasAbove = true; // Require a new rising edge after the GO signal.
   phase = 'capturing';
   $('trial-status').textContent =
     condition === 'quiet'

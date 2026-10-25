@@ -6,6 +6,7 @@ test('key-fob lab shows limits, waits for permission, measures negative trial an
 }, info) => {
   await page.addInitScript(() => {
     window.micCalls = 0;
+    window.fakeMicrophoneEnergy = 0;
     window.micStopped = 0;
     Object.defineProperty(navigator, 'mediaDevices', {
       configurable: true,
@@ -42,8 +43,11 @@ test('key-fob lab shows limits, waits for permission, measures negative trial an
       createAnalyser() {
         return {
           fftSize: 2048,
+          get frequencyBinCount() {
+            return this.fftSize / 2;
+          },
           smoothingTimeConstant: 0,
-          getByteTimeDomainData: (array) => array.fill(128),
+          getByteFrequencyData: (array) => array.fill(window.fakeMicrophoneEnergy),
         };
       }
     }
@@ -56,6 +60,17 @@ test('key-fob lab shows limits, waits for permission, measures negative trial an
   await page.locator('#mic-start').click();
   await expect(page.locator('#trial-start')).toBeEnabled({ timeout: 7000 });
   expect(await page.evaluate(() => window.micCalls)).toBe(1);
+  await expect(page.locator('#mic-status')).toContainText('Listening now');
+  // Confirm real-time detection without running any timed trial.
+  await page.evaluate(() => {
+    window.fakeMicrophoneEnergy = 170;
+  });
+  await expect(page.locator('#live-events')).toContainText(/Live clicks detected: [1-9][0-9]*/);
+  await expect(page.locator('#live-energy')).toContainText('170');
+  await page.evaluate(() => {
+    window.fakeMicrophoneEnergy = 0;
+  });
+  await expect(page.locator('#live-energy')).toContainText('0');
   await page.locator('#condition').selectOption('quiet');
   await page.locator('#trial-start').click();
   await expect(page.locator('#trial-status')).toHaveText('No sound detected', { timeout: 9000 });

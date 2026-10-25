@@ -23,6 +23,21 @@ export function sampleLevel(samples) {
   return Math.sqrt(sum / samples.length);
 }
 
+// Matches the working ClapSplash approach: measure high-frequency energy from FFT bins.
+export function frequencyBandEnergy(frequencyBins) {
+  if (!frequencyBins?.length) return 0;
+  const start = Math.floor(frequencyBins.length * 0.1);
+  const end = Math.floor(frequencyBins.length * 0.5);
+  if (end <= start) return 0;
+  let total = 0;
+  for (let i = start; i < end; i++) total += frequencyBins[i];
+  return total / (end - start);
+}
+
+export function shouldTriggerClick(energy, threshold, now, lastTime, cooldown = 350) {
+  return energy > threshold && now - lastTime >= cooldown;
+}
+
 export function calibrateNoise(levels) {
   const sorted = [...levels].filter(Number.isFinite).sort((a, b) => a - b);
   if (sorted.length < 12) throw new Error('Not enough microphone samples to calibrate.');
@@ -46,7 +61,7 @@ export function recordTrial({ condition, events, peak, threshold, noise, at }) {
   )
     throw new Error('Invalid event timings.');
   if (
-    ![peak, threshold, noise].every((value) => Number.isFinite(value) && value >= 0 && value <= 1)
+    ![peak, threshold, noise].every((value) => Number.isFinite(value) && value >= 0 && value <= 255)
   )
     throw new Error('Invalid sound levels.');
   return {
