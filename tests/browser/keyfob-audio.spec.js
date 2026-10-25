@@ -43,7 +43,9 @@ test('key-fob lab shows limits, waits for permission, measures negative trial an
       createAnalyser() {
         return {
           fftSize: 2048,
-          get frequencyBinCount() { return this.fftSize / 2; },
+          get frequencyBinCount() {
+            return this.fftSize / 2;
+          },
           smoothingTimeConstant: 0,
           getByteFrequencyData: (array) => array.fill(window.fakeMicrophoneEnergy),
         };
