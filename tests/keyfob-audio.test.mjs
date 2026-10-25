@@ -2,6 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   CONDITIONS,
+  frequencyBandEnergy,
+  shouldTriggerClick,
   sampleLevel,
   calibrateNoise,
   detectionThreshold,
@@ -88,4 +90,17 @@ test('CSV uses only measured rows, quoted fields and no audio', () => {
   assert.match(csv, /^condition,detected,eventCount,eventMs,peak,threshold,background,at\n/);
   assert.match(csv, /"unlock","true","1","250"/);
   assert.ok(!csv.includes('radio payload'));
+});
+
+test('working-demo frequency band catches transient without calibration or forced high-pass', () => {
+  const bins = new Uint8Array(256);
+  bins.fill(120, 25, 128);
+  const energy = frequencyBandEnergy(bins);
+  assert.ok(energy > 100);
+  assert.equal(frequencyBandEnergy(new Uint8Array(256)), 0);
+  assert.equal(frequencyBandEnergy([]), 0);
+  assert.equal(shouldTriggerClick(energy, 45, 1000, -Infinity), true);
+  assert.equal(shouldTriggerClick(energy, 45, 1100, 1000), false);
+  assert.equal(shouldTriggerClick(40, 45, 2000, 1000), false);
+  assert.equal(shouldTriggerClick(energy, 45, 1400, 1000), true);
 });
