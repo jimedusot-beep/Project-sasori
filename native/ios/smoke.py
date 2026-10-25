@@ -33,6 +33,12 @@ def verify_workspace(device, run=command, pause=time.sleep, screenshot="build/sa
         if marker in seen:
             break
     else:
+        print("Native readiness diagnostics:\n" + logs, flush=True)
+        Path(screenshot).parent.mkdir(parents=True, exist_ok=True)
+        try:
+            run("xcrun", "simctl", "io", device, "screenshot", screenshot)
+        except (subprocess.CalledProcessError, subprocess.TimeoutExpired):
+            print("Diagnostic screenshot unavailable.", flush=True)
         raise RuntimeError("The native Bluetooth workspace did not supply render evidence.")
     pause(2)
     Path(screenshot).parent.mkdir(parents=True, exist_ok=True)

@@ -34,7 +34,6 @@ class NativeSmokeTests(unittest.TestCase):
         def run(*args):
             if args[2] == "launch":
                 raise subprocess.TimeoutExpired(args, 120)
-            self.assertNotIn("screenshot", args)
             return "no readiness marker"
 
         with self.assertRaisesRegex(RuntimeError, "render evidence"):
@@ -50,7 +49,6 @@ class NativeSmokeTests(unittest.TestCase):
             def run(*args):
                 if "log" in args:
                     return log
-                self.assertNotIn("screenshot", args)
                 return ""
             with self.assertRaisesRegex(RuntimeError, "render evidence"):
                 smoke.verify_workspace("fixture", run=run, pause=lambda _: None)

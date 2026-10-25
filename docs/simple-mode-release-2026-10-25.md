@@ -99,3 +99,10 @@ A log query containing the marker, another process, or a launch timeout cannot p
 Privacy Lab functionality remains in its own unmerged PR. Physical Bluetooth effects
 are still outside simulator verification. See the final PR #44 native run for the
 stricter startup evidence; the earlier plain-text marker check is insufficient on its own.
+
+The first strict run also exposed a third native packaging defect: build.mjs matched
+only an unversioned app.js script tag, while the shared page uses a cache-version
+query. Its silent replacement therefore omitted native.js. The corrected injector
+preserves the module query, inserts bootstrap first, and fails on missing or duplicate
+entry modules. Local bundle inspection and regression tests cover the real current
+HTML. The earlier native check passing did not establish a usable bridge.

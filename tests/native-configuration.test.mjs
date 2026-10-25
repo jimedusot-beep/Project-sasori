@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { nativeConfiguration } from '../native/ios/configure.mjs';
+import { nativeConfiguration, nativeEntry } from '../native/ios/configure.mjs';
 const scene = 'window?.rootViewController = CAPBridgeViewController()';
 const plist =
   '<?xml version="1.0"?><plist version="1.0"><dict><key>Scene</key><dict><key>Name</key><string>main</string></dict><key>Other</key><string>keep</string></dict></plist>';
@@ -43,4 +43,26 @@ test('unsupported native templates fail rather than silently generating a generi
       }),
     /permission/,
   );
+});
+
+test('native bootstrap precedes the current versioned app entry and preserves its query', async () => {
+  const { readFile } = await import('node:fs/promises');
+  const html = await readFile(new URL('../site/index.html', import.meta.url), 'utf8');
+  const built = nativeEntry(html);
+  const entry = html.match(/src="app\.js[^"]*"/)?.[0];
+  assert.ok(entry);
+  assert.ok(built.indexOf('src="native.js"') < built.indexOf(entry));
+  assert.ok(built.includes(entry));
+  assert.equal((built.match(/src="native.js"/g) || []).length, 1);
+});
+test('native packaging refuses missing or duplicate entry modules instead of shipping without bootstrap', () => {
+  const entry = '<script type="module" src="app.js"></script>';
+  assert.ok(nativeEntry(entry).includes('src="native.js"'));
+  for (const html of [
+    '',
+    '<script src="other.js"></script>',
+    entry + entry,
+    '<script src="native.js"></script>' + entry,
+  ])
+    assert.throws(() => nativeEntry(html));
 });

@@ -18,3 +18,12 @@ export function nativeConfiguration({ scene, plist }) {
     plist: cleaned.slice(0, index) + permission + cleaned.slice(index),
   };
 }
+
+export function nativeEntry(html) {
+  const entries = [...html.matchAll(/<script type="module" src="app\.js(?:\?[^"]*)?"><\/script>/g)];
+  if (entries.length !== 1) throw new Error('Expected exactly one laboratory entry module.');
+  const entry = entries[0][0];
+  if (html.includes('<script src="native.js"></script>'))
+    throw new Error('Native bootstrap already present in source HTML.');
+  return html.replace(entry, '<script src="native.js"></script>\n' + entry);
+}

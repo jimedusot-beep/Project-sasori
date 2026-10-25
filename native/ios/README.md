@@ -56,3 +56,5 @@ containing the readiness text, another process, or a launch timeout cannot pass 
 This verifies startup/registration without requesting Bluetooth permission or scanning;
 physical iPhone and toy behavior still require separate tests. The unrelated Privacy
 Lab PR remains separate.
+
+The bundle injects native.js before the laboratory module while preserving its cache-version query. An absent or duplicate entry fails the build; it cannot silently ship a web-only page inside the native app.
