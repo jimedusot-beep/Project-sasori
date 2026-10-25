@@ -7,15 +7,27 @@ export function nativeConfiguration({ scene, plist }) {
     /<key>NSBluetoothAlwaysUsageDescription<\/key>\s*<string>[\s\S]*?<\/string>/g,
     '',
   );
-  if (cleaned.includes('<key>NSBluetoothAlwaysUsageDescription</key>'))
+  const withoutMicrophone = cleaned.replace(
+    /<key>NSMicrophoneUsageDescription<\/key>\s*<string>[\s\S]*?<\/string>/g,
+    '',
+  );
+  if (withoutMicrophone.includes('<key>NSMicrophoneUsageDescription</key>'))
+    throw new Error('Unsupported native microphone permission entry');
+  if (withoutMicrophone.includes('<key>NSBluetoothAlwaysUsageDescription</key>'))
     throw new Error('Unsupported native Bluetooth permission entry');
-  const index = cleaned.lastIndexOf('</dict>');
-  if (index < 0 || !cleaned.includes('<plist')) throw new Error('Unsupported native plist');
+  const index = withoutMicrophone.lastIndexOf('</dict>');
+  if (index < 0 || !withoutMicrophone.includes('<plist')) throw new Error('Unsupported native plist');
   const permission =
     '<key>NSBluetoothAlwaysUsageDescription</key><string>Sasori uses Bluetooth only when you choose a device to inspect or control through supported actions.</string>';
+  const microphonePermission =
+    '<key>NSMicrophoneUsageDescription</key><string>Sasori uses the microphone only when you start a local sound-detection experiment. Audio is not saved or uploaded.</string>';
   return {
     scene: configuredScene,
-    plist: cleaned.slice(0, index) + permission + cleaned.slice(index),
+    plist:
+      withoutMicrophone.slice(0, index) +
+      permission +
+      microphonePermission +
+      withoutMicrophone.slice(index),
   };
 }
 
