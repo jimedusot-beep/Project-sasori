@@ -16,8 +16,8 @@
     <title>Phone Key-Fob Lab · Project Sasori</title>
     <link rel="icon" href="icon.svg" type="image/svg+xml" />
     <link rel="stylesheet" href="hub.css?v=simple-projects-20261025" />
-    <link rel="stylesheet" href="keyfob-lab.css?v=keyfob-audio-1" />
-    <script type="module" src="keyfob-lab.js?v=keyfob-audio-1"></script>
+    <link rel="stylesheet" href="keyfob-lab.css?v=keyfob-audio-2" />
+    <script type="module" src="keyfob-lab.js?v=keyfob-audio-2"></script>
   </head>
   <body>
     <a class="skip" href="#workspace">Skip to key-fob tests</a>
@@ -53,31 +53,31 @@
           <p class="eyebrow">STEP 1</p>
           <h2 id="listen-title">Set up the microphone</h2>
           <p>
-            Keep this page open in Safari or Chrome over HTTPS. Place the fob close to the phone.
-            Keep the room quiet while calibrating.
+            Open this page directly in Safari over HTTPS. Tap Start, then click the fob once.
+            The live sound meter should react instantly — <strong>no calibration or trial is required.</strong>
           </p>
           <div class="lab-actions">
             <button type="button" id="mic-start" class="primary">
-              Start microphone + calibrate
+              Start listening (instant)
             </button>
-            <button type="button" id="mic-calibrate" class="secondary" disabled>Recalibrate</button>
+            <button type="button" id="mic-calibrate" class="secondary" disabled>Measure room noise (optional)</button>
             <button type="button" id="mic-stop" class="danger" disabled>Stop microphone</button>
           </div>
-          <label for="sensitivity">Click sensitivity</label>
-          <select id="sensitivity">
-            <option value="sensitive">Sensitive — catches quiet clicks, more false alarms</option>
-            <option selected value="normal">Normal — recommended first</option>
-            <option value="strict">Strict — fewer false alarms, more missed clicks</option>
-          </select>
+          <label for="sensitivity">Click threshold: <output for="sensitivity" id="threshold-value">45</output> / 255</label>
+          <input id="sensitivity" type="range" min="5" max="180" step="5" value="45" />
           <p class="hint">
-            Sensitivity changes are recorded separately for each trial. Recalibrate if you move the
-            phone.
+            <strong>Move LEFT to hear quieter clicks</strong> (but more false alarms).
+            Move RIGHT to reject background sounds. The working ClapSplash site uses the
+            same frequency-energy approach, with a default threshold of 100.
           </p>
+          <p id="live-energy" class="hint" role="status">Live sound energy: 0 / 255</p>
+          <p id="live-events" class="notice" role="status" aria-live="polite">Live clicks detected: 0</p>
+          <p class="hint">If the bar stays at zero, try clapping near the phone. If still zero, use Safari directly rather than an in-app browser.</p>
           <div class="meter" aria-hidden="true">
             <div id="level-bar"></div>
             <span id="threshold-marker"></span>
           </div>
-          <p id="level-label" class="hint">Sound: — · Detection threshold: —</p>
+          <p id="level-label" class="hint">Live sound: — · Detection threshold: —</p>
           <p id="mic-status" class="notice" role="status" aria-live="polite">
             Microphone is off. No sound is collected or saved.
           </p>
@@ -86,7 +86,8 @@
           <p class="eyebrow">STEP 2</p>
           <h2 id="trial-title">Run controlled trials</h2>
           <p>
-            Choose a condition. Tap <strong>Run 1 trial</strong>, wait for the 3-second countdown,
+            First confirm <strong>Live clicks detected</strong> increases when you click the fob.
+            Then choose a condition. Tap <strong>Run 1 trial</strong>, wait for the 3-second countdown,
             then do it once during the 2-second <strong>GO</strong> window. Keep the phone still.
           </p>
           <label for="condition">What will you do?</label>
