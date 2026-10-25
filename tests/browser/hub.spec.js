@@ -384,6 +384,7 @@ test('Control session survives the old 30-second boundary and the soundboard can
 test('Quick check remains a single-sound session', async ({ page }) => {
   await page.clock.install();
   await page.goto('/hub.html');
+  await page.locator('#connection-advanced > summary').click();
   await page.locator('#elmo-mode').selectOption('check');
   await page.locator('#hub-demo').click();
   await page.locator('#hub-sound').click();

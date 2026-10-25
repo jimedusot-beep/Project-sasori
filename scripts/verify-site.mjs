@@ -20,6 +20,7 @@ for (let attempt = 1; attempt <= 4; attempt++) {
   try {
     for (const file of [
       'index.html',
+      'entry.js',
       'app.js',
       'style.css',
       'tokens.css',

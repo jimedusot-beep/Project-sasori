@@ -26,20 +26,40 @@
         ><img src="icon.svg" alt="" width="36" height="36" /><span
           >SASORI<small>YOUR DEVICES. YOUR CONTROLS.</small></span
         ></a
-      ><a href="signal-atlas.html">Signal Atlas ↗</a><a href="pocket-ir.html">Pocket Remote ↗</a
-      ><a href="index.html">Full laboratory ↗</a>
+      >
+      <nav class="simple-nav" aria-label="Main navigation">
+        <a class="nav-current" href="hub.html" aria-current="page">Devices</a>
+        <a href="hub.html#automations">Automations</a>
+        <a href="signal-atlas.html">Discovery</a>
+        <a href="index.html#sessions">Projects</a>
+      </nav>
     </header>
     <main id="workspace">
       <div class="intro">
         <div>
-          <p class="eyebrow">THE DEVICE HUB</p>
-          <h1>Connect. Control.<br /><span>Make it yours.</span></h1>
-          <p>Your toys and small remotes, with a setup you can use again.</p>
+          <p class="eyebrow">SASORI / SIMPLE MODE</p>
+          <h1>Your devices.<br /><span>Made simple.</span></h1>
+          <p>Choose what you own, connect or try a demo, then use the available buttons.</p>
         </div>
         <div class="intro-note"><span class="dot"></span>One selected device at a time.</div>
       </div>
       <div class="family-grid" id="families" role="group" aria-label="Device families"></div>
       <p class="hint" id="family-hint"></p>
+      <section class="quick-launch" aria-labelledby="quick-start-title">
+        <div class="quick-launch-header">
+          <h2 id="quick-start-title">Start here</h2>
+          <a class="quiet-link" href="index.html">Open Research Lab ↗</a>
+        </div>
+        <div id="quick-credentials" hidden></div>
+        <div class="quick-actions" id="quick-actions"></div>
+        <p class="hint" id="quick-guidance" role="status" aria-live="polite">
+          Choose a device, then connect or try its offline demo.
+        </p>
+      </section>
+      <div class="sticky-session" id="sticky-session" hidden>
+        <span id="sticky-state" role="status" aria-live="polite">Connecting…</span>
+        <button id="quick-stop" type="button" class="danger">Stop &amp; disconnect</button>
+      </div>
       <div class="notice" aria-label="Find a supported Bluetooth adapter">
         <div class="action-row">
           <button id="hub-detect" class="secondary" type="button">Identify a Bluetooth toy</button>
@@ -223,7 +243,11 @@
             /></label>
           </div>
         </section>
-        <section class="panel controls-panel" aria-labelledby="controls-title">
+        <section
+          class="panel controls-panel"
+          id="hub-control-view"
+          aria-labelledby="controls-title"
+        >
           <div class="panel-head">
             <span class="eyebrow">02 / CONTROL</span><span id="remaining" class="hint"></span>
           </div>
@@ -231,7 +255,7 @@
             <span class="device-mark" aria-hidden="true">↔</span>
             <div>
               <p id="connected-name" class="eyebrow">YOUR DEVICE</p>
-              <h2 id="controls-title">Ready when you are.</h2>
+              <h2 id="controls-title" tabindex="-1">Ready when you are.</h2>
             </div>
           </div>
           <p id="connection-message" class="message" role="status" aria-live="polite">
@@ -394,7 +418,7 @@
           </button>
         </section>
       </div>
-      <section class="panel routine-panel" aria-labelledby="routine-title">
+      <section class="panel routine-panel" id="automations" aria-labelledby="routine-title">
         <div class="panel-head">
           <span class="eyebrow">03 / AUTOMATE</span
           ><span class="badge">MANUAL START · 2 MINUTE LIMIT</span>
