@@ -32,6 +32,6 @@ Every trial records one _declared_ condition, whether any sound exceeded thresho
 
 ## Implementation and device limits
 
-The analyzer uses Web Audio's `getUserMedia` and a high-pass filter followed by RMS/edge-threshold detection. Foreground JavaScript timers are not laboratory instruments; noise cancellation and auto-gain settings are requests rather than guarantees. The page suspends testing and closes the microphone when hidden. Some embedded browsers and native WebViews do not expose microphone permissions; use Safari over HTTPS if needed. A real physical phone acceptance test is still required.
+The analyzer uses Web Audio's `getUserMedia` and a high-pass filter followed by RMS/edge-threshold detection. Foreground JavaScript timers are not laboratory instruments; noise cancellation and auto-gain settings are requests rather than guarantees. The page suspends testing and closes the microphone when hidden. The packaged native iOS app includes an explicit microphone permission description, but a physical iPhone permission test is still outstanding. Some embedded browsers may not expose microphone permissions; use Safari over HTTPS if needed. A real physical phone acceptance test is still required.
 
 The page does not attempt 433 MHz radio access and should not be presented as a successful RF attack. For proof of RF behavior, genuinely compatible radio measurement equipment would be required (outside the phone-only experiment's scope).
