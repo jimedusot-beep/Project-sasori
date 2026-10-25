@@ -53,26 +53,35 @@
           <p class="eyebrow">STEP 1</p>
           <h2 id="listen-title">Set up the microphone</h2>
           <p>
-            Open this page directly in Safari over HTTPS. Tap Start, then click the fob once.
-            The live sound meter should react instantly — <strong>no calibration or trial is required.</strong>
+            Open this page directly in Safari over HTTPS. Tap Start, then click the fob once. The
+            live sound meter should react instantly —
+            <strong>no calibration or trial is required.</strong>
           </p>
           <div class="lab-actions">
-            <button type="button" id="mic-start" class="primary">
-              Start listening (instant)
+            <button type="button" id="mic-start" class="primary">Start listening (instant)</button>
+            <button type="button" id="mic-calibrate" class="secondary" disabled>
+              Measure room noise (optional)
             </button>
-            <button type="button" id="mic-calibrate" class="secondary" disabled>Measure room noise (optional)</button>
             <button type="button" id="mic-stop" class="danger" disabled>Stop microphone</button>
           </div>
-          <label for="sensitivity">Click threshold: <output for="sensitivity" id="threshold-value">45</output> / 255</label>
+          <label for="sensitivity"
+            >Click threshold: <output for="sensitivity" id="threshold-value">45</output> /
+            255</label
+          >
           <input id="sensitivity" type="range" min="5" max="180" step="5" value="45" />
           <p class="hint">
-            <strong>Move LEFT to hear quieter clicks</strong> (but more false alarms).
-            Move RIGHT to reject background sounds. The working ClapSplash site uses the
-            same frequency-energy approach, with a default threshold of 100.
+            <strong>Move LEFT to hear quieter clicks</strong> (but more false alarms). Move RIGHT to
+            reject background sounds. The working ClapSplash site uses the same frequency-energy
+            approach, with a default threshold of 100.
           </p>
           <p id="live-energy" class="hint" role="status">Live sound energy: 0 / 255</p>
-          <p id="live-events" class="notice" role="status" aria-live="polite">Live clicks detected: 0</p>
-          <p class="hint">If the bar stays at zero, try clapping near the phone. If still zero, use Safari directly rather than an in-app browser.</p>
+          <p id="live-events" class="notice" role="status" aria-live="polite">
+            Live clicks detected: 0
+          </p>
+          <p class="hint">
+            If the bar stays at zero, try clapping near the phone. If still zero, use Safari
+            directly rather than an in-app browser.
+          </p>
           <div class="meter" aria-hidden="true">
             <div id="level-bar"></div>
             <span id="threshold-marker"></span>
@@ -87,8 +96,9 @@
           <h2 id="trial-title">Run controlled trials</h2>
           <p>
             First confirm <strong>Live clicks detected</strong> increases when you click the fob.
-            Then choose a condition. Tap <strong>Run 1 trial</strong>, wait for the 3-second countdown,
-            then do it once during the 2-second <strong>GO</strong> window. Keep the phone still.
+            Then choose a condition. Tap <strong>Run 1 trial</strong>, wait for the 3-second
+            countdown, then do it once during the 2-second <strong>GO</strong> window. Keep the
+            phone still.
           </p>
           <label for="condition">What will you do?</label>
           <select id="condition">

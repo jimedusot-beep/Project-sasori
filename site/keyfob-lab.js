@@ -50,8 +50,11 @@ function thresholdUpdate() {
   threshold = Number($('sensitivity').value);
   $('threshold-value').textContent = String(threshold);
   $('level-label').textContent =
-    'Room noise: ' + background.toFixed(1) +
-    ' / 255 · Detection threshold: ' + threshold + ' / 255';
+    'Room noise: ' +
+    background.toFixed(1) +
+    ' / 255 · Detection threshold: ' +
+    threshold +
+    ' / 255';
   $('threshold-marker').style.left = (threshold / 255) * 100 + '%';
 }
 
@@ -64,11 +67,14 @@ function meterLoop() {
   const now = performance.now();
   if (phase === 'calibrating') calibrationSamples.push(value);
   if (phase === 'capturing' && capture) capture.peak = Math.max(capture.peak, value);
-  if ((phase === 'ready' || phase === 'capturing') &&
-      shouldTriggerClick(value, threshold, now, lastEventAt)) {
+  if (
+    (phase === 'ready' || phase === 'capturing') &&
+    shouldTriggerClick(value, threshold, now, lastEventAt)
+  ) {
     lastEventAt = now;
     liveClicks++;
-    $('live-events').textContent = 'Live clicks detected: ' + liveClicks + ' · Last sound heard now';
+    $('live-events').textContent =
+      'Live clicks detected: ' + liveClicks + ' · Last sound heard now';
     if (phase === 'capturing' && capture) {
       capture.events.push(Math.min(2000, Math.max(0, Math.round(now - capture.started))));
     }
@@ -177,8 +183,10 @@ async function start() {
     calibrated = true; // Live listening is available immediately; noise measurement is optional.
     phase = 'ready';
     meterLoop();
-    status('Listening now. Press the key fob and watch Live clicks detected. ' +
-      'If the meter stays at zero, clap and try Safari directly.');
+    status(
+      'Listening now. Press the key fob and watch Live clicks detected. ' +
+        'If the meter stays at zero, clap and try Safari directly.',
+    );
     $('trial-status').textContent = 'Live test first, then choose a condition';
     controls();
   } catch (error) {
