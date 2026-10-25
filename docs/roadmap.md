@@ -1,5 +1,7 @@
 # Prioritized roadmap
 
+The [phone-only Privacy Lab](../site/privacy.html) offers manual camera-frame comparisons and, in the separately built iPhone app, limited BLE advertisement surveys. These observations cannot certify room privacy or identify hidden cameras.
+
 The implemented Device Hub now covers Elmo, standard BLE gadgets, original MiP, experimental Furby Connect and local TV adapters. Pocket Remote provides a separate ESP32 IR path. Software tests and source documentation do not establish behavior on this owner's hardware.
 
 ## Current upgrade — recognition and another toy adapter

@@ -5,6 +5,7 @@ import WebKit
 class SasoriViewController: CAPBridgeViewController {
     override func capacitorDidLoad() {
         bridge?.registerPluginInstance(SasoriBluetoothPlugin())
+        bridge?.registerPluginInstance(SasoriSurveyPlugin())
         NSLog("Sasori native inspection bridge registered")
         #if targetEnvironment(simulator)
         verifyInterface()

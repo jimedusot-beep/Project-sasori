@@ -2,6 +2,10 @@
 
 This Capacitor app packages the shared Sasori interface with an original Swift Core Bluetooth plugin. It can choose a nearby BLE peripheral, inspect the configured service, capture notifications, disconnect, and share exported research files. The original inspection mode contains no command-write API. [Universal controls](../../docs/universal-controls.md) offers fixed standard BLE identity/battery/alert operations and a separately selected original WowWee MiP protocol family. MiP has two fixed queries and a dim-blue/off chest LED operation. There is no arbitrary characteristic-write, custom Elmo authentication, motor, audio-command, or firmware API.
 
+## Privacy Lab native survey
+
+The separate [Privacy Lab](../../docs/privacy-lab.md) can compare camera images in Safari. In the installed native iPhone app only, an additional explicit, short, advertisement-only Bluetooth survey is available. The survey plugin cannot connect, read, or write peripheral characteristics. It is not a reliable hidden-device detector; physical validation is pending.
+
 ## Build and install
 
 Use Node 22+, a Mac with Xcode 26+, and an iPhone/iPad running iOS 16+. From the repository:
