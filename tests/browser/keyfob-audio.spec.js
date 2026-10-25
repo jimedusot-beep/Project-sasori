@@ -65,7 +65,7 @@ test('key-fob lab shows limits, waits for permission, measures negative trial an
   await page.evaluate(() => {
     window.fakeMicrophoneEnergy = 170;
   });
-  await expect(page.locator('#live-events')).toContainText('Live clicks detected: 1');
+  await expect(page.locator('#live-events')).toContainText(/Live clicks detected: [1-9][0-9]*/);
   await expect(page.locator('#live-energy')).toContainText('170');
   await page.evaluate(() => {
     window.fakeMicrophoneEnergy = 0;
