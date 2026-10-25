@@ -40,13 +40,17 @@ function microphoneDiagnostics() {
   const track = stream?.getAudioTracks?.()[0] ?? stream?.getTracks?.()[0];
   const engineState = audioContext?.state ?? 'off';
   const trackState = track
-    ? (track.readyState ?? 'unknown') + (track.muted ? ', muted' : '') +
+    ? (track.readyState ?? 'unknown') +
+      (track.muted ? ', muted' : '') +
       (track.enabled === false ? ', disabled' : '')
     : 'off';
   $('mic-diagnostics').textContent =
-    'Permission: ' + microphonePermission +
-    ' · Audio engine: ' + engineState +
-    ' · Microphone track: ' + trackState;
+    'Permission: ' +
+    microphonePermission +
+    ' · Audio engine: ' +
+    engineState +
+    ' · Microphone track: ' +
+    trackState;
 }
 function controls() {
   const available = phase === 'ready';
@@ -208,20 +212,23 @@ async function start() {
     status(
       context.state === 'running'
         ? 'Audio engine running. Try a clap, then the fob. Watch the sound meter.'
-        : 'Microphone permission granted, but audio engine is ' + context.state +
-          '. Tap Wake up audio engine.',
+        : 'Microphone permission granted, but audio engine is ' +
+            context.state +
+            '. Tap Wake up audio engine.',
     );
     $('trial-status').textContent = 'Live test first, then choose a condition';
     controls();
   } catch (error) {
     const reason = error?.name || error?.message || 'Unknown error';
-    microphonePermission = error?.name === 'NotAllowedError' ? 'denied' : 'unavailable (' + reason + ')';
+    microphonePermission =
+      error?.name === 'NotAllowedError' ? 'denied' : 'unavailable (' + reason + ')';
     if (granted && granted !== stream) granted.getTracks().forEach((track) => track.stop());
     if (context && context !== audioContext && context.state !== 'closed')
       await context.close().catch(() => {});
     await stop();
     status(
-      'Microphone unavailable: ' + reason +
+      'Microphone unavailable: ' +
+        reason +
         '. Use Safari directly, check the site microphone permission, and retry.',
     );
     microphoneDiagnostics();
@@ -338,9 +345,11 @@ $('mic-resume').addEventListener('click', () => {
   void engine.resume().then(
     () => {
       microphoneDiagnostics();
-      status(engine.state === 'running'
-        ? 'Audio engine running. Clap once and watch the live meter.'
-        : 'Audio engine is still ' + engine.state + '. Try Stop then Start in Safari.');
+      status(
+        engine.state === 'running'
+          ? 'Audio engine running. Clap once and watch the live meter.'
+          : 'Audio engine is still ' + engine.state + '. Try Stop then Start in Safari.',
+      );
     },
     (error) => status('Could not wake audio engine: ' + (error?.message || 'unknown error')),
   );

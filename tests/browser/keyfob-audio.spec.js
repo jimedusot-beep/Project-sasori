@@ -29,7 +29,9 @@ test('key-fob lab shows limits, waits for permission, measures negative trial an
       },
     });
     class FakeAudioContext {
-      constructor() { window.audioContextConstructed = true; }
+      constructor() {
+        window.audioContextConstructed = true;
+      }
       state = 'running';
       resume() {
         return Promise.resolve();
@@ -120,19 +122,30 @@ test('suspended iPhone audio engine can be resumed from explicit tap', async ({ 
     });
     class SuspendedAudioContext {
       state = 'suspended';
-      resume() { return Promise.resolve(); } // Model a WebKit resume that leaves state suspended.
-      close() { this.state = 'closed'; return Promise.resolve(); }
-      createMediaStreamSource() { return { connect() {} }; }
+      resume() {
+        return Promise.resolve();
+      } // Model a WebKit resume that leaves state suspended.
+      close() {
+        this.state = 'closed';
+        return Promise.resolve();
+      }
+      createMediaStreamSource() {
+        return { connect() {} };
+      }
       createAnalyser() {
         return {
-          fftSize: 512, smoothingTimeConstant: 0,
-          get frequencyBinCount() { return this.fftSize / 2; },
+          fftSize: 512,
+          smoothingTimeConstant: 0,
+          get frequencyBinCount() {
+            return this.fftSize / 2;
+          },
           getByteFrequencyData: (array) => array.fill(0),
         };
       }
     }
     Object.defineProperty(window, 'AudioContext', {
-      configurable: true, value: SuspendedAudioContext,
+      configurable: true,
+      value: SuspendedAudioContext,
     });
   });
   await page.goto('/keyfob-lab.html');
