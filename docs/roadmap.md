@@ -1,5 +1,7 @@
 # Prioritized roadmap
 
+The [Elmo retrofit build plan](../experiments/001-elmo-l2l/retrofit/README.md) tracks the owner hardware inventory, power-off bench worksheet and proposed virtual-controller specification. It does not claim a working retrofit or permission to energize unidentified parts.
+
 The implemented Device Hub now covers Elmo, standard BLE gadgets, original MiP, experimental Furby Connect and local TV adapters. Pocket Remote provides a separate ESP32 IR path. Software tests and source documentation do not establish behavior on this owner's hardware.
 
 ## Current upgrade — recognition and another toy adapter

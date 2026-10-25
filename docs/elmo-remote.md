@@ -13,6 +13,25 @@ Open [Sasori Elmo Remote](https://jimedusot-beep.github.io/Project-sasori/elmo.h
 
 **Try the demo first** works without Bluetooth and uses an isolated fake device. Its badge, messages and receipt remain synthetic. It sends no request to `navigator.bluetooth` and produces no real toy sound.
 
+## Record the first real-toy trial
+
+This is an original-board status/greeting trial, not the custom-controller demonstration. Leave the password-setup option unchecked when using an existing password. Keep the toy's physical power switch accessible; do not rely on Disconnect to silence it or stop motion.
+
+Keep one private note alongside each saved JSON result. Before connecting, record the date/time zone, toy model/revision if known, phone/iOS/Bluefy versions and the Sasori revision tested (or that it is unknown). Do not include the password, device address or raw authentication packets. An optional local video can show the screen and toy together; exclude credentials and identifiers.
+
+| Step                   | Record what happened                                                                           | Evidence limit                                                                      |
+| ---------------------- | ---------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| Connect                | Exact acceptance/rejection/timeout message and whether setup was enabled                       | Toy-reported acceptance is a protocol result, not independent hardware verification |
+| Read status            | Reported volume and input values; note missing replies as unknown                              | Do not substitute expected or demo values                                           |
+| Request one greeting   | Whether the request was queued, then actual audible sound and any mouth/body motion            | A queued request alone is not proof of playback or independent mouth control        |
+| Disconnect             | Whether Bluetooth closed and whether sound or movement continued                               | Connection teardown is not a silence/motor-stop result                              |
+| Save result            | Select **Save connection result** after disconnect and keep the JSON beside these observations | The receipt does not contain your free-form observations or certify hardware        |
+| Recovery, if performed | Actual power-switch use/result and a fresh manual reconnect; save a separate connection result | Never assume that a reconnect, reset or power disconnect was tested                 |
+
+If authentication fails, record that outcome and leave status/greeting observations `NOT PERFORMED`. If status replies are missing, save the result and investigate the inconclusive query before requesting a greeting. Record each physical observation as `OBSERVED`, `NOT OBSERVED`, `INCONCLUSIVE` or `NOT PERFORMED`; a failure is still useful evidence. Do not edit the JSON verification flags to turn observations into certification. All physical checks remain pending until a real trial supplies evidence.
+
+If new-password setup was necessary, test persistence in a separate fresh session with setup unchecked, as described above. Do not reset a configured toy just to run this trial. Repeatable inspection and the later [custom-controller acceptance trials](../experiments/001-elmo-l2l/retrofit/README.md#first-physical-acceptance-record) have separate exit criteria.
+
 ## What this release establishes
 
 The browser client is an original JavaScript port of the [desktop subset](../desktop/README.md#experimental-elmo-known-password-check), supported by the [recovered original-app method evidence](../experiments/001-elmo-l2l/recovered-source.md). The JavaScript and Python calculations share independent, published synthetic expected vectors for whitespace and UTF-16 low-byte password behavior. Browser MD5 tests also compare with Node's standard implementation across padding and multi-block boundaries.
