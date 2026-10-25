@@ -55,7 +55,7 @@ test('advanced setup remains accessible but optional; browser failure offers a w
   await page.goto('/hub.html');
   await expect(page.locator('#hub-connect')).toBeDisabled();
   await expect(page.locator('#quick-guidance')).toContainText('Bluefy');
-  await page.locator('#connection-advanced summary').click();
+  await page.locator('#connection-advanced > summary').click();
   await expect(page.locator('#elmo-mode')).toBeVisible();
   await expect(page.locator('#device-prefix')).toBeVisible();
   await page.locator('#elmo-mode').selectOption('check');
