@@ -165,6 +165,9 @@ async function restoreGrant(setup) {
 }
 // Keep everyday actions close to the device chooser; advanced settings stay available.
 function mountSimpleMode() {
+  const savedLabel = document.querySelector('label[for="saved-setup"]');
+  const savedRow = $('saved-setup').parentElement;
+  document.querySelector('.quick-launch-header').after(savedLabel, savedRow);
   const quickAuth = $('quick-credentials');
   const password = $('hub-password');
   const passwordLabel = document.querySelector('label[for="hub-password"]');
