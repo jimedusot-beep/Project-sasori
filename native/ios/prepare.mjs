@@ -2,6 +2,7 @@ import { access, cp, readFile, writeFile } from 'node:fs/promises';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import xcode from 'xcode';
+import { nativeConfiguration } from './configure.mjs';
 const root = fileURLToPath(new URL('./', import.meta.url));
 const cap = root + 'node_modules/@capacitor/cli/bin/capacitor';
 try {
@@ -45,13 +46,13 @@ await writeFile(
   ),
 );
 const plist = root + 'ios/App/App/Info.plist';
-let text = await readFile(plist, 'utf8');
-if (!text.includes('NSBluetoothAlwaysUsageDescription'))
-  text = text.replace(
-    '</dict>',
-    '<key>NSBluetoothAlwaysUsageDescription</key><string>Sasori connects to the nearby device you choose to inspect its services and capture notifications.</string></dict>',
-  );
-await writeFile(plist, text);
+const scene = root + 'ios/App/App/SceneDelegate.swift';
+const configured = nativeConfiguration({
+  scene: await readFile(scene, 'utf8'),
+  plist: await readFile(plist, 'utf8'),
+});
+await writeFile(scene, configured.scene);
+await writeFile(plist, configured.plist);
 console.log(
   'Prepared inspection-only iOS app. Open in Xcode to select your signing team and iPhone.',
 );

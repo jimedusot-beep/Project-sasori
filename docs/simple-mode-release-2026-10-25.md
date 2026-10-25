@@ -37,7 +37,7 @@ storage was added.
 | Formatting, lint, core type checks, credential-pattern scan | Passed                                                                                                            |
 | Dependency audit                                            | No vulnerabilities reported by the run                                                                            |
 | ESP32-S3 reference firmware                                 | Pinned compile passed; no flashing or physical IR testing                                                         |
-| Native iOS                                                  | Unsigned simulator build, launch/render marker and screenshot passed                                              |
+| Native iOS                                                  | Original build/marker/screenshot check passed; the correction below supersedes its bridge-readiness claim         |
 
 [Final web/firmware run](https://github.com/jimedusot-beep/Project-sasori/actions/runs/40216067917)
 · [Final native run](https://github.com/jimedusot-beep/Project-sasori/actions/runs/40216067788).
@@ -83,3 +83,19 @@ protocol. The simulator and browser fixtures do not establish physical behavior.
 The next software release is the consolidated Projects overview in
 [#41](https://github.com/jimedusot-beep/Project-sasori/issues/41). Authenticated private
 sync remains separate future work; no automatic sync is claimed.
+
+## Native startup verification correction
+
+Reviewing the still-open Privacy Lab PR #29 exposed an independent startup defect:
+Capacitor 8.5.3's generated SceneDelegate creates a generic bridge directly, bypassing
+the custom storyboard controller. The older preparation script also placed the
+Bluetooth permission description in the first nested plist dictionary rather than at
+its root. Reproducing the pinned generated files confirmed both configuration issues.
+
+The focused correction in PR #44 configures the generated SceneDelegate to use
+SasoriViewController and puts the permission at plist root. It requires an exact JSON
+readiness event from the App process and a real Capacitor plugin-availability check.
+A log query containing the marker, another process, or a launch timeout cannot pass.
+Privacy Lab functionality remains in its own unmerged PR. Physical Bluetooth effects
+are still outside simulator verification. See the final PR #44 native run for the
+stricter startup evidence; the earlier plain-text marker check is insufficient on its own.

@@ -1,5 +1,6 @@
 """The simulator-launch fallback requires render proof; timeout alone must fail."""
 import importlib.util
+import json
 from pathlib import Path
 import subprocess
 import tempfile
@@ -21,7 +22,7 @@ class NativeSmokeTests(unittest.TestCase):
                 raise subprocess.TimeoutExpired(args, 120)
             if "log" in args:
                 self.assertIn("10m", args)
-                return "Sasori native interface ready"
+                return json.dumps([{ "processImagePath": "/Applications/App.app/App", "eventMessage": "Sasori native interface ready" }])
             return ""
 
         with tempfile.TemporaryDirectory() as root:
@@ -39,6 +40,21 @@ class NativeSmokeTests(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError, "render evidence"):
             smoke.verify_workspace("new-simulator", run=run, pause=lambda _: None)
 
+    def test_query_text_or_other_process_cannot_fake_readiness(self):
+        for log in [
+            'log show --predicate eventMessage CONTAINS "Sasori native interface ready"',
+            json.dumps([{ "processImagePath": "/usr/bin/log", "eventMessage": "Sasori native interface ready" }]),
+            json.dumps([{ "processImagePath": "/Applications/App.app/App", "eventMessage": "waiting for Sasori native interface ready" }]),
+            '{broken', '{}',
+        ]:
+            def run(*args):
+                if "log" in args:
+                    return log
+                self.assertNotIn("screenshot", args)
+                return ""
+            with self.assertRaisesRegex(RuntimeError, "render evidence"):
+                smoke.verify_workspace("fixture", run=run, pause=lambda _: None)
+
     def test_other_launch_errors_and_failed_screenshots_propagate(self):
         def launch_failure(*args):
             raise subprocess.CalledProcessError(1, args)
@@ -48,7 +64,7 @@ class NativeSmokeTests(unittest.TestCase):
 
         def screenshot_failure(*args):
             if "log" in args:
-                return "Sasori native interface ready"
+                return json.dumps([{ "processImagePath": "/Applications/App.app/App", "eventMessage": "Sasori native interface ready" }])
             if "screenshot" in args:
                 raise subprocess.CalledProcessError(1, args)
             return ""
