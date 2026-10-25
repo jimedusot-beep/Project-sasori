@@ -734,3 +734,7 @@ select {
     width: 100%;
   }
 }
+
+.quick-launch > label[for='saved-setup'] { display: block; margin: 9px 0 5px; font-weight: 650; }
+.quick-launch > .inline { max-width: 540px; }
+.quick-launch > .inline select { min-width: 0; flex: 1 1 180px; }
