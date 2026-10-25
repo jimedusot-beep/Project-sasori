@@ -33,13 +33,13 @@ If browser Bluetooth is unavailable, **Connect device** is disabled with an expl
 
 Test with a first-time participant on a real iPhone and on desktop. Start with an empty browser profile and record each task independently; do not disclose the solution before they try. Use **a demo** when hardware is unavailable and mark it simulated. Tests with actual electronics require exact model and owner authorization.
 
-| Task | Starting state | Success criterion | Evidence to record |
-| --- | --- | --- | --- |
-| 1. Try an Elmo demo | Open the public Sasori homepage | Choose Elmo, start demo and understand no real device was contacted | Tap count, time, hint consulted, wrong turns |
-| 2. Connect owned device | No live session, correct browser/hardware available | Manually connect only the selected device with correct local credentials | Chooser behavior, failures, retry, confirmation |
-| 3. Perform one action | Active demo or live session | Select one enabled control and distinguish request from physical outcome | Tap count, action result, physical confirmation separately |
-| 4. Save a result | Ended session | Export a connection receipt without secrets | File downloaded, whether user understood its purpose |
-| 5. Restore local setup | Prior exported hub backup | Import backup on a new blank origin/browser and see the saved profile without automatic connection | Import success, any missing credentials, recovery instructions |
+| Task                    | Starting state                                      | Success criterion                                                                                  | Evidence to record                                             |
+| ----------------------- | --------------------------------------------------- | -------------------------------------------------------------------------------------------------- | -------------------------------------------------------------- |
+| 1. Try an Elmo demo     | Open the public Sasori homepage                     | Choose Elmo, start demo and understand no real device was contacted                                | Tap count, time, hint consulted, wrong turns                   |
+| 2. Connect owned device | No live session, correct browser/hardware available | Manually connect only the selected device with correct local credentials                           | Chooser behavior, failures, retry, confirmation                |
+| 3. Perform one action   | Active demo or live session                         | Select one enabled control and distinguish request from physical outcome                           | Tap count, action result, physical confirmation separately     |
+| 4. Save a result        | Ended session                                       | Export a connection receipt without secrets                                                        | File downloaded, whether user understood its purpose           |
+| 5. Restore local setup  | Prior exported hub backup                           | Import backup on a new blank origin/browser and see the saved profile without automatic connection | Import success, any missing credentials, recovery instructions |
 
 For each task record: success (yes/assisted/no), duration in seconds, taps/clicks, scroll distance, wrong turns, spoken confusion, device/browser and exact code version. **No fabricated measurements.** Note accessibility settings: VoiceOver, large text, reduced motion and portrait landscape. Do not mix software test completions with physical device validation.
 
