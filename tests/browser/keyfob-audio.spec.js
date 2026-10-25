@@ -8,11 +8,14 @@ test('key-fob lab shows limits, waits for permission, measures negative trial an
     window.micCalls = 0;
     window.fakeMicrophoneEnergy = 0;
     window.micStopped = 0;
+    window.audioContextConstructed = false;
+    window.createdBeforePermission = false;
     Object.defineProperty(navigator, 'mediaDevices', {
       configurable: true,
       value: {
         getUserMedia: async () => {
           window.micCalls++;
+          window.createdBeforePermission = window.audioContextConstructed;
           return {
             getTracks: () => [
               {
@@ -26,6 +29,9 @@ test('key-fob lab shows limits, waits for permission, measures negative trial an
       },
     });
     class FakeAudioContext {
+      constructor() {
+        window.audioContextConstructed = true;
+      }
       state = 'running';
       resume() {
         return Promise.resolve();
@@ -60,7 +66,10 @@ test('key-fob lab shows limits, waits for permission, measures negative trial an
   await page.locator('#mic-start').click();
   await expect(page.locator('#trial-start')).toBeEnabled({ timeout: 7000 });
   expect(await page.evaluate(() => window.micCalls)).toBe(1);
-  await expect(page.locator('#mic-status')).toContainText('Listening now');
+  expect(await page.evaluate(() => window.createdBeforePermission)).toBe(true);
+  await expect(page.locator('#mic-diagnostics')).toContainText('Permission: granted');
+  await expect(page.locator('#mic-diagnostics')).toContainText('Audio engine: running');
+  await expect(page.locator('#mic-status')).toContainText('Audio engine running');
   // Confirm real-time detection without running any timed trial.
   await page.evaluate(() => {
     window.fakeMicrophoneEnergy = 170;
@@ -99,4 +108,53 @@ test('microphone errors do not claim fob radio access', async ({ page }) => {
   await expect(page.locator('#mic-status')).toContainText('Microphone unavailable');
   await expect(page.locator('#trial-start')).toBeDisabled();
   await expect(page.locator('#mic-start')).toBeEnabled();
+});
+
+test('suspended iPhone audio engine can be resumed from explicit tap', async ({ page }) => {
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, 'mediaDevices', {
+      configurable: true,
+      value: {
+        getUserMedia: async () => ({
+          getTracks: () => [{ readyState: 'live', enabled: true, stop() {} }],
+        }),
+      },
+    });
+    class SuspendedAudioContext {
+      state = 'suspended';
+      resume() {
+        return Promise.resolve();
+      } // Model a WebKit resume that leaves state suspended.
+      close() {
+        this.state = 'closed';
+        return Promise.resolve();
+      }
+      createMediaStreamSource() {
+        return { connect() {} };
+      }
+      createAnalyser() {
+        return {
+          fftSize: 512,
+          smoothingTimeConstant: 0,
+          get frequencyBinCount() {
+            return this.fftSize / 2;
+          },
+          getByteFrequencyData: (array) => array.fill(0),
+        };
+      }
+    }
+    Object.defineProperty(window, 'AudioContext', {
+      configurable: true,
+      value: SuspendedAudioContext,
+    });
+  });
+  await page.goto('/keyfob-lab.html');
+  await page.locator('#mic-start').click();
+  await expect(page.locator('#mic-status')).toContainText('audio engine is suspended');
+  await expect(page.locator('#mic-diagnostics')).toContainText('Audio engine: suspended');
+  await expect(page.locator('#mic-resume')).toBeEnabled();
+  await page.locator('#mic-resume').click();
+  await expect(page.locator('#mic-status')).toContainText('still suspended');
+  await page.locator('#mic-stop').click();
+  await expect(page.locator('#mic-diagnostics')).toContainText('Audio engine: off');
 });

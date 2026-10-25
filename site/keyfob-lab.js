@@ -6,7 +6,7 @@ import {
   recordTrial,
   summarizeTrials,
   csvForTrials,
-} from './lib/keyfob-audio.js?v=keyfob-audio-2';
+} from './lib/keyfob-audio.js?v=keyfob-audio-3';
 
 const $ = (id) => document.getElementById(id);
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -24,6 +24,7 @@ let phase = 'off',
 let threshold = 45,
   lastEventAt = -Infinity,
   liveClicks = 0;
+let microphonePermission = 'not requested';
 let calibrationSamples = [],
   capture = null,
   trials = [],
@@ -35,16 +36,34 @@ function label(condition) {
 function status(message) {
   $('mic-status').textContent = message;
 }
+function microphoneDiagnostics() {
+  const track = stream?.getAudioTracks?.()[0] ?? stream?.getTracks?.()[0];
+  const engineState = audioContext?.state ?? 'off';
+  const trackState = track
+    ? (track.readyState ?? 'unknown') +
+      (track.muted ? ', muted' : '') +
+      (track.enabled === false ? ', disabled' : '')
+    : 'off';
+  $('mic-diagnostics').textContent =
+    'Permission: ' +
+    microphonePermission +
+    ' · Audio engine: ' +
+    engineState +
+    ' · Microphone track: ' +
+    trackState;
+}
 function controls() {
   const available = phase === 'ready';
   $('mic-start').disabled = phase !== 'off';
   $('mic-stop').disabled = phase === 'off';
+  $('mic-resume').disabled = !audioContext || (phase !== 'ready' && phase !== 'calibrating');
   $('mic-calibrate').disabled = !available;
   $('trial-start').disabled = !available || !calibrated || trials.length >= MAX_TRIALS;
   $('condition').disabled = !available;
   $('sensitivity').disabled =
     phase === 'countdown' || phase === 'capturing' || phase === 'calibrating';
   for (const id of ['export-json', 'export-csv', 'clear-trials']) $(id).disabled = !trials.length;
+  microphoneDiagnostics();
 }
 function thresholdUpdate() {
   threshold = Number($('sensitivity').value);
@@ -80,6 +99,7 @@ function meterLoop() {
     }
   }
   frameNumber++;
+  if (frameNumber % 15 === 0) microphoneDiagnostics();
   if (frameNumber % 3 === 0) {
     $('level-bar').style.width = (value / 255) * 100 + '%';
     $('live-energy').textContent = 'Live sound energy: ' + Math.round(value) + ' / 255';
@@ -108,6 +128,7 @@ async function stop() {
   if (closing && closing.state !== 'closed') await closing.close().catch(() => {});
   $('level-bar').style.width = '0%';
   $('live-energy').textContent = 'Microphone off · no sound readings';
+  microphoneDiagnostics();
   $('trial-status').textContent = 'Microphone stopped';
   controls();
 }
@@ -144,7 +165,9 @@ async function start() {
   const token = ++generation;
   phase = 'starting';
   controls();
+  microphonePermission = 'requesting';
   status('Requesting microphone permission…');
+  microphoneDiagnostics();
   let granted = null,
     context = null;
   try {
@@ -152,23 +175,26 @@ async function start() {
       throw new Error('Microphone requires HTTPS (or localhost) and a supported browser.');
     const AudioEngine = window.AudioContext || window.webkitAudioContext;
     if (!AudioEngine) throw new Error('Web Audio is unavailable in this browser.');
-    // Use the same simple microphone request that worked on the original demo.
-    // Disabling phone gain/noise processing may hide quiet mechanical clicks.
+    // iPhone Safari can lose the user activation while awaiting microphone permission.
+    // Construct and request audio-engine resume during the actual Start button gesture.
+    context = new AudioEngine();
+    audioContext = context;
+    context.onstatechange = microphoneDiagnostics;
+    if (context.state !== 'running') void context.resume().catch(() => microphoneDiagnostics());
+    // Match the original successful acoustic demo: use normal browser microphone processing.
     granted = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
     if (token !== generation) {
       granted.getTracks().forEach((track) => track.stop());
+      if (context.state !== 'closed') await context.close().catch(() => {});
       return;
     }
-    context = new AudioEngine();
-    // Do not block on resume(): some iOS browsers postpone it after permission.
-    if (context.state === 'suspended') void context.resume().catch(() => {});
-    if (token !== generation) {
-      granted.getTracks().forEach((track) => track.stop());
-      await context.close();
-      return;
-    }
+    microphonePermission = 'granted';
     stream = granted;
-    audioContext = context;
+    const track = granted.getAudioTracks?.()[0] ?? granted.getTracks()[0];
+    if (track?.addEventListener) {
+      for (const name of ['mute', 'unmute', 'ended'])
+        track.addEventListener(name, microphoneDiagnostics);
+    }
     source = context.createMediaStreamSource(stream);
     analyser = context.createAnalyser();
     analyser.fftSize = 512;
@@ -184,20 +210,28 @@ async function start() {
     phase = 'ready';
     meterLoop();
     status(
-      'Listening now. Press the key fob and watch Live clicks detected. ' +
-        'If the meter stays at zero, clap and try Safari directly.',
+      context.state === 'running'
+        ? 'Audio engine running. Try a clap, then the fob. Watch the sound meter.'
+        : 'Microphone permission granted, but audio engine is ' +
+            context.state +
+            '. Tap Wake up audio engine.',
     );
     $('trial-status').textContent = 'Live test first, then choose a condition';
     controls();
   } catch (error) {
+    const reason = error?.name || error?.message || 'Unknown error';
+    microphonePermission =
+      error?.name === 'NotAllowedError' ? 'denied' : 'unavailable (' + reason + ')';
     if (granted && granted !== stream) granted.getTracks().forEach((track) => track.stop());
-    if (context && context !== audioContext) await context.close().catch(() => {});
+    if (context && context !== audioContext && context.state !== 'closed')
+      await context.close().catch(() => {});
     await stop();
     status(
       'Microphone unavailable: ' +
-        error.message +
-        ' Check permissions, use HTTPS, and keep the page in the foreground.',
+        reason +
+        '. Use Safari directly, check the site microphone permission, and retry.',
     );
+    microphoneDiagnostics();
   }
 }
 async function runTrial() {
@@ -303,6 +337,23 @@ function download(name, type, contents) {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 $('mic-start').addEventListener('click', start);
+$('mic-resume').addEventListener('click', () => {
+  if (!audioContext || phase === 'off') return;
+  const engine = audioContext;
+  status('Trying to wake the audio engine…');
+  // Direct user tap provides a fresh activation for WebKit audio.
+  void engine.resume().then(
+    () => {
+      microphoneDiagnostics();
+      status(
+        engine.state === 'running'
+          ? 'Audio engine running. Clap once and watch the live meter.'
+          : 'Audio engine is still ' + engine.state + '. Try Stop then Start in Safari.',
+      );
+    },
+    (error) => status('Could not wake audio engine: ' + (error?.message || 'unknown error')),
+  );
+});
 $('mic-stop').addEventListener('click', () => {
   void stop().then(() =>
     status('Microphone stopped. Past trial results remain until cleared or page closed.'),

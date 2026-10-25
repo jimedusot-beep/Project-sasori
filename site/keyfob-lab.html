@@ -16,8 +16,8 @@
     <title>Phone Key-Fob Lab · Project Sasori</title>
     <link rel="icon" href="icon.svg" type="image/svg+xml" />
     <link rel="stylesheet" href="hub.css?v=simple-projects-20261025" />
-    <link rel="stylesheet" href="keyfob-lab.css?v=keyfob-audio-2" />
-    <script type="module" src="keyfob-lab.js?v=keyfob-audio-2"></script>
+    <link rel="stylesheet" href="keyfob-lab.css?v=keyfob-audio-3" />
+    <script type="module" src="keyfob-lab.js?v=keyfob-audio-3"></script>
   </head>
   <body>
     <a class="skip" href="#workspace">Skip to key-fob tests</a>
@@ -62,6 +62,9 @@
             <button type="button" id="mic-calibrate" class="secondary" disabled>
               Measure room noise (optional)
             </button>
+            <button type="button" id="mic-resume" class="secondary" disabled>
+              Wake up audio engine
+            </button>
             <button type="button" id="mic-stop" class="danger" disabled>Stop microphone</button>
           </div>
           <label for="sensitivity"
@@ -89,6 +92,15 @@
           <p id="level-label" class="hint">Live sound: — · Detection threshold: —</p>
           <p id="mic-status" class="notice" role="status" aria-live="polite">
             Microphone is off. No sound is collected or saved.
+          </p>
+          <p id="mic-diagnostics" class="hint" role="status" aria-live="polite">
+            Permission: not requested · Audio engine: off · Microphone track: off
+          </p>
+          <p class="hint">
+            If microphone permission is denied, open this address in Safari (not the ChatGPT in-app
+            browser), then use Safari’s website settings to allow Microphone. If permission is
+            allowed but the audio engine says <strong>suspended</strong> or
+            <strong>interrupted</strong>, tap Wake up audio engine.
           </p>
         </section>
         <section class="panel" aria-labelledby="trial-title">
