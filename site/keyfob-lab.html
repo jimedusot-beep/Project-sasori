@@ -4,8 +4,14 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
     <meta name="theme-color" content="#111918" />
-    <meta name="description" content="Test whether a phone microphone reliably detects an old key-fob button click, including false-positive controls." />
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'" />
+    <meta
+      name="description"
+      content="Test whether a phone microphone reliably detects an old key-fob button click, including false-positive controls."
+    />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"
+    />
     <meta name="referrer" content="no-referrer" />
     <title>Phone Key-Fob Lab · Project Sasori</title>
     <link rel="icon" href="icon.svg" type="image/svg+xml" />
@@ -16,34 +22,73 @@
   <body>
     <a class="skip" href="#workspace">Skip to key-fob tests</a>
     <header class="topbar">
-      <a class="brand" href="hub.html"><img src="icon.svg" alt="" width="36" height="36" /><span>SASORI<small>KEY-FOB AUDIO LAB</small></span></a>
+      <a class="brand" href="hub.html"
+        ><img src="icon.svg" alt="" width="36" height="36" /><span
+          >SASORI<small>KEY-FOB AUDIO LAB</small></span
+        ></a
+      >
       <nav class="simple-nav" aria-label="Main navigation">
-        <a href="hub.html">Devices</a><a href="hub.html#automations">Automations</a><a href="signal-atlas.html">Discovery</a><a href="projects.html">Projects</a>
+        <a href="hub.html">Devices</a><a href="hub.html#automations">Automations</a
+        ><a href="signal-atlas.html">Discovery</a><a href="projects.html">Projects</a>
       </nav>
     </header>
     <main id="workspace">
-      <div class="intro"><div><p class="eyebrow">SASORI / PHONE-ONLY EXPERIMENT</p><h1>Does the phone hear <span>your key fob?</span></h1>
-        <p>Measure actual button clicks, compare them with unrelated noises, and export the evidence. No extra hardware.</p></div></div>
-      <p class="notice"><strong>Important:</strong> This listens to the phone <strong>microphone</strong>, not the 433 MHz radio signal. A detected click does not mean the phone decoded, copied, or controlled a car remote. Test only your own equipment; don't test near an active vehicle.</p>
+      <div class="intro">
+        <div>
+          <p class="eyebrow">SASORI / PHONE-ONLY EXPERIMENT</p>
+          <h1>Does the phone hear <span>your key fob?</span></h1>
+          <p>
+            Measure actual button clicks, compare them with unrelated noises, and export the
+            evidence. No extra hardware.
+          </p>
+        </div>
+      </div>
+      <p class="notice">
+        <strong>Important:</strong> This listens to the phone <strong>microphone</strong>, not the
+        433 MHz radio signal. A detected click does not mean the phone decoded, copied, or
+        controlled a car remote. Test only your own equipment; don't test near an active vehicle.
+      </p>
       <div class="lab-layout">
         <section class="panel" aria-labelledby="listen-title">
-          <p class="eyebrow">STEP 1</p><h2 id="listen-title">Set up the microphone</h2>
-          <p>Keep this page open in Safari or Chrome over HTTPS. Place the fob close to the phone. Keep the room quiet while calibrating.</p>
+          <p class="eyebrow">STEP 1</p>
+          <h2 id="listen-title">Set up the microphone</h2>
+          <p>
+            Keep this page open in Safari or Chrome over HTTPS. Place the fob close to the phone.
+            Keep the room quiet while calibrating.
+          </p>
           <div class="lab-actions">
-            <button type="button" id="mic-start" class="primary">Start microphone + calibrate</button>
+            <button type="button" id="mic-start" class="primary">
+              Start microphone + calibrate
+            </button>
             <button type="button" id="mic-calibrate" class="secondary" disabled>Recalibrate</button>
             <button type="button" id="mic-stop" class="danger" disabled>Stop microphone</button>
           </div>
           <label for="sensitivity">Click sensitivity</label>
-          <select id="sensitivity"><option value="sensitive">Sensitive — catches quiet clicks, more false alarms</option><option selected value="normal">Normal — recommended first</option><option value="strict">Strict — fewer false alarms, more missed clicks</option></select>
-          <p class="hint">Sensitivity changes are recorded separately for each trial. Recalibrate if you move the phone.</p>
-          <div class="meter" aria-hidden="true"><div id="level-bar"></div><span id="threshold-marker"></span></div>
+          <select id="sensitivity">
+            <option value="sensitive">Sensitive — catches quiet clicks, more false alarms</option>
+            <option selected value="normal">Normal — recommended first</option>
+            <option value="strict">Strict — fewer false alarms, more missed clicks</option>
+          </select>
+          <p class="hint">
+            Sensitivity changes are recorded separately for each trial. Recalibrate if you move the
+            phone.
+          </p>
+          <div class="meter" aria-hidden="true">
+            <div id="level-bar"></div>
+            <span id="threshold-marker"></span>
+          </div>
           <p id="level-label" class="hint">Sound: — · Detection threshold: —</p>
-          <p id="mic-status" class="notice" role="status" aria-live="polite">Microphone is off. No sound is collected or saved.</p>
+          <p id="mic-status" class="notice" role="status" aria-live="polite">
+            Microphone is off. No sound is collected or saved.
+          </p>
         </section>
         <section class="panel" aria-labelledby="trial-title">
-          <p class="eyebrow">STEP 2</p><h2 id="trial-title">Run controlled trials</h2>
-          <p>Choose a condition. Tap <strong>Run 1 trial</strong>, wait for the 3-second countdown, then do it once during the 2-second <strong>GO</strong> window. Keep the phone still.</p>
+          <p class="eyebrow">STEP 2</p>
+          <h2 id="trial-title">Run controlled trials</h2>
+          <p>
+            Choose a condition. Tap <strong>Run 1 trial</strong>, wait for the 3-second countdown,
+            then do it once during the 2-second <strong>GO</strong> window. Keep the phone still.
+          </p>
           <label for="condition">What will you do?</label>
           <select id="condition">
             <option value="unlock">Press unlock once</option>
@@ -52,29 +97,68 @@
             <option value="tap">Tap the table once (false-positive control)</option>
             <option value="muffled">Press the fob once through cloth</option>
           </select>
-          <div class="lab-actions"><button id="trial-start" class="primary" type="button" disabled>Run 1 trial</button></div>
-          <p id="trial-status" class="big-readout" role="status" aria-live="polite">Ready when microphone is calibrated</p>
+          <div class="lab-actions">
+            <button id="trial-start" class="primary" type="button" disabled>Run 1 trial</button>
+          </div>
+          <p id="trial-status" class="big-readout" role="status" aria-live="polite">
+            Ready when microphone is calibrated
+          </p>
           <p id="trial-result" class="hint" role="status">No trials recorded yet.</p>
-          <p class="hint">Aim for <strong>5 of each</strong> unlock, lock, silence, and table-tap trials. The cloth test is optional.</p>
+          <p class="hint">
+            Aim for <strong>5 of each</strong> unlock, lock, silence, and table-tap trials. The
+            cloth test is optional.
+          </p>
         </section>
       </div>
       <section class="panel results" aria-labelledby="results-title">
-        <p class="eyebrow">STEP 3</p><h2 id="results-title">Results &amp; false alarms</h2>
+        <p class="eyebrow">STEP 3</p>
+        <h2 id="results-title">Results &amp; false alarms</h2>
         <div id="trial-summary" class="summary-grid" aria-live="polite"></div>
-        <p id="verdict" class="notice" role="status">Complete the control tests to get a verdict.</p>
-        <p class="hint">A microphone cannot prove it recognizes lock versus unlock; it may simply hear any click. Scores show sound detection only, not RF reception.</p>
+        <p id="verdict" class="notice" role="status">
+          Complete the control tests to get a verdict.
+        </p>
+        <p class="hint">
+          A microphone cannot prove it recognizes lock versus unlock; it may simply hear any click.
+          Scores show sound detection only, not RF reception.
+        </p>
         <h3>Trial history (newest first)</h3>
-        <div class="history-wrap"><table><thead><tr><th scope="col">Condition</th><th scope="col">Heard?</th><th scope="col">Events</th><th scope="col">Peak / threshold</th></tr></thead><tbody id="trial-history"><tr><td colspan="4">No trials yet.</td></tr></tbody></table></div>
+        <div class="history-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">Condition</th>
+                <th scope="col">Heard?</th>
+                <th scope="col">Events</th>
+                <th scope="col">Peak / threshold</th>
+              </tr>
+            </thead>
+            <tbody id="trial-history">
+              <tr>
+                <td colspan="4">No trials yet.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
         <div class="lab-actions">
-          <button id="export-json" type="button" class="secondary" disabled>Export JSON evidence</button>
+          <button id="export-json" type="button" class="secondary" disabled>
+            Export JSON evidence
+          </button>
           <button id="export-csv" type="button" class="secondary" disabled>Export CSV</button>
           <button id="clear-trials" type="button" class="danger" disabled>Clear results</button>
         </div>
-        <p class="hint">Processing happens locally in this tab. We don't store audio or upload it; only trial measurements are exported when you choose. Closing/reloading clears this session's trials.</p>
-        <a href="https://github.com/jimedusot-beep/Project-sasori/blob/main/docs/keyfob-audio-lab.md">Read experiment guide and limitations ↗</a>
+        <p class="hint">
+          Processing happens locally in this tab. We don't store audio or upload it; only trial
+          measurements are exported when you choose. Closing/reloading clears this session's trials.
+        </p>
+        <a
+          href="https://github.com/jimedusot-beep/Project-sasori/blob/main/docs/keyfob-audio-lab.md"
+          >Read experiment guide and limitations ↗</a
+        >
       </section>
     </main>
-    <footer>PROJECT SASORI <span>Local measurements. Negative controls. No RF claims.</span></footer>
+    <footer>
+      PROJECT SASORI <span>Local measurements. Negative controls. No RF claims.</span>
+    </footer>
     <noscript><p>JavaScript is required for microphone testing.</p></noscript>
   </body>
 </html>

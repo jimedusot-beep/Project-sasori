@@ -6,7 +6,7 @@ Open **[Key-Fob Audio Lab](../site/keyfob-lab.html)** from Sasori in Safari on i
 
 - **Can learn:** whether an old remote's mechanical click is audible to the phone, how often the app misses it, and whether ordinary taps falsely trigger detection.
 - **Cannot learn:** whether the 433 MHz transmitter works, what lock/unlock data it sends, whether codes are fixed or rolling, or whether a car recognizes it. Ordinary phones do not expose an arbitrary 433 MHz transmit/receive radio.
-- The observed "ClapSplash worked" result demonstrates a *sound-correlated reaction*, not RF capture.
+- The observed "ClapSplash worked" result demonstrates a _sound-correlated reaction_, not RF capture.
 - No audio is saved, uploaded, or sent to a server. The microphone is used only while the page is foregrounded and the user starts it. The app keeps an in-memory measurement table until reload/close, with optional manual JSON/CSV export.
 
 ## Repeatable protocol
@@ -16,11 +16,11 @@ Open **[Key-Fob Audio Lab](../site/keyfob-lab.html)** from Sasori in Safari on i
 3. Choose **Unlock**. Tap **Run 1 trial**, wait for the 3-second countdown. Press the remote once only during **GO** (2 seconds). Repeat five times.
 4. Repeat five trials for **Lock**.
 5. Repeat five **Silence** trials without touching anything during GO. This measures background false alarms.
-6. Repeat five **Tap table** trials without touching the remote. This measures whether your detector recognizes *ordinary* nearby clicks as if they were remote button sounds.
+6. Repeat five **Tap table** trials without touching the remote. This measures whether your detector recognizes _ordinary_ nearby clicks as if they were remote button sounds.
 7. Optionally wrap the fob in cloth and do the **Muffled press** test five times, holding distance constant. This is a rough control, not evidence of RF: cloth also changes the mechanical sound, and microphone processing varies by phone.
 8. Read the condition-specific detection rates and verdict. Use **Export JSON evidence** or **Export CSV** to keep results before closing the tab. Trial histories intentionally do not store audio.
 
-Every trial records one *declared* condition, whether any sound exceeded threshold, approximate events during GO, background level, peak and threshold. There is no automatic way for the phone to verify that you truly pressed lock vs unlock; the labels are user-reported.
+Every trial records one _declared_ condition, whether any sound exceeded threshold, approximate events during GO, background level, peak and threshold. There is no automatic way for the phone to verify that you truly pressed lock vs unlock; the labels are user-reported.
 
 ## How to interpret the result
 

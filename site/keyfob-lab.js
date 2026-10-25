@@ -1,16 +1,34 @@
 import {
-  CONDITIONS, sampleLevel, calibrateNoise, detectionThreshold,
-  recordTrial, summarizeTrials, csvForTrials,
+  CONDITIONS,
+  sampleLevel,
+  calibrateNoise,
+  detectionThreshold,
+  recordTrial,
+  summarizeTrials,
+  csvForTrials,
 } from './lib/keyfob-audio.js?v=keyfob-audio-1';
 
 const $ = (id) => document.getElementById(id);
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const MAX_TRIALS = 100;
-let stream = null, audioContext = null, analyser = null, buffer = null;
-let source = null, highpass = null, animation = 0;
-let phase = 'off', generation = 0, calibrated = false, background = 0;
-let threshold = 0.022, wasAbove = false, lastEventAt = -Infinity;
-let calibrationSamples = [], capture = null, trials = [], frameNumber = 0;
+let stream = null,
+  audioContext = null,
+  analyser = null,
+  buffer = null;
+let source = null,
+  highpass = null,
+  animation = 0;
+let phase = 'off',
+  generation = 0,
+  calibrated = false,
+  background = 0;
+let threshold = 0.022,
+  wasAbove = false,
+  lastEventAt = -Infinity;
+let calibrationSamples = [],
+  capture = null,
+  trials = [],
+  frameNumber = 0;
 
 function label(condition) {
   return CONDITIONS.find((entry) => entry.id === condition)?.label ?? condition;
@@ -25,13 +43,17 @@ function controls() {
   $('mic-calibrate').disabled = !available;
   $('trial-start').disabled = !available || !calibrated || trials.length >= MAX_TRIALS;
   $('condition').disabled = !available;
-  $('sensitivity').disabled = phase === 'countdown' || phase === 'capturing' || phase === 'calibrating';
+  $('sensitivity').disabled =
+    phase === 'countdown' || phase === 'capturing' || phase === 'calibrating';
   for (const id of ['export-json', 'export-csv', 'clear-trials']) $(id).disabled = !trials.length;
 }
 function thresholdUpdate() {
   threshold = detectionThreshold(background, $('sensitivity').value);
   $('level-label').textContent =
-    'Background: ' + background.toFixed(3) + ' · Threshold: ' + threshold.toFixed(3) +
+    'Background: ' +
+    background.toFixed(3) +
+    ' · Threshold: ' +
+    threshold.toFixed(3) +
     ' · Orange line is the trigger level';
   $('threshold-marker').style.left = Math.min(100, threshold * 500) + '%';
 }
@@ -89,8 +111,11 @@ async function calibrate() {
     calibrated = true;
     thresholdUpdate();
     phase = 'ready';
-    status('Microphone on. Calibrated using ' + calibrationSamples.length +
-      ' sound readings. Audio stays on this phone; nothing is recorded or uploaded.');
+    status(
+      'Microphone on. Calibrated using ' +
+        calibrationSamples.length +
+        ' sound readings. Audio stays on this phone; nothing is recorded or uploaded.',
+    );
     $('trial-status').textContent = 'Choose a condition, then Run 1 trial';
   } catch (error) {
     phase = 'ready';
@@ -104,7 +129,8 @@ async function start() {
   phase = 'starting';
   controls();
   status('Requesting microphone permission…');
-  let granted = null, context = null;
+  let granted = null,
+    context = null;
   try {
     if (!window.isSecureContext || !navigator.mediaDevices?.getUserMedia)
       throw new Error('Microphone requires HTTPS (or localhost) and a supported browser.');
@@ -114,7 +140,10 @@ async function start() {
       audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false },
       video: false,
     });
-    if (token !== generation) { granted.getTracks().forEach((track) => track.stop()); return; }
+    if (token !== generation) {
+      granted.getTracks().forEach((track) => track.stop());
+      return;
+    }
     context = new AudioEngine();
     await context.resume();
     if (token !== generation) {
@@ -142,8 +171,11 @@ async function start() {
     if (granted && granted !== stream) granted.getTracks().forEach((track) => track.stop());
     if (context && context !== audioContext) await context.close().catch(() => {});
     await stop();
-    status('Microphone unavailable: ' + error.message +
-      ' Check permissions, use HTTPS, and keep the page in the foreground.');
+    status(
+      'Microphone unavailable: ' +
+        error.message +
+        ' Check permissions, use HTTPS, and keep the page in the foreground.',
+    );
   }
 }
 async function runTrial() {
@@ -162,21 +194,35 @@ async function runTrial() {
   lastEventAt = -Infinity;
   wasAbove = true; // Require a new rising edge after the GO signal.
   phase = 'capturing';
-  $('trial-status').textContent = condition === 'quiet' ? 'GO — stay silent' :
-    condition === 'tap' ? 'GO — tap the table once' : 'GO — press once';
+  $('trial-status').textContent =
+    condition === 'quiet'
+      ? 'GO — stay silent'
+      : condition === 'tap'
+        ? 'GO — tap the table once'
+        : 'GO — press once';
   controls();
   await sleep(2000);
   if (token !== generation || !capture) return;
   const result = recordTrial({
-    condition, events: capture.events, peak: capture.peak,
-    threshold: capture.threshold, noise: background, at: new Date().toISOString(),
+    condition,
+    events: capture.events,
+    peak: capture.peak,
+    threshold: capture.threshold,
+    noise: background,
+    at: new Date().toISOString(),
   });
   trials.push(result);
   capture = null;
   phase = 'ready';
   $('trial-status').textContent = result.detected ? 'Sound detected' : 'No sound detected';
-  $('trial-result').textContent = label(condition) + ' · ' + result.eventCount +
-    ' trigger(s) · peak ' + result.peak + ' / threshold ' + result.threshold +
+  $('trial-result').textContent =
+    label(condition) +
+    ' · ' +
+    result.eventCount +
+    ' trigger(s) · peak ' +
+    result.peak +
+    ' / threshold ' +
+    result.threshold +
     '. Only acoustic detection was measured.';
   status('Microphone on. Run the next trial or export your measurements.');
   controls();
@@ -193,14 +239,16 @@ function renderResults() {
     const count = document.createElement('strong');
     count.textContent = group.detected + '/' + group.total;
     const rate = document.createElement('small');
-    rate.textContent = group.rate === null ? 'No trials' : Math.round(group.rate * 100) + '% detected';
+    rate.textContent =
+      group.rate === null ? 'No trials' : Math.round(group.rate * 100) + '% detected';
     card.append(title, count, rate);
     $('trial-summary').append(card);
   }
   $('verdict').textContent = summary.verdict;
   $('trial-history').replaceChildren();
   if (!trials.length) {
-    const row = document.createElement('tr'), cell = document.createElement('td');
+    const row = document.createElement('tr'),
+      cell = document.createElement('td');
     cell.colSpan = 4;
     cell.textContent = 'No trials yet.';
     row.append(cell);
@@ -209,8 +257,10 @@ function renderResults() {
   for (const trial of [...trials].reverse()) {
     const row = document.createElement('tr');
     for (const value of [
-      label(trial.condition), trial.detected ? 'Yes' : 'No',
-      String(trial.eventCount), trial.peak + ' / ' + trial.threshold,
+      label(trial.condition),
+      trial.detected ? 'Yes' : 'No',
+      String(trial.eventCount),
+      trial.peak + ' / ' + trial.threshold,
     ]) {
       const cell = document.createElement('td');
       cell.textContent = value;
@@ -232,18 +282,40 @@ function download(name, type, contents) {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 $('mic-start').addEventListener('click', start);
-$('mic-stop').addEventListener('click', () => { void stop().then(() => status('Microphone stopped. Past trial results remain until cleared or page closed.')); });
-$('mic-calibrate').addEventListener('click', () => { void calibrate(); });
+$('mic-stop').addEventListener('click', () => {
+  void stop().then(() =>
+    status('Microphone stopped. Past trial results remain until cleared or page closed.'),
+  );
+});
+$('mic-calibrate').addEventListener('click', () => {
+  void calibrate();
+});
 $('sensitivity').addEventListener('change', thresholdUpdate);
-$('trial-start').addEventListener('click', () => { void runTrial(); });
+$('trial-start').addEventListener('click', () => {
+  void runTrial();
+});
 $('export-json').addEventListener('click', () =>
-  download('sasori-keyfob-acoustic-trials.json', 'application/json', JSON.stringify({
-    schema: 'sasori/keyfob-acoustic-trials/v1', collectedAt: new Date().toISOString(),
-    source: 'phone-microphone-not-RF', windowMs: 2000, trialCount: trials.length,
-    summary: summarizeTrials(trials), trials,
-  }, null, 2) + '\n'));
+  download(
+    'sasori-keyfob-acoustic-trials.json',
+    'application/json',
+    JSON.stringify(
+      {
+        schema: 'sasori/keyfob-acoustic-trials/v1',
+        collectedAt: new Date().toISOString(),
+        source: 'phone-microphone-not-RF',
+        windowMs: 2000,
+        trialCount: trials.length,
+        summary: summarizeTrials(trials),
+        trials,
+      },
+      null,
+      2,
+    ) + '\n',
+  ),
+);
 $('export-csv').addEventListener('click', () =>
-  download('sasori-keyfob-acoustic-trials.csv', 'text/csv', csvForTrials(trials)));
+  download('sasori-keyfob-acoustic-trials.csv', 'text/csv', csvForTrials(trials)),
+);
 $('clear-trials').addEventListener('click', () => {
   if (!window.confirm('Erase all unsaved key-fob trial results in this tab?')) return;
   trials = [];
@@ -252,9 +324,15 @@ $('clear-trials').addEventListener('click', () => {
 });
 document.addEventListener('visibilitychange', () => {
   if (document.hidden && phase !== 'off') {
-    void stop().then(() => status('Microphone stopped when the page went into the background. Start again and recalibrate.'));
+    void stop().then(() =>
+      status(
+        'Microphone stopped when the page went into the background. Start again and recalibrate.',
+      ),
+    );
   }
 });
-window.addEventListener('pagehide', () => { void stop(); });
+window.addEventListener('pagehide', () => {
+  void stop();
+});
 thresholdUpdate();
 renderResults();

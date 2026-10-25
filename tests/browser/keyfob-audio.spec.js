@@ -12,19 +12,37 @@ test('key-fob lab shows limits, waits for permission, measures negative trial an
       value: {
         getUserMedia: async () => {
           window.micCalls++;
-          return { getTracks: () => [{ stop: () => { window.micStopped++; } }] };
+          return {
+            getTracks: () => [
+              {
+                stop: () => {
+                  window.micStopped++;
+                },
+              },
+            ],
+          };
         },
       },
     });
     class FakeAudioContext {
       state = 'running';
-      resume() { return Promise.resolve(); }
-      close() { this.state = 'closed'; return Promise.resolve(); }
-      createMediaStreamSource() { return { connect() {} }; }
-      createBiquadFilter() { return { type: '', frequency: { value: 0 }, connect() {} }; }
+      resume() {
+        return Promise.resolve();
+      }
+      close() {
+        this.state = 'closed';
+        return Promise.resolve();
+      }
+      createMediaStreamSource() {
+        return { connect() {} };
+      }
+      createBiquadFilter() {
+        return { type: '', frequency: { value: 0 }, connect() {} };
+      }
       createAnalyser() {
         return {
-          fftSize: 2048, smoothingTimeConstant: 0,
+          fftSize: 2048,
+          smoothingTimeConstant: 0,
           getByteTimeDomainData: (array) => array.fill(128),
         };
       }

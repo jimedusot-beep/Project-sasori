@@ -38,10 +38,16 @@ export function detectionThreshold(noiseLevel, sensitivity = 'normal') {
 }
 
 export function recordTrial({ condition, events, peak, threshold, noise, at }) {
-  if (!CONDITIONS.some((item) => item.id === condition)) throw new Error('Unknown trial condition.');
-  if (!Array.isArray(events) || !events.every((time) => Number.isFinite(time) && time >= 0 && time <= 2000))
+  if (!CONDITIONS.some((item) => item.id === condition))
+    throw new Error('Unknown trial condition.');
+  if (
+    !Array.isArray(events) ||
+    !events.every((time) => Number.isFinite(time) && time >= 0 && time <= 2000)
+  )
     throw new Error('Invalid event timings.');
-  if (![peak, threshold, noise].every((value) => Number.isFinite(value) && value >= 0 && value <= 1))
+  if (
+    ![peak, threshold, noise].every((value) => Number.isFinite(value) && value >= 0 && value <= 1)
+  )
     throw new Error('Invalid sound levels.');
   return {
     condition,
@@ -57,7 +63,10 @@ export function recordTrial({ condition, events, peak, threshold, noise, at }) {
 
 export function summarizeTrials(trials) {
   const groups = Object.fromEntries(
-    CONDITIONS.map((condition) => [condition.id, { label: condition.label, total: 0, detected: 0 }]),
+    CONDITIONS.map((condition) => [
+      condition.id,
+      { label: condition.label, total: 0, detected: 0 },
+    ]),
   );
   for (const trial of trials) {
     const group = groups[trial.condition];
@@ -69,14 +78,23 @@ export function summarizeTrials(trials) {
     group.rate = group.total ? group.detected / group.total : null;
   }
   const ready = ['unlock', 'lock', 'quiet', 'tap'].every((id) => groups[id].total >= 5);
-  let verdict = 'Not enough evidence: run at least 5 trials each of unlock, lock, silence, and unrelated taps.';
+  let verdict =
+    'Not enough evidence: run at least 5 trials each of unlock, lock, silence, and unrelated taps.';
   if (ready) {
-    if (groups.unlock.rate >= 0.8 && groups.lock.rate >= 0.8 && groups.quiet.rate <= 0.2 && groups.tap.rate <= 0.2) {
-      verdict = 'Promising acoustic button trigger. Repeat in a different room. This is not RF decoding or proof of lock/unlock identification.';
+    if (
+      groups.unlock.rate >= 0.8 &&
+      groups.lock.rate >= 0.8 &&
+      groups.quiet.rate <= 0.2 &&
+      groups.tap.rate <= 0.2
+    ) {
+      verdict =
+        'Promising acoustic button trigger. Repeat in a different room. This is not RF decoding or proof of lock/unlock identification.';
     } else if (groups.tap.rate > 0.2) {
-      verdict = 'The phone also hears unrelated taps: this detector is NOT fob-specific. Do not treat it as a reliable Sasori command yet.';
+      verdict =
+        'The phone also hears unrelated taps: this detector is NOT fob-specific. Do not treat it as a reliable Sasori command yet.';
     } else {
-      verdict = 'Unreliable at the present distance/sensitivity. Recalibrate and repeat; no fob control is established.';
+      verdict =
+        'Unreliable at the present distance/sensitivity. Recalibrate and repeat; no fob control is established.';
     }
   }
   return { groups, ready, verdict };
@@ -85,9 +103,18 @@ export function summarizeTrials(trials) {
 export function csvForTrials(trials) {
   const header = 'condition,detected,eventCount,eventMs,peak,threshold,background,at';
   const rows = trials.map((trial) =>
-    [trial.condition, trial.detected, trial.eventCount, trial.eventMs.join(';'), trial.peak,
-      trial.threshold, trial.background, trial.at]
-      .map((item) => '"' + String(item).replaceAll('"', '""') + '"').join(','),
+    [
+      trial.condition,
+      trial.detected,
+      trial.eventCount,
+      trial.eventMs.join(';'),
+      trial.peak,
+      trial.threshold,
+      trial.background,
+      trial.at,
+    ]
+      .map((item) => '"' + String(item).replaceAll('"', '""') + '"')
+      .join(','),
   );
   return [header, ...rows].join('\n') + '\n';
 }
