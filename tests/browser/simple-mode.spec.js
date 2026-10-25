@@ -28,7 +28,7 @@ test('first-use Simple Mode exposes Connect, Demo and Research with a short devi
   await expect(page.locator('#quick-credentials #hub-password')).toBeVisible();
   expect(
     await page.locator('#hub-connect').evaluate((el) => el.getBoundingClientRect().top),
-  ).toBeLessThan(
+  ).toBeGreaterThan(
     await page.locator('#saved-setup').evaluate((el) => el.getBoundingClientRect().top),
   );
   await expect(page.locator('#connection-advanced')).not.toHaveAttribute('open', '');
