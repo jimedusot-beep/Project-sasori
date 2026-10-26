@@ -5,37 +5,6 @@
  * Cloud etching is authored for this project; no third-party anime graphics.
  * --accent is a LIGHT text/focus red; --accent-fill is the darker action background.
  */
-:root {
-  color-scheme: dark;
-  --bg: #0d0a0a;
-  --rail: #161111;
-  --panel: #211616;
-  --surface: #161111;
-  --surface-elevated: #211616;
-  --line: #503038;
-  --border: #3a2323;
-  --border-strong: #743b45;
-  --text: #f3ece8;
-  --muted: #cbb9b9;
-  --text-muted: #cbb9b9;
-  --accent: #ff9099;
-  --accent-fill: #a3141f;
-  --accent-action: #b62937;
-  --accent-strong: #d32b36;
-  --accent-hover: #e2444e;
-  --warm: #e7b981;
-  --copper: #c89d77;
-  --wood: #8d6b4f;
-  --mechanical: #a57c52;
-  --thread: #c8a7a7;
-  --cloud: rgb(163 20 31 / 12%);
-  --success: #70c38e;
-  --warning: #e7b981;
-  --error: #f38b89;
-  --info: #9ab9f0;
-  --shadow: 0 10px 30px rgb(0 0 0 / 35%);
-}
-
 html {
   background: var(--bg);
   color-scheme: dark;
