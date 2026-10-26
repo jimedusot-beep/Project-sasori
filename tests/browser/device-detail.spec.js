@@ -46,6 +46,7 @@ test('Elmo legacy remote shares device details and keeps Stop reachable in demo'
   await expect(detail.locator('[data-detail-field="progress"]')).toHaveText('Not connected');
   await page.locator('#elmo-demo').click();
   await expect(detail.locator('[data-detail-field="progress"]')).toHaveText('Demo ready');
+  await expect(page.locator('#elmo-connect')).toHaveText('Demo ready');
   await expect(page.locator('#elmo-sticky-session')).toBeVisible();
   await page.locator('#elmo-greet').click();
   await expect(detail.locator('[data-detail-field="lastAction"]')).toHaveText('Greeting request');
