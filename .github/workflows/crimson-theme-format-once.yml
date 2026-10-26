@@ -17,8 +17,8 @@ jobs:
       - name: Format theme-related source
         run: >-
           npx prettier --write
-          site/tokens.css site/sasori-theme.css site/puppet-clouds.svg
-          site/icon.svg site/index.html site/hub.html site/explore.html
+          site/tokens.css site/sasori-theme.css
+          site/index.html site/hub.html site/explore.html
           site/projects.html site/elmo.html site/signal-atlas.html
           site/privacy.html site/pocket-ir.html site/keyfob-lab.html
           site/companion.html scripts/verify-site.mjs
