@@ -1,0 +1,33 @@
+name: One-time navigation PR formatting
+on:
+  push:
+    branches: [feat/unified-navigation-explore-20261026]
+permissions:
+  contents: write
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: true
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - name: Format only files changed by this PR
+        run: >-
+          npx prettier --write
+          docs/unified-interface-audit-2026-10-26.md
+          site/explore.html site/unified-nav.js
+          tests/browser/unified-navigation.spec.js tests/unified-nav.test.mjs
+      - name: Commit formatted files if necessary
+        run: |
+          if [ -n "$(git status --porcelain)" ]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add docs/unified-interface-audit-2026-10-26.md site/explore.html site/unified-nav.js tests/browser/unified-navigation.spec.js tests/unified-nav.test.mjs
+            git commit -m "style: format unified navigation files"
+            git push origin HEAD:feat/unified-navigation-explore-20261026
+          fi
