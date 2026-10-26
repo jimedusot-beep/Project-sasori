@@ -1,0 +1,60 @@
+/* Shared four-destination navigation. No dependency on tool-specific styles. */
+.sasori-primary-nav {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 4px;
+  flex: 1 1 330px;
+  width: min(100%, 480px);
+  max-width: 480px;
+  margin-inline-start: auto;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+.sasori-primary-nav a {
+  display: grid;
+  place-items: center;
+  min-width: 0;
+  min-height: 44px;
+  padding: 8px 5px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  color: #dceade;
+  text-decoration: none;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 650;
+  line-height: 1.3;
+  white-space: nowrap;
+}
+
+.sasori-primary-nav a:hover,
+.sasori-primary-nav a[aria-current='page'] {
+  border-color: #6c9575;
+  background: #263d32;
+  color: #f0ffd6;
+}
+
+.sasori-primary-nav a:focus-visible {
+  outline: 3px solid #e2ba8c;
+  outline-offset: 2px;
+}
+
+@media (max-width: 650px) {
+  .sasori-primary-nav {
+    flex-basis: 100%;
+    width: 100%;
+    max-width: none;
+    margin-inline: 0;
+  }
+
+  .sasori-primary-nav a {
+    font-size: 13px;
+    padding-inline: 2px;
+  }
+}
+
+@media (max-width: 350px) {
+  .sasori-primary-nav a {
+    font-size: 12px;
+  }
+}
