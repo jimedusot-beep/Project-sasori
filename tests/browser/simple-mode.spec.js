@@ -65,9 +65,9 @@ test('advanced setup remains accessible but optional; browser failure offers a w
   await page.locator('#quick-stop').click();
   await page
     .getByRole('navigation', { name: 'Main navigation' })
-    .getByRole('link', { name: 'Discovery' })
+    .getByRole('link', { name: 'Explore' })
     .click();
-  await expect(page).toHaveURL(/signal-atlas\.html$/);
+  await expect(page).toHaveURL(/explore\.html$/);
 });
 
 test('phone has clear primary navigation, visible Stop and no sideways scrolling', async ({
