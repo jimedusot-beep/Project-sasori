@@ -55,9 +55,9 @@ test('first-time Hub actions have distinct readable demo, selection and Stop tre
   await page.goto('/hub.html');
   const family = page.locator('.family-button[aria-pressed="true"]');
   await expect(family).toHaveCount(1);
-  expect(
-    await family.evaluate((node) => getComputedStyle(node).borderTopColor),
-  ).toBe('rgb(241, 126, 135)');
+  expect(await family.evaluate((node) => getComputedStyle(node).borderTopColor)).toBe(
+    'rgb(241, 126, 135)',
+  );
   const fill = await page.locator('#hub-connect').evaluate((node) => ({
     bg: getComputedStyle(node).backgroundColor,
     color: getComputedStyle(node).color,
@@ -102,7 +102,10 @@ test('visual review: before-and-after targets in phone and desktop sizes', async
 test('respect reduced motion and preserve keyboard focus visibility', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.goto('/explore.html');
-  await page.getByRole('navigation', { name: 'Main navigation' }).getByRole('link', { name: 'Explore' }).focus();
+  await page
+    .getByRole('navigation', { name: 'Main navigation' })
+    .getByRole('link', { name: 'Explore' })
+    .focus();
   const style = await page
     .getByRole('navigation', { name: 'Main navigation' })
     .getByRole('link', { name: 'Explore' })

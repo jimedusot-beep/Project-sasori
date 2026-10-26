@@ -61,9 +61,13 @@ body main > .page-heading {
   background-image:
     linear-gradient(90deg, #0d0a0a 15%, rgb(13 10 10 / 60%) 65%, rgb(13 10 10 / 35%)),
     url('puppet-clouds.svg');
-  background-position: center, right center;
+  background-position:
+    center,
+    right center;
   background-repeat: no-repeat;
-  background-size: cover, min(70vw, 600px) auto;
+  background-size:
+    cover,
+    min(70vw, 600px) auto;
 }
 
 /* A fine puppet-thread line keeps the graphic decorative and low density. */
@@ -111,7 +115,9 @@ body .family-button[aria-selected='true'] {
   background: #3b1b23;
   border-color: #f17e87;
   color: #ffe1df;
-  box-shadow: 0 0 0 1px rgb(211 43 54 / 30%), 0 0 24px rgb(163 20 31 / 14%);
+  box-shadow:
+    0 0 0 1px rgb(211 43 54 / 30%),
+    0 0 24px rgb(163 20 31 / 14%);
 }
 
 body .family-button:focus-visible,
@@ -339,7 +345,9 @@ body main h1 em {
 
 /* A saved record view favors reading density over decoration. */
 body:has(#project-sections) main > .intro {
-  background-size: cover, min(47vw, 320px) auto;
+  background-size:
+    cover,
+    min(47vw, 320px) auto;
 }
 
 @media (hover: hover) and (prefers-reduced-motion: no-preference) {
@@ -347,7 +355,10 @@ body:has(#project-sections) main > .intro {
   body .panel,
   body .quick-card,
   body .card {
-    transition: border-color 150ms ease, box-shadow 150ms ease, transform 150ms ease;
+    transition:
+      border-color 150ms ease,
+      box-shadow 150ms ease,
+      transform 150ms ease;
   }
 
   body .family-button:hover:not(:disabled),
@@ -370,7 +381,11 @@ body:has(#project-sections) main > .intro {
 @media (max-width: 600px) {
   body main > .intro,
   body main > .page-heading {
-    background-size: cover, 400px auto;
-    background-position: center, calc(100% + 145px) center;
+    background-size:
+      cover,
+      400px auto;
+    background-position:
+      center,
+      calc(100% + 145px) center;
   }
 }
