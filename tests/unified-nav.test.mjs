@@ -19,6 +19,7 @@ test('legacy tool URLs resolve to one primary destination without changing the U
     assert.equal(currentPrimaryDestination('/Project-sasori/' + page), 'devices');
   }
   assert.equal(currentPrimaryDestination('/Project-sasori/hub.html', '#automations'), 'routines');
+  assert.equal(currentPrimaryDestination('/Project-sasori/index.html', '#universal'), 'devices');
   for (const page of ['index.html', 'signal-atlas.html', 'privacy.html', 'keyfob-lab.html', 'explore.html']) {
     assert.equal(currentPrimaryDestination('/Project-sasori/' + page), 'explore');
   }
