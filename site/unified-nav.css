@@ -7,6 +7,8 @@
   width: min(100%, 480px);
   max-width: 480px;
   margin-inline-start: auto;
+  overflow-x: visible;
+  scrollbar-width: auto;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
@@ -37,6 +39,12 @@
 .sasori-primary-nav a:focus-visible {
   outline: 3px solid #e2ba8c;
   outline-offset: 2px;
+}
+
+header:has(> .sasori-primary-nav) {
+  height: auto;
+  min-height: 77px;
+  flex-wrap: wrap;
 }
 
 @media (max-width: 650px) {
