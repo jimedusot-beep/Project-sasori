@@ -1,0 +1,407 @@
+@import url('tokens.css');
+
+/*
+ * Sasori's original crimson puppet-lab identity. Presentation only.
+ * Cloud etching is authored for this project; no third-party anime graphics.
+ * --accent is a LIGHT text/focus red; --accent-fill is the darker action background.
+ */
+:root {
+  color-scheme: dark;
+  --bg: #0d0a0a;
+  --rail: #161111;
+  --panel: #211616;
+  --surface: #161111;
+  --surface-elevated: #211616;
+  --line: #503038;
+  --border: #3a2323;
+  --border-strong: #743b45;
+  --text: #f3ece8;
+  --muted: #cbb9b9;
+  --text-muted: #cbb9b9;
+  --accent: #ff9099;
+  --accent-fill: #a3141f;
+  --accent-action: #b62937;
+  --accent-strong: #d32b36;
+  --accent-hover: #e2444e;
+  --warm: #e7b981;
+  --copper: #c89d77;
+  --wood: #8d6b4f;
+  --mechanical: #a57c52;
+  --thread: #c8a7a7;
+  --cloud: rgb(163 20 31 / 12%);
+  --success: #70c38e;
+  --warning: #e7b981;
+  --error: #f38b89;
+  --info: #9ab9f0;
+  --shadow: 0 10px 30px rgb(0 0 0 / 35%);
+}
+
+html {
+  background: var(--bg);
+  color-scheme: dark;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+}
+
+body a {
+  color: var(--accent);
+}
+
+body a:hover {
+  color: #ffd0d3;
+}
+
+body .topbar,
+body .app-header,
+body header:not(.page-heading) {
+  border-color: var(--line);
+}
+
+body .rail {
+  background: var(--rail);
+  border-color: var(--line);
+}
+
+body .brand,
+body header .brand {
+  color: var(--text);
+}
+
+body .brand small {
+  color: var(--muted);
+}
+
+body .eyebrow,
+body h1 span,
+body h1 em,
+body .project-count,
+body .rail-bottom {
+  color: var(--accent);
+}
+
+/* The etched cloud artwork sits inside the hero surface, not on top of controls. */
+body main > .intro,
+body main > .page-heading {
+  position: relative;
+  isolation: isolate;
+  min-width: 0;
+  border-bottom: 1px solid var(--line);
+  background-image:
+    linear-gradient(90deg, #0d0a0a 15%, rgb(13 10 10 / 60%) 65%, rgb(13 10 10 / 35%)),
+    url('puppet-clouds.svg');
+  background-position: center, right center;
+  background-repeat: no-repeat;
+  background-size: cover, min(70vw, 600px) auto;
+}
+
+/* A fine puppet-thread line keeps the graphic decorative and low density. */
+body main > .intro::after,
+body main > .page-heading::after {
+  content: '';
+  position: absolute;
+  inset: auto 0 -1px;
+  height: 1px;
+  background: linear-gradient(90deg, #a57c52, #a3141f 42%, transparent 85%);
+  pointer-events: none;
+}
+
+body .panel,
+body .card,
+body .quick-card,
+body .quick-launch,
+body .browser-note,
+body section.sasori-device-detail {
+  background-color: var(--panel);
+  border-color: var(--line);
+  box-shadow: inset 0 1px rgb(255 219 214 / 4%);
+}
+
+body .quick-launch {
+  background: linear-gradient(145deg, #29171a, #191112);
+  border-color: #743b45;
+  box-shadow: 0 5px 22px rgb(0 0 0 / 20%);
+}
+
+body .controls-card,
+body .controls-panel {
+  background: linear-gradient(155deg, #29191c, #1b1214 80%);
+}
+
+body .family-button,
+body .quick-card {
+  background: var(--surface);
+  color: var(--text);
+  border-color: var(--line);
+}
+
+body .family-button[aria-pressed='true'],
+body .family-button[aria-selected='true'] {
+  background: #3b1b23;
+  border-color: #f17e87;
+  color: #ffe1df;
+  box-shadow: 0 0 0 1px rgb(211 43 54 / 30%), 0 0 24px rgb(163 20 31 / 14%);
+}
+
+body .family-button:focus-visible,
+body a:focus-visible,
+body button:focus-visible,
+body input:focus-visible,
+body select:focus-visible,
+body textarea:focus-visible,
+body summary:focus-visible,
+body [tabindex]:focus-visible {
+  outline: 3px solid #ffb0a4;
+  outline-offset: 3px;
+}
+
+body input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='file']),
+body select,
+body textarea {
+  background: #180f12;
+  color: var(--text);
+  border-color: #88656b;
+}
+
+body input::placeholder,
+body textarea::placeholder {
+  color: #c7b6b8;
+}
+
+body input[type='checkbox'],
+body input[type='radio'],
+body input[type='range'] {
+  accent-color: var(--accent-strong);
+}
+
+/* Light text on crimson meets contrast requirements; links use the lighter accent. */
+body button.primary,
+body .primary:not(a),
+body .sound-button,
+body .greeting,
+body button#elmo-greet {
+  background: var(--accent-action);
+  color: #fff5f1;
+  border-color: #e7616e;
+}
+
+body button.primary:hover:not(:disabled),
+body .primary:hover:not(:disabled),
+body .sound-button:hover:not(:disabled),
+body .greeting:hover:not(:disabled) {
+  background: #d23846;
+  color: #fff;
+}
+
+body button.secondary,
+body .secondary:not(a) {
+  background: #231719;
+  color: var(--text);
+  border-color: #93616a;
+}
+
+body button.secondary:hover:not(:disabled),
+body .secondary:hover:not(:disabled) {
+  background: #402329;
+}
+
+body .quiet,
+body .text-button,
+body .file-button,
+body .project-link {
+  color: var(--accent);
+}
+
+body button.danger,
+body .danger,
+body .sticky-session button,
+body .device-sticky-stop button {
+  background: #6f202b;
+  border-color: #d78383;
+  color: #fff5f1;
+}
+
+body .notice,
+body .browser-note {
+  background: #271b1a;
+  border-color: #8e6252;
+  color: var(--text);
+}
+
+body .demo-banner,
+body .demo-note {
+  background: #342127;
+  border-color: #b44f61;
+  color: #ffe0e2;
+}
+
+body .sticky-session,
+body .device-sticky-stop {
+  background: #28151a;
+  border-color: #b44f61;
+  color: var(--text);
+}
+
+body .device-mark,
+body .connection-orbit {
+  border-color: #9a545e;
+  color: var(--accent);
+  box-shadow: 0 0 0 8px rgb(163 20 31 / 9%);
+}
+
+body .sasori-primary-nav a {
+  color: #e4d1d1;
+  background: transparent;
+  border-color: transparent;
+}
+
+body .sasori-primary-nav a:hover,
+body .sasori-primary-nav a[aria-current='page'] {
+  background: #472029;
+  border-color: #c65b68;
+  color: #ffe1df;
+  box-shadow: inset 0 -2px #e7616e;
+}
+
+body .nav:hover {
+  background: #352025;
+  color: var(--text);
+}
+
+body .nav.active {
+  background: #45212a;
+  color: #ffe1df;
+}
+
+body .count {
+  background: #332027;
+}
+
+body .badge:not(.warm):not(.subtle),
+body .pill {
+  border-color: #955261;
+  color: #ffb2b9;
+}
+
+/* Keep semantic outcomes distinct from the decorative crimson. */
+body .badge.warm,
+body .boundary,
+body .experiment-note {
+  border-color: #ab8051;
+}
+
+body .reaction-mappings,
+body .step-label {
+  color: var(--muted);
+}
+
+body .readings,
+body .project-items li,
+body .research,
+body details {
+  border-color: var(--line);
+}
+
+/* Tool-specific legacy overrides, not changes to device or signal behavior. */
+body .meter,
+body .summary-grid article,
+body .viewer {
+  background: var(--bg);
+  border-color: var(--line);
+}
+
+body #level-bar {
+  background: var(--success);
+}
+
+body #threshold-marker {
+  background: var(--warning);
+}
+
+body .workspace > .panel,
+body .work-grid > .panel,
+body .tools section,
+body .remote-grid > .card {
+  background-color: var(--panel);
+  border-color: var(--line);
+}
+
+body .tools section {
+  background: var(--panel);
+}
+
+body .topbar,
+body header:not(.page-heading) {
+  background-color: #120d0e;
+}
+
+body p,
+body .hint,
+body .small,
+body .muted {
+  color: var(--muted);
+}
+
+body .message,
+body .lead {
+  color: var(--text);
+}
+
+body .experiment-note,
+body .hint {
+  color: var(--muted);
+}
+
+body .panel h2,
+body .card h2,
+body main h1,
+body main h2,
+body main h3,
+body .sasori-device-detail h3 {
+  color: var(--text);
+}
+
+body main h1 span,
+body main h1 em {
+  color: var(--accent);
+}
+
+/* A saved record view favors reading density over decoration. */
+body:has(#project-sections) main > .intro {
+  background-size: cover, min(47vw, 320px) auto;
+}
+
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  body .family-button,
+  body .panel,
+  body .quick-card,
+  body .card {
+    transition: border-color 150ms ease, box-shadow 150ms ease, transform 150ms ease;
+  }
+
+  body .family-button:hover:not(:disabled),
+  body .quick-card:hover {
+    transform: translateY(-2px);
+    border-color: #b65d69;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body *,
+  body *::before,
+  body *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}
+
+@media (max-width: 600px) {
+  body main > .intro,
+  body main > .page-heading {
+    background-size: cover, 400px auto;
+    background-position: center, calc(100% + 145px) center;
+  }
+}
