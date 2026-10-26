@@ -1,0 +1,85 @@
+/* One device status treatment shared by the existing Hub and Elmo controller. */
+.sasori-device-detail {
+  min-width: 0;
+  margin: 20px 0;
+  padding: 16px;
+  border: 1px solid #485b4c;
+  border-radius: 12px;
+  background: #192720;
+  color: #edf1e7;
+  font:
+    14px/1.5 -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    sans-serif;
+}
+.sasori-device-detail h3 {
+  font-size: 16px;
+  margin: 0 0 12px;
+  color: #edf1e7;
+}
+.sasori-device-detail dl {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px 18px;
+  margin: 0;
+}
+.sasori-device-detail dt {
+  margin: 0 0 3px;
+  font-size: 11px;
+  color: #c2d2c4;
+}
+.sasori-device-detail dd {
+  margin: 0;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.sasori-device-detail .device-detail-guidance {
+  margin: 14px 0 0;
+  padding-top: 12px;
+  border-top: 1px solid #485b4c;
+  color: #d5e4d4;
+}
+.device-sticky-stop {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  width: min(1100px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 10px 12px;
+  border: 1px solid #856157;
+  border-radius: 10px;
+  background: #30241f;
+  color: #f5e7df;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 6px 20px #0006;
+}
+.device-sticky-stop button {
+  min-height: 44px;
+  background: #653c32;
+  border: 1px solid #a77b68;
+  border-radius: 9px;
+  color: #fff1e7;
+  padding: 8px 12px;
+  cursor: pointer;
+  font:
+    600 14px -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    sans-serif;
+}
+.device-sticky-stop button:focus-visible {
+  outline: 3px solid #e2ba8c;
+  outline-offset: 2px;
+}
+@media (max-width: 440px) {
+  .sasori-device-detail dl {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .device-sticky-stop {
+    font-size: 13px;
+  }
+}

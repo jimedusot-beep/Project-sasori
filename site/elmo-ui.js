@@ -1,7 +1,10 @@
 import { ElmoRemote, createElmoDemo } from './lib/elmo-remote.js';
 import { ELMO_INPUTS } from './lib/elmo-codec.js';
+import { deviceDetailModel, mountDeviceDetail } from './lib/device-detail.js';
 
 const $ = (id) => document.getElementById(id);
+const updateDeviceDetail = mountDeviceDetail(document.querySelector('.controls-card'));
+
 const labels = [
   'Left hand',
   'Right hand',
@@ -90,6 +93,28 @@ function render(next = state) {
       ready: report?.helloQueued ? 'Hello requested.' : 'Ready to greet.',
       disconnected: 'See you next time.',
     }[state.state] || 'Let’s connect.';
+  $('elmo-sticky-session').hidden = !working;
+  $('elmo-sticky-state').textContent = state.synthetic
+    ? 'Demo · no real device'
+    : connected
+      ? 'Connected · Love2Learn Elmo'
+      : 'Connecting · press Stop to cancel';
+  $('elmo-sticky-stop').disabled = !working;
+  updateDeviceDetail(
+    deviceDetailModel({
+      deviceName: state.deviceName || 'Love2Learn Elmo',
+      familyName: 'Love2Learn Elmo',
+      state: state.state,
+      synthetic: !!state.synthetic,
+      canConnect: supported,
+      nativeUnsupported: !!globalThis.SasoriNativeBluetooth,
+      lastAction: report?.helloQueued ? 'greeting-requested' : '',
+      failure:
+        state.state === 'disconnected' &&
+        !!report?.reason &&
+        !['user-stop', 'page-hidden'].includes(report.reason),
+    }),
+  );
   $('elmo-state').textContent =
     state.synthetic && connected
       ? 'Demo · ready'
@@ -215,6 +240,7 @@ $('elmo-status').addEventListener(
   handle(() => runner.readStatus()),
 );
 $('elmo-disconnect').addEventListener('click', () => runner?.stop());
+$('elmo-sticky-stop').addEventListener('click', () => runner?.stop());
 $('elmo-password').addEventListener('keydown', (event) => {
   if (event.key === 'Enter') {
     event.preventDefault();
