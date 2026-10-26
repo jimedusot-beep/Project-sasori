@@ -32,6 +32,8 @@ test('all existing workspaces use shared theme assets without requesting Bluetoo
   await page.setViewportSize({ width: 390, height: 844 });
   for (const url of allPages) {
     await page.goto('/' + url);
+    // WebKit may finish importing the shared token stylesheet after DOM readiness.
+    await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(13, 10, 10)');
     const theme = await page.evaluate(() => ({
       background: getComputedStyle(document.body).backgroundColor,
       accent: getComputedStyle(document.documentElement).getPropertyValue('--accent-action').trim(),
