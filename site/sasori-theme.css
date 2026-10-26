@@ -343,6 +343,68 @@ body main h1 em {
   color: var(--accent);
 }
 
+/* Legacy tools keep their own interaction logic, but share lacquer controls. */
+body .device-icon,
+body .browser-note,
+body .summary-grid article {
+  background: #29191c;
+  border-color: var(--line);
+}
+
+body .section-number,
+body .stat,
+body .legend span,
+body .tag {
+  border-color: #99606a;
+}
+
+body .tag,
+body .receipt strong {
+  color: var(--accent);
+}
+
+body .sensor-list li {
+  background: #241619;
+  border-color: #69434a;
+}
+
+body .sensor-list li.on {
+  background: #4d2630;
+  border-color: #d77883;
+  color: #fff1f0;
+}
+
+body button.remote-key {
+  background: #322026;
+  border-color: #a36370;
+  color: var(--text);
+}
+
+body button.remote-key.power {
+  background: var(--accent-action);
+  border-color: #e7616e;
+  color: #fff5f1;
+}
+
+body:has(#atlas) button:not(.primary),
+body:has(#workbench) button:not(.primary):not(.remote-key),
+body:has(.tools) button:not(.primary) {
+  background: #281a1d;
+  border-color: #98616b;
+  color: var(--text);
+}
+
+body:has(.tools) button:not(.primary):hover:not(:disabled),
+body:has(#workbench) button:not(.primary):not(.remote-key):hover:not(:disabled) {
+  background: #48252e;
+}
+
+body .section-number,
+body .project-section summary,
+body .progress li.done {
+  color: var(--accent);
+}
+
 /* A saved record view favors reading density over decoration. */
 body:has(#project-sections) main > .intro {
   background-size:
