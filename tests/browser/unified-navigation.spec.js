@@ -32,10 +32,7 @@ test('the same four accessible destinations appear across every existing workspa
     await page.goto('/' + pathname);
     const nav = page.getByRole('navigation', { name: 'Main navigation' });
     await expect(nav.getByRole('link')).toHaveText(['Devices', 'Routines', 'Explore', 'Saved']);
-    await expect(nav.getByRole('link', { name: current })).toHaveAttribute(
-      'aria-current',
-      'page',
-    );
+    await expect(nav.getByRole('link', { name: current })).toHaveAttribute('aria-current', 'page');
     expect(await page.evaluate(() => window.unexpectedBluetooth)).toBe(0);
   }
 });
@@ -62,9 +59,14 @@ test('Explore keeps legacy research routes reachable without starting hardware',
   );
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
   await page.screenshot({ path: info.outputPath('unified-explore-phone.png'), fullPage: true });
-  await page.getByRole('navigation', { name: 'Main navigation' }).getByRole('link', { name: 'Routines' }).click();
+  await page
+    .getByRole('navigation', { name: 'Main navigation' })
+    .getByRole('link', { name: 'Routines' })
+    .click();
   await expect(page).toHaveURL(/hub\.html#automations$/);
   await expect(
-    page.getByRole('navigation', { name: 'Main navigation' }).getByRole('link', { name: 'Routines' }),
+    page
+      .getByRole('navigation', { name: 'Main navigation' })
+      .getByRole('link', { name: 'Routines' }),
   ).toHaveAttribute('aria-current', 'page');
 });
