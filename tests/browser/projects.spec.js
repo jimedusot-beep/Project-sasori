@@ -84,7 +84,7 @@ test('Projects links to a real restore workflow; failed restore leaves saved dat
   await expect(page.locator('#storage-notice')).toContainText('Import was not saved');
   await page
     .getByRole('navigation', { name: 'Main navigation' })
-    .getByRole('link', { name: 'Projects' })
+    .getByRole('link', { name: 'Saved' })
     .click();
   await expect(page).toHaveURL(/projects\.html$/);
   await expect(page.locator('[data-project="devices"] .project-count')).toHaveText('1 saved');
