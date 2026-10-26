@@ -88,6 +88,13 @@ test('visual review: before-and-after targets in phone and desktop sizes', async
     ]) {
       await page.goto('/' + route);
       await expect(page.getByRole('navigation', { name: 'Main navigation' })).toBeVisible();
+      if (pageName === 'explore') {
+        const warningLabels = page.locator('.experimental-label');
+        await expect(warningLabels).toHaveCount(3);
+        expect(
+          await warningLabels.first().evaluate((node) => getComputedStyle(node).color),
+        ).toBe('rgb(231, 185, 129)');
+      }
       expect(
         await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1),
       ).toBe(true);
