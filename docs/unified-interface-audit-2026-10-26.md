@@ -1,0 +1,52 @@
+# Sasori unified interface — current source audit and reuse decisions
+
+Audit date: 2026-10-26. Scope: `main` at `b298228f31c52125ecf77e714f2f0604e0ebbf05`, the shared static web app, and the packaged native entry. This is a code audit, not a physical-hardware verification or a human usability study.
+
+## What exists now
+
+- **Beginner entry**: `site/entry.js` redirects only the bare hosted Pages project root to `hub.html`. Explicit `index.html`, existing hash links, localhost, and native iOS continue to open the full laboratory. Do not change this behavior merely to share navigation.
+- **Device Hub**: `site/hub.html`, `hub-ui.js`, `site/lib/hub-session.js`, `site/lib/hub-records.js`, `site/lib/routines.js`. The first-use device selector, Connect, offline Demo, sticky Stop and expandable settings already exist. The last Simple Mode release captured phone/tablet/desktop before-and-after screenshots in `docs/images/simple-mode/`.
+- **Legacy lab**: `site/index.html`, `app.js`, `site/lib/bluetooth.js`, `site/lib/standard-controls.js`, `site/lib/mip-controls.js`, `site/lib/devices.js`. This remains the engineering workspace and must not lose its internal section navigation.
+- **Tool pages**: `elmo.html`, `signal-atlas.html`, `privacy.html`, `keyfob-lab.html`, `pocket-ir.html`, and `companion.html` had different or absent global navigation. `projects.html` aggregates nine saved-work categories, but deliberately does not merge their data formats.
+- **Storage**: IndexedDB and workspace-specific records/backups in `site/lib/storage.js`, `projects.js`, `hub-records.js`, `discovery.js`, etc. A shared tab bar is not evidence of shared sync or portable raw-data interchange.
+- **Native iPhone**: `native/ios/build.mjs` bundles the site into a local Capacitor app, with an explicit inspection/standard-controls/MiP semantic bridge and a separate advertisement-only Privacy Lab survey. Native Elmo/Furby or arbitrary writes are **not** available. See `native/ios/README.md` and existing issue #43. Native startup remains the Research Lab, intentionally; it must not advertise full Hub adapter parity.
+
+### Navigation inventory / routing contract
+
+| Destination | Canonical link         | Existing routes grouped beneath it                                                                 |
+| ----------- | ---------------------- | -------------------------------------------------------------------------------------------------- |
+| Devices     | `hub.html`             | `elmo.html`, `pocket-ir.html`, `companion.html`                                                    |
+| Routines    | `hub.html#automations` | Existing Hub routine builder; no duplicate routine storage                                         |
+| Explore     | `explore.html`         | `signal-atlas.html`, `privacy.html`, `keyfob-lab.html`, `index.html` and its legacy section hashes |
+| Saved       | `projects.html`        | Existing record overviews and links back to format-specific import/export workflows                |
+
+This PR introduces one shared **presentation-only** navigation module, `site/unified-nav.js`, and `explore.html`. These never request Bluetooth permission, create device sessions, issue commands, or mutate stored records. Subtools and old URLs remain independently accessible. The Explore links have explicit experimental boundaries. The engineering lab's own sidebar remains present.
+
+### Open-source inspection and source-reuse matrix
+
+The following are **patterns researched, not code copied**. Repository/license and individual source-file headers must be rechecked at the pinned revision before future code incorporation.
+
+| Reference and inspected implementation                                                                                                                                                                | Repository license at inspection                          | Design pattern relevant to Sasori                                                             | Reuse decision                                                                              |
+| ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------- | --------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| [Home Assistant frontend](https://github.com/home-assistant/frontend/blob/dev/src/panels/config/devices/device-detail/ha-device-entities-card.ts) — `ha-device-entities-card.ts` (file SHA `1a88b5d`) | Apache-2.0                                                | Group device-specific entities into a consistent card, distinguish enabled/disabled sections  | **Inspiration only** for a shared device detail template; no Lit component import           |
+| [ESPHome Device Builder](https://github.com/esphome/device-builder/blob/main/esphome_device_builder/controllers/onboarding.py) — `controllers/onboarding.py` (SHA `df0a95a`)                          | Apache-2.0                                                | Compute onboarding steps from live state; keep acknowledgement separate from actual readiness | **Inspiration only** for Connect / Demo progress and recovery; no backend copied            |
+| [Flipper iOS](https://github.com/flipperdevices/Flipper-iOS-App/blob/dev/Flipper/iOS/UI/TabView/TabView.swift) — `TabView.swift` (SHA as inspected via connector)                                     | MIT                                                       | Short primary destinations and concise connection-dependent tab labels                        | **Inspiration only**; Sasori keeps vanilla JS and explicit native capability checks         |
+| [Node-RED](https://github.com/node-red/node-red/blob/main/packages/node_modules/%40node-red/editor-client/src/js/ui/tour/tourGuide.js) — `tourGuide.js` (SHA `078957c`)                               | Apache-2.0                                                | Guide an action with contextual steps while retaining access to expert detail                 | **Inspiration only**; no tour framework or runtime added                                    |
+| [Web Awesome](https://github.com/shoelace-style/webawesome/blob/next/packages/webawesome/src/components/details/details.ts) — `details.ts`                                                            | MIT                                                       | Semantic expandable disclosure and keyboard-accessible controls                               | **Use native HTML `details`**; no library dependency or copied component                    |
+| [Web Bluetooth CG demos](https://github.com/WebBluetoothCG/demos/blob/gh-pages/heart-rate-sensor/app.js) — `heart-rate-sensor/app.js` (SHA `af2c00c`)                                                 | Apache-2.0                                                | Bluetooth only begins from an explicit click; asynchronous errors are reported in page        | **Inspiration only**; retain Sasori's tighter scoped chooser and cancellation               |
+| [WLED](https://github.com/wled/WLED/blob/main/wled00/data/index.js) — `wled00/data/index.js` (SHA `7fceec4`)                                                                                          | **EUPL-1.2** on current main                              | Immediate controls and presets, advanced state separate from the first screen                 | **Behavioral inspiration only. No source incorporation** without compatibility/legal review |
+| [PulseView](https://github.com/sigrokproject/pulseview/blob/master/pv/views/trace/view.cpp) — `pv/views/trace/view.cpp` (SHA `33d8b0a`)                                                               | **GPL-3.0-or-later** overall (file-specific headers vary) | Time-aligned signal visualization with trace/ruler layers                                     | **Behavioral inspiration only. No source incorporation** without GPL review                 |
+
+Sasori already has source/notice rules in `docs/research/reuse-matrix.md`. This change adds no third-party runtime dependency and copies no outside source. If code is subsequently adapted, record exact source URL, commit, file-level license, copyright notices, changes, attribution and redistribution obligations. An Apache/MIT repository label alone never settles individual asset licensing.
+
+## Implementation sequence and release gates
+
+1. **PR 1 — Global navigation + Explore (this PR)**: four short destinations across current workspaces, one indexed Explore hub, legacy deep links unchanged; adjust navigation tests and add WebKit/mobile/accessibility checks. No transport or storage change.
+2. **PR 2 — Unified device detail**: extract a reusable view from the working Hub, preserve HubSession, adapter allowlists, budgets and lifecycle. Display compatibility, Connect/Demo, controls, progress, last _software_ outcome, Stop/Disconnect and optional advanced details. Gate each native control against an actual semantic bridge before rendering.
+3. **PR 3 — Beginner language/state contract**: centralize vocabulary for Demo / software-supported / experimental / connected / command sent / physically verified. Each error reports outcome, next action and recovery. Never promote a successful write to verified physical behavior.
+4. **PR 4 — Saved and Explore completion**: improve concise summaries and direct links, keep existing typed imports/exports isolated; no automatic sync claim. Preserve source provenance and experiment warnings.
+5. **Release gate**: run `npm run check`, browser Chromium and WebKit, Playwright axe, native iOS Actions, click-path/cancellation/security checks and review before/after screenshots. Test 360/390/768/1440 widths, no load-time permissions, safe Demo, Stop, all legacy routes, zero lost records, and no native unsupported actions. Review running deployment after merge; **do not claim this from source inspection**.
+
+### Verification limitations
+
+GitHub Pages could not be opened through the external web reader during this audit. No simulator can verify physical toy actions, and source review cannot establish real-iPhone permission behavior. New screenshots and CI results belong to the PR verification run; earlier Simple Mode captures are historical, not evidence of this navigation change.
