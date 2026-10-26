@@ -359,6 +359,11 @@ body .tag {
 }
 
 body .tag,
+body .experimental-label {
+  color: var(--warning);
+  border-color: #ab8051;
+}
+
 body .receipt strong {
   color: var(--accent);
 }
