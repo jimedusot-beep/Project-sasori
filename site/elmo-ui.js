@@ -71,11 +71,15 @@ function render(next = state) {
   $('allow-password-setup').disabled = working;
   $('show-all').disabled = working;
   $('elmo-connect').disabled = working || !supported;
-  $('elmo-connect').textContent = working
-    ? 'Connection in progress'
-    : lastLiveDevice
-      ? 'Reconnect Elmo →'
-      : 'Connect Elmo →';
+  $('elmo-connect').textContent = connected
+    ? state.synthetic
+      ? 'Demo ready'
+      : 'Connected'
+    : working
+      ? 'Connection in progress'
+      : lastLiveDevice
+        ? 'Reconnect Elmo →'
+        : 'Connect Elmo →';
   $('elmo-demo').disabled = working;
   $('elmo-choose').hidden = !lastLiveDevice;
   $('elmo-choose').disabled = working || !supported;
