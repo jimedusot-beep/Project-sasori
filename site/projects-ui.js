@@ -35,7 +35,14 @@ function render() {
       );
     else {
       const matches = matchingProjectItems(section, query);
-      if (!section.count) card.append(node('p', 'Nothing saved here yet.', 'hint'));
+      if (!section.count)
+        card.append(
+          node(
+            'p',
+            'Nothing saved here yet. Open this workspace to create or import matching work.',
+            'hint',
+          ),
+        );
       else if (!matches.length) card.append(node('p', 'No matching items.', 'hint'));
       else {
         const details = node('details', '');
@@ -55,6 +62,13 @@ function render() {
             'hint',
           );
           row.append(date);
+          const open = node('a', 'Open workspace to find this item', 'project-item-link');
+          open.href = section.href;
+          open.setAttribute(
+            'aria-label',
+            'Open ' + section.title + ' workspace for ' + entry.title,
+          );
+          row.append(open);
           list.append(row);
         }
         details.append(list);

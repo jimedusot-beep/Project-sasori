@@ -53,6 +53,18 @@ test('empty and populated Projects preserve local records, support search and ac
   await expect(page.locator('[data-project="sessions"]')).toContainText(
     'A saved result description',
   );
+  await expect(page.locator('[data-project="sessions"] .project-item-link')).toHaveAttribute(
+    'href',
+    'index.html#sessions',
+  );
+  await expect(page.locator('[data-project="sessions"] .project-item-link')).toHaveAttribute(
+    'aria-label',
+    'Open Experiments and results workspace for My synthetic experiment',
+  );
+  await expect(page.locator('.backup-steps li')).toHaveCount(3);
+  await expect(page.locator('#backup-title').locator('..')).toContainText(
+    'does not connect hardware',
+  );
   await page.locator('#project-search').fill('No match');
   await expect(page.locator('[data-project="sessions"]')).toContainText('No matching items');
   await page.locator('#project-search').fill('');

@@ -36,6 +36,19 @@
 .project-items p {
   margin-bottom: 6px;
 }
+.project-item-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  font-weight: 650;
+  overflow-wrap: anywhere;
+}
+.backup-steps {
+  padding-left: 23px;
+}
+.backup-steps li {
+  margin-bottom: 9px;
+}
 .project-link {
   display: inline-flex;
   align-items: center;
