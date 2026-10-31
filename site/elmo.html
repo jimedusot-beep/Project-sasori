@@ -17,6 +17,7 @@
     <link rel="icon" href="icon.svg" type="image/svg+xml" />
     <link rel="stylesheet" href="tokens.css" />
     <link rel="stylesheet" href="elmo.css" />
+    <link rel="stylesheet" href="device-detail.css" />
     <script type="module" src="elmo-ui.js"></script>
     <link rel="stylesheet" href="unified-nav.css" />
     <link rel="stylesheet" href="sasori-theme.css" />
@@ -32,6 +33,15 @@
       >
       <a class="lab-link" href="hub.html">Device hub ↗</a>
     </header>
+    <aside
+      class="device-sticky-stop"
+      id="elmo-sticky-session"
+      aria-label="Active device controls"
+      hidden
+    >
+      <span id="elmo-sticky-state">Connecting…</span>
+      <button id="elmo-sticky-stop" type="button">Stop &amp; disconnect</button>
+    </aside>
     <main id="remote">
       <div class="intro">
         <div>

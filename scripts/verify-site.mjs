@@ -21,6 +21,11 @@ for (let attempt = 1; attempt <= 4; attempt++) {
     for (const file of [
       'index.html',
       'entry.js',
+      'explore.html',
+      'unified-nav.js',
+      'unified-nav.css',
+      'device-detail.css',
+      'lib/device-detail.js',
       'app.js',
       'style.css',
       'tokens.css',

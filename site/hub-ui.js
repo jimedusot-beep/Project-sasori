@@ -21,8 +21,11 @@ import {
 } from './lib/hub-records.js?v=recognition-20261024';
 import { TVRemote } from './lib/tv-remote.js';
 import { TouchReactions, validateReactions } from './lib/reactions.js';
+import { deviceDetailModel, mountDeviceDetail } from './lib/device-detail.js';
 
 const $ = (id) => document.getElementById(id);
+const updateDeviceDetail = mountDeviceDetail(document.querySelector('.controls-panel'));
+
 const companion = document.querySelector('meta[name="sasori-runtime"]')?.content === 'local-helper';
 const bluetoothAvailable =
   window.isSecureContext && typeof navigator.bluetooth?.requestDevice === 'function';
@@ -561,6 +564,20 @@ function render() {
   $('source').textContent = s?.synthetic ? 'DEMO' : 'LIVE';
   $('demo-banner').hidden = !s?.synthetic;
   $('connected-name').textContent = s?.deviceName || hubFamily(familyId).name;
+  updateDeviceDetail(
+    deviceDetailModel({
+      deviceName: s?.deviceName || $('device-label').value,
+      familyName: hubFamily(familyId).name,
+      state: s?.state || 'idle',
+      synthetic: !!s?.synthetic,
+      canConnect: familyId === 'tv-local/v1' ? companion : bluetoothAvailable,
+      nativeUnsupported:
+        !!globalThis.SasoriNativeBluetooth &&
+        !['ble-standard/v1', 'wowwee-mip/v1'].includes(familyId),
+      lastAction: s?.lastAction || '',
+      failure: !!s?.failure,
+    }),
+  );
   $('controls-title').textContent =
     s?.state === 'connecting'
       ? 'Making contact…'
