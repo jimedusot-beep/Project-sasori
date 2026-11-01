@@ -1,0 +1,27 @@
+name: Temporary BLE recovery formatting
+on:
+  push:
+    branches: [feature/ble-recovery-evidence-sprint-20261101]
+permissions:
+  contents: write
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          ref: feature/ble-recovery-evidence-sprint-20261101
+          persist-credentials: true
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+        with:
+          node-version: '24'
+      - run: npm ci
+      - run: npx prettier --write docs/open-source-ble-adoption-2026-11-01.md tests/native-ble-recovery.test.mjs
+      - run: |
+          if ! git diff --quiet; then
+            git config user.name 'github-actions[bot]'
+            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+            git add docs/open-source-ble-adoption-2026-11-01.md tests/native-ble-recovery.test.mjs
+            git commit -m 'style: format BLE recovery fixtures and adoption analysis'
+            git push origin HEAD:feature/ble-recovery-evidence-sprint-20261101
+          fi
