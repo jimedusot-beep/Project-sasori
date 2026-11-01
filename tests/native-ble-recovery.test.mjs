@@ -232,7 +232,8 @@ test('overlapping chooser calls do not cancel the first pending selection', asyn
 test('a late cancelled chooser rejection cannot clear new Bluetooth listeners', async () => {
   const f = makeNativeFixture();
   const bluetooth = createNativeBluetooth(f.plugin);
-  let rejectOld, selections = 0;
+  let rejectOld,
+    selections = 0;
   f.plugin.requestDevice = () => {
     ++selections;
     if (selections === 1)
