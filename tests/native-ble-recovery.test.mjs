@@ -178,7 +178,6 @@ test('cancelled native session drops its GATT authority before the next chooser'
   assert.equal(f.registrations.size, 0);
 });
 
-
 test('duplicate native chooser cannot revoke an already-connected GATT session', async () => {
   const f = makeNativeFixture();
   const bluetooth = createNativeBluetooth(f.plugin);
@@ -198,7 +197,10 @@ test('duplicate native chooser cannot revoke an already-connected GATT session',
   );
 
   assert.equal(current.gatt.connected, true);
-  assert.equal((await current.gatt.getPrimaryService(STANDARD_SERVICES[0])).uuid, STANDARD_SERVICES[0]);
+  assert.equal(
+    (await current.gatt.getPrimaryService(STANDARD_SERVICES[0])).uuid,
+    STANDARD_SERVICES[0],
+  );
   assert.equal(f.calls.filter((call) => call === 'choose').length, chooseCount);
   current.gatt.disconnect();
   assert.equal(f.registrations.size, 0);
@@ -251,7 +253,10 @@ test('a late cancelled chooser rejection cannot clear new Bluetooth listeners', 
 
   assert.equal(f.registrations.size, 2);
   assert.equal(current.gatt.connected, true);
-  assert.equal((await current.gatt.getPrimaryService(STANDARD_SERVICES[0])).uuid, STANDARD_SERVICES[0]);
+  assert.equal(
+    (await current.gatt.getPrimaryService(STANDARD_SERVICES[0])).uuid,
+    STANDARD_SERVICES[0],
+  );
   current.gatt.disconnect();
   assert.equal(f.registrations.size, 0);
 });
