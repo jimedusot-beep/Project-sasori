@@ -27,10 +27,10 @@ test('native iPhone Hub exposes only bridge-backed live families, with Demo fall
   await expect(page.locator('#hub-detect')).toBeDisabled();
   await page.locator('[data-family="furby-connect/v1"]').click();
   await expect(page.locator('#hub-connect')).toBeDisabled();
-  await expect(page.locator('#platform-support')).toContainText('unavailable');
+  await expect(page.locator('#quick-guidance')).toContainText('unavailable');
   await page.locator('[data-family="ble-standard/v1"]').click();
   await expect(page.locator('#hub-connect')).toBeEnabled();
-  await expect(page.locator('#platform-support')).toContainText('Native iPhone');
+  await expect(page.locator('#quick-guidance')).toContainText('Native iPhone');
   await page.locator('[data-family="wowwee-mip/v1"]').click();
   await expect(page.locator('#hub-connect')).toBeEnabled();
   await page.locator('[data-family="elmo-l2l/v1"]').click();
@@ -59,7 +59,7 @@ test('hosted Hub never implies native bridge or requests Bluetooth merely by loa
     });
   });
   await page.goto('/hub.html');
-  await expect(page.locator('#platform-support')).toContainText('Compatible Bluetooth browser');
+  await expect(page.locator('#quick-guidance')).toContainText('Connect opens a chooser');
   await expect(page.locator('#hub-connect')).toBeEnabled();
   await page.locator('[data-family="furby-connect/v1"]').click();
   await expect(page.locator('#hub-connect')).toBeEnabled();
