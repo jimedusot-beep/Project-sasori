@@ -61,7 +61,10 @@ export function createNativeBluetooth(plugin) {
       // Do not invalidate the active generation for a rejected second request.
       // A selected device is reserved even while its GATT connect is pending.
       if (device || requestPending)
-        throw new DOMException('Stop the current native Bluetooth session first.', 'InvalidStateError');
+        throw new DOMException(
+          'Stop the current native Bluetooth session first.',
+          'InvalidStateError',
+        );
       const standard = options.sasoriStandardControls === true;
       const mip = options.sasoriControlAdapter === MIP_ADAPTER.id;
       if (options.sasoriControlAdapter && !mip)
