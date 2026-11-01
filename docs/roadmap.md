@@ -11,6 +11,14 @@ The implemented Device Hub now covers Elmo, standard BLE gadgets, original MiP, 
 - Implement the [Furby Connect](furby-connect.md) firmware/presence queries and bounded blue antenna-light request using pinned Bluefluff facts. Reuse setups, routines and receipts; keep native Furby writes unavailable until a reviewed bridge exists.
 - Preserve explicit unknown fields and physical-validation limits. This is supported-adapter matching, not automatic reverse engineering of an unknown protocol.
 
+## iPhone reliability and owner acceptance
+
+The installed native Hub now exposes only fixed standard BLE and original MiP controls,
+with unsupported Elmo/Furby live commands unavailable. Native startup remains the
+working Research Lab until owner testing validates the Hub. For physical Elmo sound
+verification, use the [Bluefy iPhone trial](iphone-elmo-acceptance.md). Software tests
+cannot establish real-device compatibility (#43, #53, #4).
+
 ## Next acceptance — original Elmo and Furby hardware
 
 1. Use the [Device Hub directions](device-hub.md) on the exact unit. Retain model, firmware, observed channels and private connection results.

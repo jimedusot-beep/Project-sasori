@@ -22,13 +22,21 @@ import {
 import { TVRemote } from './lib/tv-remote.js';
 import { TouchReactions, validateReactions } from './lib/reactions.js';
 import { deviceDetailModel, mountDeviceDetail } from './lib/device-detail.js';
+import { createNativeBluetooth } from './lib/native-bluetooth.js';
+import { hostSupport, hostCanRecognize } from './lib/platform-capabilities.js';
 
 const $ = (id) => document.getElementById(id);
 const updateDeviceDetail = mountDeviceDetail(document.querySelector('.controls-panel'));
 
 const companion = document.querySelector('meta[name="sasori-runtime"]')?.content === 'local-helper';
-const bluetoothAvailable =
+const nativePlugin = globalThis.SasoriNativeBluetooth || null;
+const nativeBluetooth = nativePlugin ? createNativeBluetooth(nativePlugin) : null;
+const native = !!nativeBluetooth;
+const webBluetoothAvailable =
   window.isSecureContext && typeof navigator.bluetooth?.requestDevice === 'function';
+const host = { native, webBluetooth: webBluetoothAvailable, companion };
+const availableFor = (id) => hostSupport(id, host);
+const activeBluetooth = nativeBluetooth || navigator.bluetooth;
 const inputLabels = [
   'Left hand',
   'Right hand',
@@ -212,11 +220,8 @@ function setFamily(id) {
   );
   $('tv-hosted').hidden = companion;
   $('tv-local').hidden = !companion;
-  $('browser-help').textContent = bluetoothAvailable
-    ? 'Bluetooth is available. Select your device in the chooser when prompted.'
-    : companion
-      ? 'Bluetooth requires a secure browser context. Use the hosted Sasori hub in Bluefy or compatible Chrome for Bluetooth; local TV controls work here.'
-      : 'Use Bluefy on iPhone/iPad or compatible Chrome for Bluetooth. The offline demo works here.';
+  $('browser-help').textContent = availableFor(id).explanation;
+  $('platform-support').textContent = availableFor(id).explanation;
   $('hub-alert').textContent = actionLabel(
     id === 'elmo-l2l/v1' || id === 'tv-local/v1' ? 'ble-standard/v1' : id,
     'alert',
@@ -346,13 +351,13 @@ function cancelDetection(message = 'Identification cancelled. No adapter was sel
   render();
 }
 async function detectDevice() {
-  if (!ready || locked() || !bluetoothAvailable) return;
+  if (!ready || locked() || !hostCanRecognize(host)) return;
   const sequence = ++detectionSequence;
   detecting = true;
   cachedDevice = null;
   $('recognition-matches').replaceChildren();
   $('recognition-status').textContent = 'Select a device. Checking known service metadata…';
-  const probe = new KnownDeviceProbe({ bluetooth: navigator.bluetooth });
+  const probe = new KnownDeviceProbe({ bluetooth: activeBluetooth });
   detector = probe;
   try {
     const pending = probe.inspect();
@@ -407,7 +412,7 @@ async function connect(demo = false) {
     notice('Check the setup label, TV target and local companion address.');
     return;
   }
-  if (!demo && familyId !== 'tv-local/v1' && !bluetoothAvailable) {
+  if (!demo && !availableFor(familyId).live) {
     failure({ code: 'browser-unavailable' });
     return;
   }
@@ -427,7 +432,7 @@ async function connect(demo = false) {
   const session = new HubSession({
     familyId,
     synthetic: demo,
-    bluetooth: navigator.bluetooth,
+    bluetooth: activeBluetooth,
     companion,
     ...(familyId === 'elmo-l2l/v1' ? { mode: setup.elmoMode } : {}),
     emit: (value) => receive(session, value),
@@ -495,7 +500,10 @@ function render() {
   const s = snapshot,
     lockedNow = locked(),
     busy = actionBusy || running() || reactions.active || !!s?.busy;
-  $('hub-detect').disabled = !ready || lockedNow || !bluetoothAvailable;
+  $('hub-detect').disabled = !ready || lockedNow || !hostCanRecognize(host);
+  $('hub-detect').title = native
+    ? 'Multi-service recognition is unavailable in the native bridge. Use Research Lab inspection.'
+    : '';
   $('cancel-detect').hidden = !detecting;
   for (const button of $('recognition-matches').querySelectorAll('button'))
     button.disabled = lockedNow;
@@ -517,8 +525,7 @@ function render() {
     'find-ha',
   ])
     $(id).disabled = lockedNow;
-  $('hub-connect').disabled =
-    !ready || lockedNow || (familyId === 'tv-local/v1' ? !companion : !bluetoothAvailable);
+  $('hub-connect').disabled = !ready || lockedNow || !availableFor(familyId).live;
   $('hub-connect').textContent = connected()
     ? 'Connected'
     : active()
@@ -528,14 +535,12 @@ function render() {
         : 'Connect device →';
   $('hub-demo').disabled = !ready || lockedNow;
   $('hub-connect').setAttribute('aria-describedby', 'quick-guidance');
-  const blockedReason =
-    familyId === 'tv-local/v1'
-      ? 'TV connection requires the local computer companion. You can try the demo here.'
-      : !bluetoothAvailable
-        ? 'Bluetooth is unavailable in this browser. On iPhone use Bluefy; the offline demo works now.'
-        : familyId === 'elmo-l2l/v1'
-          ? 'Enter the existing Elmo password, then connect. Your password is never saved.'
-          : 'Connect opens a chooser for your selected device. Nothing connects automatically.';
+  const blockedReason = !availableFor(familyId).live
+    ? availableFor(familyId).explanation
+    : familyId === 'elmo-l2l/v1'
+      ? 'Enter your existing Elmo password, then connect. Sasori never saves it.'
+      : 'Connect opens a chooser. No connection starts automatically.';
+  $('platform-support').textContent = availableFor(familyId).explanation;
   $('quick-guidance').textContent = connected()
     ? s.synthetic
       ? 'DEMO · No physical device contacted. Try a control below.'
@@ -570,10 +575,8 @@ function render() {
       familyName: hubFamily(familyId).name,
       state: s?.state || 'idle',
       synthetic: !!s?.synthetic,
-      canConnect: familyId === 'tv-local/v1' ? companion : bluetoothAvailable,
-      nativeUnsupported:
-        !!globalThis.SasoriNativeBluetooth &&
-        !['ble-standard/v1', 'wowwee-mip/v1'].includes(familyId),
+      canConnect: availableFor(familyId).live,
+      nativeUnsupported: native && !availableFor(familyId).live,
       lastAction: s?.lastAction || '',
       failure: !!s?.failure,
     }),
@@ -860,7 +863,11 @@ for (const family of HUB_FAMILIES) {
   const button = node('button', family.name, 'family-button');
   button.type = 'button';
   button.dataset.family = family.id;
-  button.append(node('small', family.kind === 'bluetooth' ? 'BLUETOOTH' : 'WI-FI / IR COMPANION'));
+  button.append(
+    node('small', native
+      ? availableFor(family.id).live ? 'NATIVE · FIXED CONTROLS' : 'DEMO · LIVE UNSUPPORTED'
+      : family.kind === 'bluetooth' ? 'BLUETOOTH' : 'WI-FI / IR COMPANION'),
+  );
   button.addEventListener('click', () => {
     if (locked()) return;
     data.selectedId = '';

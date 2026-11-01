@@ -73,3 +73,16 @@ test('native packaging refuses missing or duplicate entry modules instead of shi
   ])
     assert.throws(() => nativeEntry(html));
 });
+
+test('native Hub gets bootstrap before its versioned module without touching hosted Hub', async () => {
+  const { readFile } = await import('node:fs/promises');
+  const { nativeHubEntry } = await import('../native/ios/configure.mjs');
+  const html = await readFile(new URL('../site/hub.html', import.meta.url), 'utf8');
+  const built = nativeHubEntry(html);
+  assert.ok(built.indexOf('src="native.js"') < built.indexOf('src="hub-ui.js'));
+  assert.equal((built.match(/src="native.js"/g) || []).length, 1);
+  const entry = '<script type="module" src="hub-ui.js?v=fixture"></script>';
+  assert.ok(nativeHubEntry(entry).includes('src="native.js"'));
+  for (const invalid of ['', entry + entry, '<script src="native.js"></script>' + entry])
+    assert.throws(() => nativeHubEntry(invalid));
+});
