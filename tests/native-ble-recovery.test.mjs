@@ -177,3 +177,87 @@ test('cancelled native session drops its GATT authority before the next chooser'
   assert.equal(current.gatt.connected, false);
   assert.equal(f.registrations.size, 0);
 });
+
+test('duplicate native chooser cannot revoke an already-connected GATT session', async () => {
+  const f = makeNativeFixture();
+  const bluetooth = createNativeBluetooth(f.plugin);
+  const current = await bluetooth.requestDevice(nativeStandardOptions);
+  await current.gatt.connect();
+  const chooseCount = f.calls.filter((call) => call === 'choose').length;
+
+  await assert.rejects(bluetooth.requestDevice(nativeStandardOptions), {
+    name: 'InvalidStateError',
+  });
+  await assert.rejects(
+    bluetooth.requestDevice({
+      ...nativeStandardOptions,
+      sasoriControlAdapter: 'unreviewed-command-adapter',
+    }),
+    { name: 'InvalidStateError' },
+  );
+
+  assert.equal(current.gatt.connected, true);
+  assert.equal(
+    (await current.gatt.getPrimaryService(STANDARD_SERVICES[0])).uuid,
+    STANDARD_SERVICES[0],
+  );
+  assert.equal(f.calls.filter((call) => call === 'choose').length, chooseCount);
+  current.gatt.disconnect();
+  assert.equal(f.registrations.size, 0);
+});
+
+test('overlapping chooser calls do not cancel the first pending selection', async () => {
+  const f = makeNativeFixture();
+  const bluetooth = createNativeBluetooth(f.plugin);
+  let select;
+  f.plugin.requestDevice = () =>
+    new Promise((resolve) => {
+      select = resolve;
+    });
+  const pending = bluetooth.requestDevice(nativeStandardOptions);
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.equal(typeof select, 'function');
+
+  await assert.rejects(bluetooth.requestDevice(nativeStandardOptions), {
+    name: 'InvalidStateError',
+  });
+  select({ id: 'synthetic-private-id', name: 'First selected peripheral' });
+  const first = await pending;
+  await first.gatt.connect();
+  assert.equal(first.gatt.connected, true);
+  first.gatt.disconnect();
+  assert.equal(f.registrations.size, 0);
+});
+
+test('a late cancelled chooser rejection cannot clear new Bluetooth listeners', async () => {
+  const f = makeNativeFixture();
+  const bluetooth = createNativeBluetooth(f.plugin);
+  let rejectOld,
+    selections = 0;
+  f.plugin.requestDevice = () => {
+    ++selections;
+    if (selections === 1)
+      return new Promise((_, reject) => {
+        rejectOld = reject;
+      });
+    return Promise.resolve({ id: 'synthetic-private-id', name: 'New peripheral' });
+  };
+  const oldPending = bluetooth.requestDevice(nativeStandardOptions);
+  await new Promise((resolve) => setImmediate(resolve));
+  bluetooth.cancelRequest();
+  await new Promise((resolve) => setImmediate(resolve));
+
+  const current = await bluetooth.requestDevice(nativeStandardOptions);
+  await current.gatt.connect();
+  rejectOld(new DOMException('Old chooser was cancelled', 'AbortError'));
+  await assert.rejects(oldPending, { name: 'AbortError' });
+
+  assert.equal(f.registrations.size, 2);
+  assert.equal(current.gatt.connected, true);
+  assert.equal(
+    (await current.gatt.getPrimaryService(STANDARD_SERVICES[0])).uuid,
+    STANDARD_SERVICES[0],
+  );
+  current.gatt.disconnect();
+  assert.equal(f.registrations.size, 0);
+});
