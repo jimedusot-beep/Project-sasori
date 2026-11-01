@@ -15,16 +15,19 @@ The implemented Device Hub now covers Elmo, standard BLE gadgets, original MiP, 
 
 The installed native Hub now exposes only fixed standard BLE and original MiP controls,
 with unsupported Elmo/Furby live commands unavailable. Native startup remains the
-working Research Lab until owner testing validates the Hub. For physical Elmo sound
-verification, use the [Bluefy iPhone trial](iphone-elmo-acceptance.md). Software tests
-cannot establish real-device compatibility (#43, #53, #4).
+working Research Lab until owner testing validates the Hub. **First** complete the
+[read-only Bluefy inspection trials](iphone-setup.md) for #4. A separate
+[Elmo greeting worksheet](iphone-elmo-acceptance.md) is a later owner-authorized trial
+after #4 and #5 have produced real-unit evidence. Software tests cannot establish
+real-device compatibility (#43, #53, #4).
 
 ## Next acceptance — original Elmo and Furby hardware
 
 1. Use the [Device Hub directions](device-hub.md) on the exact unit. Retain model, firmware, observed channels and private connection results.
-2. Elmo: verify source-derived authentication with the existing password, status replies and one greeting. Observe actual playback, disconnect and recovery. New-password setup requires an explicit choice and the toy's unset-password response.
-3. Furby Connect: follow the [adapter acceptance guide](furby-connect.md#physical-acceptance) for version/presence, antenna light/off, cancellation and recovery.
-4. Repeat fresh connections; keep owner observations, software receipts, community evidence and independent verification separate.
+2. Elmo milestone #4: complete five read-only 15-second inspections, plus manual Stop and background interruption; retain the observed services, notification properties, counts and reasons. Do not authenticate or request audio during this phase.
+3. Elmo milestone #5 and later: only after #4 passes, establish an authorized authentication specification, then separately validate existing-password status and one greeting. Observe actual playback, disconnect and recovery; keep a queued request distinct from a physical effect.
+4. Furby Connect: follow the [adapter acceptance guide](furby-connect.md#physical-acceptance) for version/presence, antenna light/off, cancellation and recovery.
+5. Repeat fresh connections; keep owner observations, software receipts, community evidence and independent verification separate.
 
 [Issue #4](https://github.com/jimedusot-beep/Project-sasori/issues/4) tracks repeatable inspection and [issue #5](https://github.com/jimedusot-beep/Project-sasori/issues/5) tracks authentication acceptance. Source-derived browser/desktop Elmo implementations now exist; independent owner-unit validation remains pending.
 
