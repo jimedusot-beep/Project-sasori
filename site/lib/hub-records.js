@@ -11,6 +11,10 @@ export const HUB_FAILURES = Object.freeze({
     'Connection failed',
     'Check the selected device family, power, range and competing apps, then try again.',
   ],
+  'platform-unsupported': [
+    'This Bluetooth action is not supported here',
+    'Use Demo or a compatible Bluetooth browser. The native iPhone bridge only offers reviewed controls for supported models.',
+  ],
   'browser-unavailable': [
     'Bluetooth unavailable here',
     'For Bluetooth use Bluefy on iPhone/iPad or compatible Chrome. The demo works without Bluetooth.',
@@ -139,9 +143,17 @@ export function hubFailure(error) {
       ? 'selection-cancelled'
       : error?.name === 'SecurityError' || error?.name === 'NotAllowedError'
         ? 'permission-denied'
-        : error?.name === 'AbortError'
-          ? 'user-stop'
-          : 'connection-failed';
+        : error?.name === 'NotSupportedError'
+          ? 'platform-unsupported'
+          : error?.name === 'TimeoutError'
+            ? 'operation-timeout'
+            : error?.name === 'NetworkError'
+              ? 'connection-lost'
+              : error?.name === 'InvalidStateError'
+                ? 'not-ready'
+                : error?.name === 'AbortError'
+                  ? 'user-stop'
+                  : 'connection-failed';
   return { code, title: HUB_FAILURES[code][0], hint: HUB_FAILURES[code][1] };
 }
 export function localCompanionURL(value) {
