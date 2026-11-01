@@ -23,7 +23,8 @@ export function createNativeBluetooth(plugin) {
   }
   let device = null,
     listeners = [],
-    generation = 0;
+    generation = 0,
+    requestPending = false;
   const characteristics = new Map();
   const cleanup = () => {
     for (const handle of listeners) Promise.resolve(handle.remove()).catch(() => {});
@@ -49,6 +50,7 @@ export function createNativeBluetooth(plugin) {
   return {
     cancelRequest() {
       ++generation;
+      requestPending = false;
       const ended = device;
       device = null;
       if (ended) ended.gatt.connected = false;
@@ -56,7 +58,10 @@ export function createNativeBluetooth(plugin) {
       cleanup();
     },
     async requestDevice(options) {
-      const run = ++generation;
+      // Do not invalidate the active generation for a rejected second request.
+      // A selected device is reserved even while its GATT connect is pending.
+      if (device || requestPending)
+        throw new DOMException('Stop the current native Bluetooth session first.', 'InvalidStateError');
       const standard = options.sasoriStandardControls === true;
       const mip = options.sasoriControlAdapter === MIP_ADAPTER.id;
       if (options.sasoriControlAdapter && !mip)
@@ -79,7 +84,8 @@ export function createNativeBluetooth(plugin) {
           !STANDARD_SERVICES.every((uuid) => options.optionalServices.includes(uuid)))
       )
         throw new Error('Standard controls require the fixed service allowlist.');
-      if (device?.gatt.connected) throw new Error('A native inspection is already active.');
+      requestPending = true;
+      const run = ++generation;
       cleanup();
       const registered = await Promise.allSettled([
         plugin.addListener('disconnected', (event) => {
@@ -118,6 +124,7 @@ export function createNativeBluetooth(plugin) {
       const failure = registered.find((r) => r.status === 'rejected');
       if (failure) {
         for (const handle of handles) await handle.remove();
+        if (run === generation) requestPending = false;
         throw failure.reason;
       }
       if (run !== generation) {
@@ -254,8 +261,12 @@ export function createNativeBluetooth(plugin) {
         device = current;
         return current;
       } catch (error) {
-        cleanup();
+        // A cancelled old chooser may reject after a fresh one starts.
+        // Never remove the fresh session's listeners from the old catch.
+        if (run === generation) cleanup();
         throw error;
+      } finally {
+        if (run === generation) requestPending = false;
       }
     },
   };
