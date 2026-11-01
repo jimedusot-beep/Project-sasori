@@ -32,18 +32,26 @@ export function createNativeBluetooth(plugin) {
   };
   const unavailable = () => new DOMException('Native inspection cancelled', 'AbortError');
   function close(reason = 'unexpected', error = null) {
-    if (device) {
-      device.gatt.connected = false;
+    // Retire the connection before notifying consumers: their Stop handler must
+    // not disconnect a newly selected device or revive an old GATT request.
+    const ended = device;
+    ++generation;
+    device = null;
+    cleanup();
+    if (ended) {
+      ended.gatt.connected = false;
       const event = new Event('gattserverdisconnected');
       event.reason = reason;
       if (error) event.error = error;
-      device.dispatchEvent(event);
+      ended.dispatchEvent(event);
     }
-    cleanup();
   }
   return {
     cancelRequest() {
       ++generation;
+      const ended = device;
+      device = null;
+      if (ended) ended.gatt.connected = false;
       Promise.resolve(plugin.disconnect()).catch(() => {});
       cleanup();
     },
@@ -234,7 +242,11 @@ export function createNativeBluetooth(plugin) {
             };
           },
           disconnect() {
+            // Late native/Web Bluetooth completions can retain an old GATT
+            // object. An obsolete object must never tear down the next session.
+            const currentSession = run === generation && device === current;
             this.connected = false;
+            if (!currentSession) return;
             Promise.resolve(plugin.disconnect()).catch(() => {});
             close('user');
           },

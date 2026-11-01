@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { HubSession } from '../site/lib/hub-session.js';
 import { createNativeBluetooth } from '../site/lib/native-bluetooth.js';
 import { hubFailure } from '../site/lib/hub-records.js';
+import { STANDARD_SERVICES } from '../site/lib/standard-controls.js';
 
 // Self-contained failure simulator influenced by the testing approach of
 // Nordic CoreBluetoothMock, not imported or copied from that project.
@@ -108,4 +109,71 @@ test('hub generic error does not leak messages or misclassify unsupported platfo
       'private arbitrary',
     ),
   );
+});
+
+const nativeStandardOptions = {
+  acceptAllDevices: true,
+  optionalServices: [...STANDARD_SERVICES],
+  sasoriStandardControls: true,
+};
+
+test('unexpected native disconnect revokes an in-flight connection and permits retry', async () => {
+  const f = makeNativeFixture();
+  const bluetooth = createNativeBluetooth(f.plugin);
+  let completeConnect;
+  f.plugin.connect = () =>
+    new Promise((resolve) => {
+      f.calls.push('connect');
+      completeConnect = resolve;
+    });
+  const previous = await bluetooth.requestDevice(nativeStandardOptions);
+  const inFlight = previous.gatt.connect();
+  const oldCallback = f.registrations.get('disconnected');
+  oldCallback({
+    id: 'synthetic-private-id',
+    reason: 'unexpected',
+    errorCode: 'NetworkError',
+  });
+  completeConnect();
+  await assert.rejects(inFlight, { name: 'AbortError' });
+  assert.equal(previous.gatt.connected, false);
+  assert.equal(f.registrations.size, 0);
+
+  f.plugin.connect = async () => {
+    f.calls.push('connect');
+  };
+  const current = await bluetooth.requestDevice(nativeStandardOptions);
+  await current.gatt.connect();
+  const disconnectsBefore = f.calls.filter((call) => call === 'disconnect').length;
+  oldCallback({
+    id: 'synthetic-private-id',
+    reason: 'unexpected',
+    errorCode: 'NetworkError',
+  });
+  previous.gatt.disconnect();
+  assert.equal(current.gatt.connected, true);
+  assert.equal(f.calls.filter((call) => call === 'disconnect').length, disconnectsBefore);
+  current.gatt.disconnect();
+  assert.equal(current.gatt.connected, false);
+  assert.equal(f.registrations.size, 0);
+});
+
+test('cancelled native session drops its GATT authority before the next chooser', async () => {
+  const f = makeNativeFixture();
+  const bluetooth = createNativeBluetooth(f.plugin);
+  const previous = await bluetooth.requestDevice(nativeStandardOptions);
+  await previous.gatt.connect();
+  bluetooth.cancelRequest();
+  assert.equal(previous.gatt.connected, false);
+  assert.equal(f.registrations.size, 0);
+
+  const current = await bluetooth.requestDevice(nativeStandardOptions);
+  await current.gatt.connect();
+  const disconnectsBefore = f.calls.filter((call) => call === 'disconnect').length;
+  previous.gatt.disconnect();
+  assert.equal(current.gatt.connected, true);
+  assert.equal(f.calls.filter((call) => call === 'disconnect').length, disconnectsBefore);
+  current.gatt.disconnect();
+  assert.equal(current.gatt.connected, false);
+  assert.equal(f.registrations.size, 0);
 });
