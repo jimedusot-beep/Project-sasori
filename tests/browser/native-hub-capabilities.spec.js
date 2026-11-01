@@ -59,6 +59,7 @@ test('hosted Hub never implies native bridge or requests Bluetooth merely by loa
     });
   });
   await page.goto('/hub.html');
+  await page.locator('[data-family="ble-standard/v1"]').click();
   await expect(page.locator('#quick-guidance')).toContainText('Connect opens a chooser');
   await expect(page.locator('#hub-connect')).toBeEnabled();
   await page.locator('[data-family="furby-connect/v1"]').click();
