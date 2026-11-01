@@ -7,14 +7,18 @@ import {
 } from '../site/lib/platform-capabilities.js';
 
 const families = [
-  'elmo-l2l/v1', 'ble-standard/v1', 'wowwee-mip/v1',
-  'furby-connect/v1', 'tv-local/v1',
+  'elmo-l2l/v1',
+  'ble-standard/v1',
+  'wowwee-mip/v1',
+  'furby-connect/v1',
+  'tv-local/v1',
 ];
 
 test('native iPhone permits exactly reviewed standard and MiP family controls', () => {
   assert.deepEqual(NATIVE_CONTROL_FAMILIES, ['ble-standard/v1', 'wowwee-mip/v1']);
-  const actual = families.filter((id) =>
-    hostSupport(id, { native: true, webBluetooth: true }).live);
+  const actual = families.filter(
+    (id) => hostSupport(id, { native: true, webBluetooth: true }).live,
+  );
   assert.deepEqual(actual, NATIVE_CONTROL_FAMILIES);
   for (const id of ['elmo-l2l/v1', 'furby-connect/v1']) {
     assert.equal(hostSupport(id, { native: true, webBluetooth: true }).live, false);

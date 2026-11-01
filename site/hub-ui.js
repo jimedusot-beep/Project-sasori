@@ -864,9 +864,16 @@ for (const family of HUB_FAMILIES) {
   button.type = 'button';
   button.dataset.family = family.id;
   button.append(
-    node('small', native
-      ? availableFor(family.id).live ? 'NATIVE · FIXED CONTROLS' : 'DEMO · LIVE UNSUPPORTED'
-      : family.kind === 'bluetooth' ? 'BLUETOOTH' : 'WI-FI / IR COMPANION'),
+    node(
+      'small',
+      native
+        ? availableFor(family.id).live
+          ? 'NATIVE · FIXED CONTROLS'
+          : 'DEMO · LIVE UNSUPPORTED'
+        : family.kind === 'bluetooth'
+          ? 'BLUETOOTH'
+          : 'WI-FI / IR COMPANION',
+    ),
   );
   button.addEventListener('click', () => {
     if (locked()) return;

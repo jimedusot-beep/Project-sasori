@@ -13,14 +13,14 @@ legitimate password. Do not factory-reset or enroll a new password for this tria
 5. Request **one** built-in greeting. Record separately whether the request was sent, whether a reply came, and whether you actually heard sound or saw mouth movement. A queued request alone is not success.
 6. Stop/Disconnect. Observe whether sound/motion continues. Bluetooth disconnect **is not a guaranteed stop for the toy**; use its physical switch if required. Save the result and any errors.
 
-| Check | Actual result |
-| --- | --- |
-| Connect / permission | NOT TESTED |
-| Existing-password acceptance | NOT TESTED |
-| Status received | NOT TESTED |
-| Greeting requested | NOT TESTED |
-| Sound or motion independently observed | NOT TESTED |
-| Disconnect and recovery | NOT TESTED |
+| Check                                  | Actual result |
+| -------------------------------------- | ------------- |
+| Connect / permission                   | NOT TESTED    |
+| Existing-password acceptance           | NOT TESTED    |
+| Status received                        | NOT TESTED    |
+| Greeting requested                     | NOT TESTED    |
+| Sound or motion independently observed | NOT TESTED    |
+| Disconnect and recovery                | NOT TESTED    |
 
 **Pass:** authenticating, receiving status, requesting one greeting, independently
 observing its effect and safely ending the trial. **Fail:** repeatable protocol failure or

@@ -1,7 +1,9 @@
 import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
-test('native iPhone Hub exposes only bridge-backed live families, with Demo fallback', async ({ page }) => {
+test('native iPhone Hub exposes only bridge-backed live families, with Demo fallback', async ({
+  page,
+}) => {
   await page.addInitScript(() => {
     window.nativeCalls = [];
     window.SasoriNativeBluetooth = {
@@ -13,7 +15,9 @@ test('native iPhone Hub exposes only bridge-backed live families, with Demo fall
         window.nativeCalls.push('request');
         throw new Error('Do not request a device in this test.');
       },
-      disconnect: async () => { window.nativeCalls.push('disconnect'); },
+      disconnect: async () => {
+        window.nativeCalls.push('disconnect');
+      },
     };
     Object.defineProperty(navigator, 'bluetooth', { configurable: true, value: undefined });
   });
@@ -39,12 +43,19 @@ test('native iPhone Hub exposes only bridge-backed live families, with Demo fall
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
 });
 
-test('hosted Hub never implies native bridge or requests Bluetooth merely by loading', async ({ page }) => {
+test('hosted Hub never implies native bridge or requests Bluetooth merely by loading', async ({
+  page,
+}) => {
   await page.addInitScript(() => {
     window.webRequests = 0;
     Object.defineProperty(navigator, 'bluetooth', {
       configurable: true,
-      value: { requestDevice: async () => { window.webRequests++; throw new Error('not used'); } },
+      value: {
+        requestDevice: async () => {
+          window.webRequests++;
+          throw new Error('not used');
+        },
+      },
     });
   });
   await page.goto('/hub.html');
