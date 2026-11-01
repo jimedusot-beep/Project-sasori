@@ -6,6 +6,20 @@ This Capacitor app packages the shared Sasori interface with an original Swift C
 
 The separate [Privacy Lab](../../docs/privacy-lab.md) can compare camera images in Safari. In the installed native iPhone app only, an additional explicit, short, advertisement-only Bluetooth survey is available. The survey plugin cannot connect, read, or write peripheral characteristics. It is not a reliable hidden-device detector; physical validation is pending.
 
+## Capability-aware native Device Hub
+
+The bundled `hub.html` now loads the existing native Core Bluetooth facade. It offers
+live standard BLE identity/battery/mild-alert and original MiP version/status/LED commands.
+Native Elmo sound/password commands and Furby actions stay **Demo only**; no
+generic write API was added. Native multi-service recognition stays unavailable because
+the bridge cannot perform that probe. No scan or connection starts on page load, and
+Stop remains available during active sessions.
+
+The native app still starts in the functioning Research Lab until real-device/owner
+acceptance supports changing its startup route (#43). For the first live original-Elmo
+trial use the hosted Elmo Remote inside Bluefy with the legitimate existing password,
+then follow [the owner acceptance worksheet](../../docs/iphone-elmo-acceptance.md).
+
 ## Build and install
 
 Use Node 22+, a Mac with Xcode 26+, and an iPhone/iPad running iOS 16+. From the repository:

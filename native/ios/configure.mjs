@@ -48,3 +48,12 @@ export function nativeEntry(html) {
     throw new Error('Native bootstrap already present in source HTML.');
   return html.replace(entry, '<script src="native.js"></script>\n' + entry);
 }
+
+export function nativeHubEntry(html) {
+  const entries = [
+    ...html.matchAll(/<script type="module" src="hub-ui\.js(?:\?[^"]*)?"><\/script>/g),
+  ];
+  if (entries.length !== 1 || html.includes('<script src="native.js"></script>'))
+    throw new Error('Expected exactly one native Hub entry module.');
+  return html.replace(entries[0][0], '<script src="native.js"></script>\n' + entries[0][0]);
+}

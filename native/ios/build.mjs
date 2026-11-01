@@ -1,7 +1,7 @@
 import { cp, mkdir, readFile, writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { build } from 'esbuild';
-import { nativeEntry } from './configure.mjs';
+import { nativeEntry, nativeHubEntry } from './configure.mjs';
 const root = fileURLToPath(new URL('./', import.meta.url));
 await mkdir(root + 'www', { recursive: true });
 await cp(root + '../../site', root + 'www', { recursive: true });
@@ -24,3 +24,6 @@ await writeFile(
   root + 'www/privacy.html',
   privacy.replace(entry, '<script src="native.js"></script>\n' + entry),
 );
+
+const hubHTML = await readFile(root + 'www/hub.html', 'utf8');
+await writeFile(root + 'www/hub.html', nativeHubEntry(hubHTML));
