@@ -7,7 +7,8 @@ import { hubFailure } from '../site/lib/hub-records.js';
 // Self-contained failure simulator influenced by the testing approach of
 // Nordic CoreBluetoothMock, not imported or copied from that project.
 function makeNativeFixture() {
-  const registrations = new Map(), calls = [];
+  const registrations = new Map(),
+    calls = [];
   let failure = null;
   const plugin = {
     addListener: async (name, callback) => {
@@ -19,15 +20,25 @@ function makeNativeFixture() {
       if (failure) throw Object.assign(new Error('Synthetic Bluetooth failure'), { code: failure });
       return { id: 'synthetic-private-id', name: 'Mock Standard Peripheral' };
     },
-    connect: async () => { calls.push('connect'); },
+    connect: async () => {
+      calls.push('connect');
+    },
     getService: async ({ uuid }) => ({ uuid }),
     getCharacteristics: async () => ({ characteristics: [] }),
-    disconnect: async () => { calls.push('disconnect'); },
+    disconnect: async () => {
+      calls.push('disconnect');
+    },
   };
   return {
-    plugin, calls, registrations,
-    rejectWith(code) { failure = code; },
-    allowSelection() { failure = null; },
+    plugin,
+    calls,
+    registrations,
+    rejectWith(code) {
+      failure = code;
+    },
+    allowSelection() {
+      failure = null;
+    },
   };
 }
 
@@ -87,7 +98,14 @@ test('timeout can be retried without ghost listeners or fabricated hardware succ
 
 test('hub generic error does not leak messages or misclassify unsupported platforms', () => {
   assert.equal(hubFailure(new Error('private arbitrary detail')).code, 'connection-failed');
-  assert.equal(hubFailure({ code: 'password-rejected', name: 'NotSupportedError' }).code, 'password-rejected');
+  assert.equal(
+    hubFailure({ code: 'password-rejected', name: 'NotSupportedError' }).code,
+    'password-rejected',
+  );
   assert.equal(hubFailure({ name: 'NotSupportedError' }).code, 'platform-unsupported');
-  assert.ok(!JSON.stringify(hubFailure(new Error('private arbitrary detail'))).includes('private arbitrary'));
+  assert.ok(
+    !JSON.stringify(hubFailure(new Error('private arbitrary detail'))).includes(
+      'private arbitrary',
+    ),
+  );
 });
