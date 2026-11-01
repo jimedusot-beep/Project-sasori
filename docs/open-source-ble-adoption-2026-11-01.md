@@ -34,13 +34,20 @@ Licenses here reflect upstream GitHub's reported repository-level SPDX metadata 
 - [ ] On-device screenshots and VoiceOver validation for action descriptions, permission recovery and persistent Stop
 - [ ] Never show `verified` for a command receipt without a real observed effect
 
-### #4: first Elmo physical acceptance
+### #4: initial physical Elmo inspection (read-only)
 
-- [x] First-owner worksheet: [iPhone Elmo acceptance](iphone-elmo-acceptance.md)
-- [ ] Open hosted `elmo.html` in a genuine Web Bluetooth-capable iPhone browser on an owned original Love2Learn Elmo; use its **existing** legitimate password
-- [ ] Observe exactly one status reply and one built-in greeting, then disconnect and use the toy's physical power switch if necessary
-- [ ] Record **command submitted** and **effect heard/seen** separately; keep passwords and raw pairing identifiers out of exports
-- [ ] Decide pass, fail, or inconclusive using actual owner evidence only
+- [x] Owner worksheet: [iPhone inspection setup and repeatable captures](iphone-setup.md)
+- [ ] In Bluefy on an owned Elmo, record exact model/iOS/Bluefy version and verify observed service and notification properties
+- [ ] Complete **five** foreground, 15-second inspection sessions, with saved private records
+- [ ] Separately test one explicit Stop and one background/foreground interruption; record disconnect reasons and notification counts
+- [ ] No password authentication, firmware, motor or audio application writes in these first five trials
+- [ ] Mark each attempt pass, fail, or inconclusive from physical owner evidence only
+
+### #5 and later: authentication and greeting (not initial acceptance)
+
+- [ ] After #4 passes, independently establish authorized characteristic roles, framing, and success/rejection evidence under #5
+- [ ] Only after those gates, consider the separate [hosted Elmo greeting worksheet](iphone-elmo-acceptance.md); a queued sound request is **not** observed playback
+- [ ] Keep credentials, raw authentication data and device identifiers private
 
 ## Why we are not cloning all ten
 

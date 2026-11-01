@@ -1,6 +1,9 @@
-# Real iPhone + original Elmo: first owner acceptance
+# Real iPhone + original Elmo: later greeting trial
 
-**Not tested on physical hardware yet.** This is a manual procedure, not a certification.
+**Not tested on physical hardware yet.** This is a separate advanced experiment, not the initial inspection milestone or a certification.
+
+**Prerequisites:** complete [issue #4's five inspection-only sessions](iphone-setup.md) on the actual owned Elmo, then establish an authorized, model-specific authentication specification under [issue #5](https://github.com/jimedusot-beep/Project-sasori/issues/5). An inspection subscription is not authentication. Do not start password or sound writes merely because the hosted page exposes controls.
+
 Native Sasori does not implement Elmo authentication or sound writes. Open the
 [hosted Elmo Remote](https://jimedusot-beep.github.io/Project-sasori/elmo.html)
 inside Bluefy on your iPhone. Test only your own Love2Learn Elmo with an existing
@@ -27,5 +30,4 @@ observing its effect and safely ending the trial. **Fail:** repeatable protocol 
 no observed effect despite successful request. **Inconclusive:** permission, device access,
 or observation failure. Record facts only; no synthetic or imported success.
 
-Issues: [#4 real-Elmo inspection](https://github.com/jimedusot-beep/Project-sasori/issues/4)
-and [#5 protocol verification](https://github.com/jimedusot-beep/Project-sasori/issues/5).
+Tracking: [#4 inspection-only acceptance](https://github.com/jimedusot-beep/Project-sasori/issues/4) must be completed first; [#5 authorized protocol verification](https://github.com/jimedusot-beep/Project-sasori/issues/5) is the prerequisite for an owner-authorized greeting trial. Neither issue is closed by a synthetic greeting or a command receipt.
