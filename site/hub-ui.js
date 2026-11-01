@@ -221,7 +221,6 @@ function setFamily(id) {
   $('tv-hosted').hidden = companion;
   $('tv-local').hidden = !companion;
   $('browser-help').textContent = availableFor(id).explanation;
-  $('platform-support').textContent = availableFor(id).explanation;
   $('hub-alert').textContent = actionLabel(
     id === 'elmo-l2l/v1' || id === 'tv-local/v1' ? 'ble-standard/v1' : id,
     'alert',
@@ -537,10 +536,11 @@ function render() {
   $('hub-connect').setAttribute('aria-describedby', 'quick-guidance');
   const blockedReason = !availableFor(familyId).live
     ? availableFor(familyId).explanation
-    : familyId === 'elmo-l2l/v1'
-      ? 'Enter your existing Elmo password, then connect. Sasori never saves it.'
-      : 'Connect opens a chooser. No connection starts automatically.';
-  $('platform-support').textContent = availableFor(familyId).explanation;
+    : native
+      ? availableFor(familyId).explanation
+      : familyId === 'elmo-l2l/v1'
+        ? 'Enter your existing Elmo password, then connect. Sasori never saves it.'
+        : 'Connect opens a chooser. No connection starts automatically.';
   $('quick-guidance').textContent = connected()
     ? s.synthetic
       ? 'DEMO · No physical device contacted. Try a control below.'

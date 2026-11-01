@@ -23,7 +23,7 @@ test('native iPhone Hub exposes only bridge-backed live families, with Demo fall
   });
   await page.goto('/hub.html');
   await expect(page.locator('#hub-connect')).toBeDisabled();
-  await expect(page.locator('#platform-support')).toContainText('Native Elmo');
+  await expect(page.locator('#quick-guidance')).toContainText('Native Elmo');
   await expect(page.locator('#hub-detect')).toBeDisabled();
   await page.locator('[data-family="furby-connect/v1"]').click();
   await expect(page.locator('#hub-connect')).toBeDisabled();
