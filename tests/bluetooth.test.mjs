@@ -158,7 +158,11 @@ test('inspection deadline disconnects even if discovery is hanging', async () =>
   f.transport.operationMs = 300;
   f.primary.getCharacteristics = () => new Promise(() => {});
   await f.transport.connect({ service, notify, durationMs: 100 });
-  assert.equal(f.events.filter((e) => e.type === 'state').at(-1).reason, 'inspection-complete');
+  assert.equal(
+    f.events.filter((e) => e.type === 'state').at(-1).reason,
+    'inspection-deadline-before-ready',
+  );
+  assert.equal(f.events.some((e) => e.stage === 'inspection-ready'), false);
   assert.equal(f.gatt.connected, false);
 });
 test('notification budget terminates a noisy device after 500 packets', async () => {
@@ -235,4 +239,53 @@ test('metadata-only inspection omits notification stage and subscription', async
   assert.ok(stages.includes('inspection-ready'));
   assert.equal(f.characteristic.subscribed, 0);
   f.transport.disconnect();
+});
+
+test('successful inspection only reports complete after reaching inspection-ready', async () => {
+  const f = setup();
+  await f.transport.connect({ service, notify, durationMs: 100 });
+  assert.equal(f.transport.state, 'inspecting');
+  await wait(130);
+  assert.equal(f.transport.state, 'disconnected');
+  assert.equal(f.events.filter((e) => e.type === 'state').at(-1).reason, 'inspection-complete');
+  assert.ok(f.events.some((e) => e.type === 'stage' && e.stage === 'inspection-ready'));
+  assert.equal(f.bluetooth.requests.length, 1);
+});
+
+test('a failed GATT disconnect still retires session and reports unconfirmed teardown', async () => {
+  const f = setup();
+  await f.transport.connect({ service, notify });
+  f.gatt.disconnect = () => {
+    throw new DOMException('Radio refused to disconnect', 'NetworkError');
+  };
+  f.transport.disconnect('user');
+  assert.equal(f.transport.state, 'disconnected');
+  assert.equal(f.transport.busy, false);
+  assert.equal(f.events.at(-1).reason, 'disconnect-failed');
+  assert.equal(f.events.findLast((e) => e.type === 'error').error.stage, 'teardown');
+  assert.ok(
+    f.events.some(
+      (e) => e.type === 'warning' && e.message.includes('could not be confirmed'),
+    ),
+  );
+  assert.equal(f.characteristic.listeners.size, 0);
+  assert.equal(f.bluetooth.requests.length, 1);
+});
+
+test('a failed chooser cancellation still clears pending inspection state', async () => {
+  const f = setup();
+  f.bluetooth.cancelRequest = () => {
+    throw new Error('Chooser cancellation failed');
+  };
+  f.transport.operationMs = 300;
+  const pending = deferred();
+  f.bluetooth.requestDevice = () => pending.promise;
+  const connection = f.transport.connect({ service, notify });
+  f.transport.disconnect('user');
+  pending.resolve(f.device);
+  await connection;
+  assert.equal(f.transport.state, 'disconnected');
+  assert.equal(f.transport.busy, false);
+  assert.equal(f.gatt.connectCount, 0);
+  assert.equal(f.events.at(-1).reason, 'disconnect-failed');
 });
