@@ -566,7 +566,9 @@ function render() {
   $('remove-setup').disabled = !selected() || readOnly || lockedNow;
   $('hub-import').disabled = !ready || readOnly || lockedNow;
   $('hub-export').disabled = !ready;
-  $('source').textContent = s?.synthetic ? 'DEMO' : 'LIVE';
+  // A configured or previously used device is not necessarily connected.
+  // Never advertise LIVE until the active session is genuinely connected.
+  $('source').textContent = connected() ? (s.synthetic ? 'DEMO' : 'LIVE') : 'OFFLINE';
   $('demo-banner').hidden = !s?.synthetic;
   $('connected-name').textContent = s?.deviceName || hubFamily(familyId).name;
   updateDeviceDetail(
