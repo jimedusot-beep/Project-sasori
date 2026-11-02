@@ -169,7 +169,11 @@ export class BluetoothTransport {
       this.server = await withTimeout(attempt, this.operationMs, 'GATT connection');
       this.check(run);
       this.connectedAt = performance.now();
-      this.timer = setTimeout(() => this.disconnect('inspection-complete'), durationMs);
+      this.timer = setTimeout(() => {
+        const reason =
+          this.state === 'inspecting' ? 'inspection-complete' : 'inspection-deadline-before-ready';
+        this.disconnect(reason);
+      }, durationMs);
       this.setState('discovering');
       this.markStage('service-discovery');
       const primary = await withTimeout(
@@ -292,7 +296,28 @@ export class BluetoothTransport {
   disconnect(reason = 'user') {
     if (!ACTIVE.has(this.state) && this.state !== 'error') return;
     ++this.generation;
-    this.bluetooth?.cancelRequest?.();
+    let teardownFailed = false;
+    const reportTeardownFailure = (error) => {
+      teardownFailed = true;
+      this.emit({
+        type: 'error',
+        error: {
+          ...explainError(error),
+          stage: 'teardown',
+          elapsedMs: Math.max(0, Date.now() - this.startedAt),
+        },
+      });
+      this.emit({
+        type: 'warning',
+        message:
+          'Bluetooth disconnect could not be confirmed. Check the toy and use its power switch if needed. No automatic reconnect will occur.',
+      });
+    };
+    try {
+      this.bluetooth?.cancelRequest?.();
+    } catch (error) {
+      reportTeardownFailure(error);
+    }
     clearTimeout(this.timer);
     this.timer = null;
     this.markStage('teardown');
@@ -303,13 +328,17 @@ export class BluetoothTransport {
     if (this.device && this.onDisconnect)
       this.device.removeEventListener('gattserverdisconnected', this.onDisconnect);
     // Disconnect rather than scheduling GATT writes/stopNotifications against a closing link.
-    if (this.device?.gatt?.connected) this.device.gatt.disconnect();
+    try {
+      if (this.device?.gatt?.connected) this.device.gatt.disconnect();
+    } catch (error) {
+      reportTeardownFailure(error);
+    }
     this.server = null;
     this.device = null;
     this.onDisconnect = null;
     this.busy = false;
     this.setState('disconnected', {
-      reason,
+      reason: teardownFailed ? 'disconnect-failed' : reason,
       gattDurationMs:
         this.connectedAt === null
           ? 0
