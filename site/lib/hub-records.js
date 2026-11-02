@@ -152,9 +152,10 @@ const BLUETOOTH_ERROR_CODES = Object.freeze({
   AbortError: 'user-stop',
 });
 export function hubFailure(error) {
-  const code = Object.hasOwn(HUB_FAILURES, error?.code)
-    ? error.code
-    : BLUETOOTH_ERROR_CODES[error?.name] || 'connection-failed';
+  const mapped = Object.hasOwn(BLUETOOTH_ERROR_CODES, error?.name)
+    ? BLUETOOTH_ERROR_CODES[error.name]
+    : 'connection-failed';
+  const code = Object.hasOwn(HUB_FAILURES, error?.code) ? error.code : mapped;
   return { code, title: HUB_FAILURES[code][0], hint: HUB_FAILURES[code][1] };
 }
 export function localCompanionURL(value) {
