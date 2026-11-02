@@ -237,3 +237,8 @@ test('manual Stop remains an ordinary disconnect without a fabricated fault', as
   assert.equal(f.events.find((event) => event.type === 'error'), undefined);
   assert.equal(f.plugin.listeners.size, 0);
 });
+
+test('untrusted native error names cannot use inherited mapping keys', () => {
+  assert.equal(hubFailure({ name: 'constructor' }).code, 'connection-failed');
+  assert.equal(hubFailure({ name: '__proto__' }).code, 'connection-failed');
+});
