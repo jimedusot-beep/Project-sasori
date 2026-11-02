@@ -119,7 +119,8 @@ test('foreign, stale, or invalid native notifications cannot become capture data
   callback({ id: 'synthetic-native-id', uuid: ELMO_NOTIFY, hex: 'xyz' });
   assert.equal(f.events.filter((e) => e.type === 'packet').length, 0);
   assert.equal(f.transport.state, 'disconnected');
-  assert.equal(f.events.find((event) => event.type === 'error')?.error.name, 'NotSupportedError');
+  const malformedError = f.events.find((event) => event.type === 'error');
+  assert.equal(malformedError?.error.name, 'NotSupportedError');
   callback({ id: 'synthetic-native-id', uuid: ELMO_NOTIFY, hex: '00' });
   assert.equal(f.events.filter((e) => e.type === 'packet').length, 0);
 });
@@ -216,7 +217,8 @@ for (const [reason, nativeCode, expectedName, beginnerCode] of [
     });
     assert.equal(f.transport.state, 'disconnected');
     assert.equal(f.events.at(-1).reason, reason);
-    assert.equal(f.events.find((event) => event.type === 'error')?.error.name, expectedName);
+    const fault = f.events.find((event) => event.type === 'error');
+    assert.equal(fault?.error.name, expectedName);
     assert.equal(hubFailure({ name: expectedName }).code, beginnerCode);
     assert.equal(f.plugin.listeners.size, 0);
     assert.equal(f.events.some((event) => event.type === 'packet'), false);
