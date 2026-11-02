@@ -7,6 +7,24 @@ on:
 permissions:
   contents: read
 jobs:
+  # Catch native npm lockfile drift and moderate advisories on Linux before
+  # reserving the scarcer macOS simulator runners.
+  native-dependency-security:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: native/ios/package-lock.json
+      - name: Install exactly the locked native dependencies
+        working-directory: native/ios
+        run: npm ci
+      - name: Reject moderate or higher native dependency advisories
+        working-directory: native/ios
+        run: npm audit --audit-level=moderate
   pocket-firmware:
     runs-on: ubuntu-latest
     timeout-minutes: 20
