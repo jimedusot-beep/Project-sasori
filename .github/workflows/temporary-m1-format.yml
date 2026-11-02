@@ -1,0 +1,21 @@
+name: Temporary M1 Markdown Formatter
+on:
+  push:
+    branches: [docs/m1-elmo-owner-acceptance-20261102]
+permissions:
+  contents: read
+jobs:
+  format-preview:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - name: Print formatted Markdown as one JSON-escaped log line
+        run: |
+          npx prettier docs/m1-elmo-read-only-acceptance.md > /tmp/sasori-m1-formatted.md
+          node -e 'const fs = require("node:fs"); console.log("SASORI_M1_FORMAT_BEGIN" + JSON.stringify(fs.readFileSync("/tmp/sasori-m1-formatted.md","utf8")) + "SASORI_M1_FORMAT_END")'
