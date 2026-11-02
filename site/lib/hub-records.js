@@ -63,6 +63,10 @@ export const HUB_FAILURES = Object.freeze({
     'Connection time limit reached',
     'Save your result, then reconnect manually for another session.',
   ],
+  'packet-limit': [
+    'Bluetooth capture safety limit reached',
+    'The inspection stopped after too many notifications. Save the result, then reconnect manually.',
+  ],
   'connection-lost': [
     'Connection lost',
     'Your setup is kept. Check power and range before reconnecting.',
@@ -145,7 +149,9 @@ export function hubFailure(error) {
         ? 'permission-denied'
         : error?.name === 'NotSupportedError'
           ? 'platform-unsupported'
-          : error?.name === 'TimeoutError'
+          : error?.name === 'QuotaExceededError'
+            ? 'packet-limit'
+            : error?.name === 'TimeoutError'
             ? 'operation-timeout'
             : error?.name === 'NetworkError'
               ? 'connection-lost'
