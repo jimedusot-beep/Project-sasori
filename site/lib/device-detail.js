@@ -26,6 +26,13 @@ function actionName(action) {
   return 'No action recorded';
 }
 
+// Shared display contract for the legacy remote and future device views.
+// A selected/saved profile is not evidence of a live Bluetooth connection.
+export function connectionSourceLabel({ state = 'idle', synthetic = false } = {}) {
+  if (!['connected', 'ready'].includes(state)) return 'OFFLINE';
+  return synthetic ? 'DEMO' : 'LIVE';
+}
+
 export function deviceDetailModel({
   deviceName = '',
   familyName = 'Device',
@@ -37,6 +44,7 @@ export function deviceDetailModel({
   failure = false,
 } = {}) {
   const connected = state === 'connected' || state === 'ready';
+  const failed = failure || state === 'error';
   const connecting = ['choosing', 'connecting', 'authenticating'].includes(state);
   const action = actionName(lastAction);
   const hasAction = action !== 'No action recorded';
@@ -48,7 +56,7 @@ export function deviceDetailModel({
       : 'Demo available · live connection unavailable here';
   let happened;
   let next;
-  if (failure) {
+  if (failed) {
     happened = 'The last connection or action did not finish.';
     next = 'Read the recovery message below. Check the device, then try again or use Demo.';
   } else if (connecting) {
@@ -74,13 +82,17 @@ export function deviceDetailModel({
         ? 'Use the Research Lab for supported native controls, or try an offline demo.'
         : 'Try Demo now, or use a compatible browser or companion for a live connection.';
   }
-  const outcome = !hasAction
-    ? 'No action yet'
-    : synthetic
-      ? 'Demo only · no physical command sent'
-      : lastAction === 'state-read'
-        ? 'Software read completed · verify values on your device'
-        : 'Command sent · physical effect not confirmed';
+  const outcome = failed
+    ? synthetic
+      ? 'Demo interrupted · no physical command sent'
+      : 'Outcome unconfirmed · check failure and recovery guidance'
+    : !hasAction
+      ? 'No action yet'
+      : synthetic
+        ? 'Demo only · no physical command sent'
+        : lastAction === 'state-read'
+          ? 'Software read completed · verify values on your device'
+          : 'Command sent · physical effect not confirmed';
   return {
     name: String(deviceName || familyName),
     compatibility,
