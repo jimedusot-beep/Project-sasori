@@ -1,6 +1,10 @@
 import { ElmoRemote, createElmoDemo } from './lib/elmo-remote.js';
 import { ELMO_INPUTS } from './lib/elmo-codec.js';
-import { deviceDetailModel, mountDeviceDetail } from './lib/device-detail.js';
+import {
+  connectionSourceLabel,
+  deviceDetailModel,
+  mountDeviceDetail,
+} from './lib/device-detail.js';
 
 const $ = (id) => document.getElementById(id);
 const updateDeviceDetail = mountDeviceDetail(document.querySelector('.controls-card'));
@@ -65,7 +69,7 @@ function render(next = state) {
   const connected = state.state === 'ready',
     working = active(),
     report = state.report;
-  $('mode').textContent = state.synthetic ? 'DEMO' : 'LIVE';
+  $('mode').textContent = connectionSourceLabel(state);
   $('demo-note').hidden = !state.synthetic;
   $('elmo-password').disabled = working;
   $('allow-password-setup').disabled = working;
