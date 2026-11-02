@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { deviceDetailModel } from '../site/lib/device-detail.js';
+import { connectionSourceLabel, deviceDetailModel } from '../site/lib/device-detail.js';
 
 test('demo never implies a hardware command or verification', () => {
   const model = deviceDetailModel({
@@ -51,4 +51,38 @@ test('unknown action does not create a speculative command label', () => {
   const model = deviceDetailModel({ lastAction: 'secret-motor-write', state: 'connected' });
   assert.equal(model.lastAction, 'No action recorded');
   assert.equal(model.outcome, 'No action yet');
+});
+
+test('source label requires an actual connected state before claiming LIVE or DEMO', () => {
+  for (const state of ['idle', 'choosing', 'connecting', 'authenticating', 'disconnected', 'error']) {
+    assert.equal(connectionSourceLabel({ state }), 'OFFLINE');
+    assert.equal(connectionSourceLabel({ state, synthetic: true }), 'OFFLINE');
+  }
+  assert.equal(connectionSourceLabel({ state: 'ready' }), 'LIVE');
+  assert.equal(connectionSourceLabel({ state: 'connected' }), 'LIVE');
+  assert.equal(connectionSourceLabel({ state: 'ready', synthetic: true }), 'DEMO');
+  assert.equal(connectionSourceLabel({ state: 'connected', synthetic: true }), 'DEMO');
+});
+
+test('failed sessions never imply a completed command or independent verification', () => {
+  const failed = deviceDetailModel({
+    state: 'disconnected',
+    failure: true,
+    lastAction: 'greeting-requested',
+  });
+  assert.match(failed.outcome, /Outcome unconfirmed/);
+  assert.match(failed.next, /recovery/);
+  assert.equal(failed.physical, 'Not independently verified');
+
+  const error = deviceDetailModel({ state: 'error', lastAction: 'effect-requested' });
+  assert.match(error.happened, /did not finish/);
+  assert.match(error.outcome, /Outcome unconfirmed/);
+
+  const demo = deviceDetailModel({
+    state: 'disconnected',
+    synthetic: true,
+    failure: true,
+    lastAction: 'sound-requested',
+  });
+  assert.match(demo.outcome, /no physical command sent/);
 });
