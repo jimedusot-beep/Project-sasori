@@ -16,3 +16,9 @@ test('the Hub only labels a genuinely connected session LIVE', async ({ page }) 
   await page.reload();
   await expect(page.locator('#source')).toHaveText('OFFLINE');
 });
+
+test('the shipped Hub HTML does not flash LIVE before scripts execute', async ({ request }) => {
+  const response = await request.get('/hub.html');
+  expect(response.ok()).toBe(true);
+  expect(await response.text()).toContain('<span class="badge" id="source">OFFLINE</span>');
+});
