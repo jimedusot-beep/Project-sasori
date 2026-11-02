@@ -70,7 +70,10 @@ test('user Stop is not reported as a Bluetooth failure', async () => {
     reason: 'user',
     errorCode: 'AbortError',
   });
-  assert.equal(f.events.some((event) => event.type === 'error'), false);
+  assert.equal(
+    f.events.some((event) => event.type === 'error'),
+    false,
+  );
   assert.equal(f.transport.state, 'disconnected');
   assert.equal(f.listeners.size, 0);
 });
