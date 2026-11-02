@@ -54,7 +54,14 @@ test('unknown action does not create a speculative command label', () => {
 });
 
 test('source label requires an actual connected state before claiming LIVE or DEMO', () => {
-  for (const state of ['idle', 'choosing', 'connecting', 'authenticating', 'disconnected', 'error']) {
+  for (const state of [
+    'idle',
+    'choosing',
+    'connecting',
+    'authenticating',
+    'disconnected',
+    'error',
+  ]) {
     assert.equal(connectionSourceLabel({ state }), 'OFFLINE');
     assert.equal(connectionSourceLabel({ state, synthetic: true }), 'OFFLINE');
   }
