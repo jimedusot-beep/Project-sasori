@@ -162,7 +162,10 @@ test('inspection deadline disconnects even if discovery is hanging', async () =>
     f.events.filter((e) => e.type === 'state').at(-1).reason,
     'inspection-deadline-before-ready',
   );
-  assert.equal(f.events.some((e) => e.stage === 'inspection-ready'), false);
+  assert.equal(
+    f.events.some((e) => e.stage === 'inspection-ready'),
+    false,
+  );
   assert.equal(f.gatt.connected, false);
 });
 test('notification budget terminates a noisy device after 500 packets', async () => {
@@ -264,9 +267,7 @@ test('a failed GATT disconnect still retires session and reports unconfirmed tea
   assert.equal(f.events.at(-1).reason, 'disconnect-failed');
   assert.equal(f.events.findLast((e) => e.type === 'error').error.stage, 'teardown');
   assert.ok(
-    f.events.some(
-      (e) => e.type === 'warning' && e.message.includes('could not be confirmed'),
-    ),
+    f.events.some((e) => e.type === 'warning' && e.message.includes('could not be confirmed')),
   );
   assert.equal(f.characteristic.listeners.size, 0);
   assert.equal(f.bluetooth.requests.length, 1);
