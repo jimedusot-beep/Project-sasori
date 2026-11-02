@@ -2,6 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createNativeBluetooth } from '../site/lib/native-bluetooth.js';
 import { BluetoothTransport } from '../site/lib/bluetooth.js';
+import { hubFailure } from '../site/lib/hub-records.js';
 import { ELMO_SERVICE, ELMO_NOTIFY } from '../site/lib/profiles.js';
 import {
   DEVICE_INFORMATION_SERVICE,
@@ -118,6 +119,7 @@ test('foreign, stale, or invalid native notifications cannot become capture data
   callback({ id: 'synthetic-native-id', uuid: ELMO_NOTIFY, hex: 'xyz' });
   assert.equal(f.events.filter((e) => e.type === 'packet').length, 0);
   assert.equal(f.transport.state, 'disconnected');
+  assert.equal(f.events.find((event) => event.type === 'error')?.error.name, 'NotSupportedError');
   callback({ id: 'synthetic-native-id', uuid: ELMO_NOTIFY, hex: '00' });
   assert.equal(f.events.filter((e) => e.type === 'packet').length, 0);
 });
@@ -196,4 +198,40 @@ test('a native disconnect retains its failure cause before a pending operation r
     f.events.some((e) => e.type === 'warning'),
     false,
   );
+});
+
+for (const [reason, nativeCode, expectedName, beginnerCode] of [
+  ['native-deadline', 'TimeoutError', 'TimeoutError', 'operation-timeout'],
+  ['packet-limit', 'QuotaExceededError', 'QuotaExceededError', 'packet-limit'],
+  // Still classify correctly when a prior native release returned AbortError.
+  ['packet-limit', 'AbortError', 'QuotaExceededError', 'packet-limit'],
+]) {
+  test('native ' + reason + ' records its fault and releases the connection', async () => {
+    const f = fixture();
+    await f.transport.connect(options);
+    f.plugin.listeners.get('disconnected')({
+      id: 'synthetic-native-id',
+      reason,
+      errorCode: nativeCode,
+    });
+    assert.equal(f.transport.state, 'disconnected');
+    assert.equal(f.events.at(-1).reason, reason);
+    assert.equal(f.events.find((event) => event.type === 'error')?.error.name, expectedName);
+    assert.equal(hubFailure({ name: expectedName }).code, beginnerCode);
+    assert.equal(f.plugin.listeners.size, 0);
+    assert.equal(f.events.some((event) => event.type === 'packet'), false);
+  });
+}
+
+test('manual Stop remains an ordinary disconnect without a fabricated fault', async () => {
+  const f = fixture();
+  await f.transport.connect(options);
+  f.plugin.listeners.get('disconnected')({
+    id: 'synthetic-native-id',
+    reason: 'user',
+    errorCode: 'AbortError',
+  });
+  assert.equal(f.transport.state, 'disconnected');
+  assert.equal(f.events.find((event) => event.type === 'error'), undefined);
+  assert.equal(f.plugin.listeners.size, 0);
 });
