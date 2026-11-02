@@ -35,6 +35,8 @@ export function explainError(error) {
       'The device is disconnected or busy. Disconnect, wait for idle, and start a new inspection.',
     TimeoutError:
       'An operation exceeded its time limit. Any late connection will be disconnected; retry manually.',
+    QuotaExceededError:
+      'The notification safety limit was reached. Save the captured data, then start a new inspection manually.',
     AbortError:
       'The inspection was cancelled. A pending device chooser may still need to be closed.',
   };
