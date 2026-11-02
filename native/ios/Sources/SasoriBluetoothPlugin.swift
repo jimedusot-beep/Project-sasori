@@ -146,6 +146,7 @@ public class SasoriBluetoothPlugin: CAPPlugin, CAPBridgedPlugin, CBCentralManage
         let errorCode: String
         switch reason {
         case "operation-timeout", "native-deadline": errorCode = "TimeoutError"
+        case "packet-limit": errorCode = "QuotaExceededError"
         case "no-matching-devices", "service-not-found": errorCode = "NotFoundError"
         case "bluetooth-unavailable":
             if manager?.state == .unauthorized { errorCode = "SecurityError" }
