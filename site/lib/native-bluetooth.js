@@ -8,6 +8,7 @@ export function createNativeBluetooth(plugin) {
     'NetworkError',
     'NotFoundError',
     'NotSupportedError',
+    'QuotaExceededError',
     'SecurityError',
     'TimeoutError',
   ]);
@@ -93,14 +94,20 @@ export function createNativeBluetooth(plugin) {
       const registered = await Promise.allSettled([
         plugin.addListener('disconnected', (event) => {
           if (run !== generation || device?.id !== event.id) return;
-          const expectedStop = ['user', 'page-hidden', 'native-deadline', 'packet-limit'].includes(
-            event.reason,
-          );
+          // A native deadline or notification cap is a failure, not a user Stop.
+          // Preserve its reason even if an older native build returns AbortError.
+          const faultCode =
+            event.reason === 'native-deadline'
+              ? 'TimeoutError'
+              : event.reason === 'packet-limit'
+                ? 'QuotaExceededError'
+                : event.errorCode;
+          const expectedStop = ['user', 'page-hidden'].includes(event.reason);
           const error =
-            !expectedStop && errorNames.has(event.errorCode)
+            !expectedStop && errorNames.has(faultCode)
               ? new DOMException(
                   'Native Bluetooth inspection ended: ' + event.reason + '.',
-                  event.errorCode,
+                  faultCode,
                 )
               : null;
           close(event.reason || 'unexpected', error);
@@ -115,7 +122,10 @@ export function createNativeBluetooth(plugin) {
             !/^(?:[a-f0-9]{2})*$/i.test(event.hex)
           ) {
             Promise.resolve(plugin.disconnect()).catch(() => {});
-            close('invalid-notification');
+            close(
+              'invalid-notification',
+              new DOMException('Native Bluetooth notification was invalid.', 'NotSupportedError'),
+            );
             return;
           }
           const bytes = Uint8Array.from(event.hex.match(/../g) || [], (pair) => parseInt(pair, 16));

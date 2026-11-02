@@ -63,6 +63,10 @@ export const HUB_FAILURES = Object.freeze({
     'Connection time limit reached',
     'Save your result, then reconnect manually for another session.',
   ],
+  'packet-limit': [
+    'Bluetooth capture safety limit reached',
+    'The inspection stopped after too many notifications. Save the result, then reconnect manually.',
+  ],
   'connection-lost': [
     'Connection lost',
     'Your setup is kept. Check power and range before reconnecting.',
@@ -136,24 +140,22 @@ export const HUB_FAILURES = Object.freeze({
   ],
   busy: ['An operation is still running', 'Wait for it to finish or choose Stop.'],
 });
+const BLUETOOTH_ERROR_CODES = Object.freeze({
+  NotFoundError: 'selection-cancelled',
+  SecurityError: 'permission-denied',
+  NotAllowedError: 'permission-denied',
+  NotSupportedError: 'platform-unsupported',
+  QuotaExceededError: 'packet-limit',
+  TimeoutError: 'operation-timeout',
+  NetworkError: 'connection-lost',
+  InvalidStateError: 'not-ready',
+  AbortError: 'user-stop',
+});
 export function hubFailure(error) {
-  const code = Object.hasOwn(HUB_FAILURES, error?.code)
-    ? error.code
-    : error?.name === 'NotFoundError'
-      ? 'selection-cancelled'
-      : error?.name === 'SecurityError' || error?.name === 'NotAllowedError'
-        ? 'permission-denied'
-        : error?.name === 'NotSupportedError'
-          ? 'platform-unsupported'
-          : error?.name === 'TimeoutError'
-            ? 'operation-timeout'
-            : error?.name === 'NetworkError'
-              ? 'connection-lost'
-              : error?.name === 'InvalidStateError'
-                ? 'not-ready'
-                : error?.name === 'AbortError'
-                  ? 'user-stop'
-                  : 'connection-failed';
+  const mapped = Object.hasOwn(BLUETOOTH_ERROR_CODES, error?.name)
+    ? BLUETOOTH_ERROR_CODES[error.name]
+    : 'connection-failed';
+  const code = Object.hasOwn(HUB_FAILURES, error?.code) ? error.code : mapped;
   return { code, title: HUB_FAILURES[code][0], hint: HUB_FAILURES[code][1] };
 }
 export function localCompanionURL(value) {
