@@ -91,9 +91,9 @@ test('Explore and Saved fit narrow phones, support keyboard focus and remain scr
           ['A', 'BUTTON', 'INPUT', 'SUMMARY'].includes(document.activeElement?.tagName),
         ),
       ).toBe(true);
-      expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(
-        true,
-      );
+      expect(
+        await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1),
+      ).toBe(true);
       expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
       await page.screenshot({
         path: info.outputPath(route + '-' + width + '-after.png'),
