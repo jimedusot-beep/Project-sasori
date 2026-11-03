@@ -4,6 +4,12 @@ on:
     branches-ignore: [main]
   pull_request:
   workflow_call:
+# A PR and its feature-branch push share one verification identity. Keep only
+# the newest commit's expensive browser/firmware checks; main release verification
+# has its own identity and is not displaced by a feature branch.
+concurrency:
+  group: sasori-lab-${{ github.repository }}-${{ github.head_ref || github.ref_name }}
+  cancel-in-progress: true
 permissions:
   contents: read
 jobs:
