@@ -45,6 +45,20 @@ export function connectionResult(record, { running = false, state = 'idle' } = {
       next: 'Results and the next available step appear here. Stop disconnects the toy.',
       channels: [],
     };
+  if (record.outcome === 'inspection-deadline-before-ready')
+    return {
+      title: prefix + 'Inspection deadline reached before ready',
+      detail: 'Service discovery or notification setup did not finish within the session budget.',
+      next: 'This was not a completed inspection. Check the service setup and try another manual read-only session.',
+      channels: [],
+    };
+  if (record.outcome === 'disconnect-failed')
+    return {
+      title: prefix + 'Bluetooth disconnect not confirmed',
+      detail: 'Sasori could not confirm the link closed. Treat this result as incomplete.',
+      next: 'Power off the device and confirm the link has ended. Reload Sasori before manually starting another inspection.',
+      channels: [],
+    };
   if (record.outcome === 'selection-cancelled')
     return {
       title: prefix + 'No device selected',

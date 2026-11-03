@@ -51,6 +51,8 @@ export class BluetoothTransport {
     this.startedAt = 0;
     this.currentStage = null;
     this.connectedAt = null;
+    // An unconfirmed Stop must not permit another live attempt in this page.
+    this.disconnectUncertain = false;
   }
   markStage(stage) {
     this.currentStage = stage;
@@ -79,6 +81,11 @@ export class BluetoothTransport {
   }) {
     if (this.busy || ACTIVE.has(this.state) || this.state === 'disconnecting')
       throw new Error('An inspection is already active.');
+    if (this.disconnectUncertain)
+      throw new DOMException(
+        'The previous Bluetooth disconnect was not confirmed. Power off your toy and reload the page before inspecting again.',
+        'InvalidStateError',
+      );
     service = normalizeUUID(service);
     if (notify) notify = normalizeUUID(notify);
     if (
@@ -169,7 +176,11 @@ export class BluetoothTransport {
       this.server = await withTimeout(attempt, this.operationMs, 'GATT connection');
       this.check(run);
       this.connectedAt = performance.now();
-      this.timer = setTimeout(() => this.disconnect('inspection-complete'), durationMs);
+      this.timer = setTimeout(() => {
+        const reason =
+          this.state === 'inspecting' ? 'inspection-complete' : 'inspection-deadline-before-ready';
+        this.disconnect(reason);
+      }, durationMs);
       this.setState('discovering');
       this.markStage('service-discovery');
       const primary = await withTimeout(
@@ -292,7 +303,29 @@ export class BluetoothTransport {
   disconnect(reason = 'user') {
     if (!ACTIVE.has(this.state) && this.state !== 'error') return;
     ++this.generation;
-    this.bluetooth?.cancelRequest?.();
+    let teardownFailed = false;
+    const reportTeardownFailure = (error) => {
+      teardownFailed = true;
+      this.disconnectUncertain = true;
+      this.emit({
+        type: 'error',
+        error: {
+          ...explainError(error),
+          stage: 'teardown',
+          elapsedMs: Math.max(0, Date.now() - this.startedAt),
+        },
+      });
+      this.emit({
+        type: 'warning',
+        message:
+          'Bluetooth disconnect could not be confirmed. Check the toy and use its power switch if needed. No automatic reconnect will occur.',
+      });
+    };
+    try {
+      this.bluetooth?.cancelRequest?.();
+    } catch (error) {
+      reportTeardownFailure(error);
+    }
     clearTimeout(this.timer);
     this.timer = null;
     this.markStage('teardown');
@@ -303,13 +336,17 @@ export class BluetoothTransport {
     if (this.device && this.onDisconnect)
       this.device.removeEventListener('gattserverdisconnected', this.onDisconnect);
     // Disconnect rather than scheduling GATT writes/stopNotifications against a closing link.
-    if (this.device?.gatt?.connected) this.device.gatt.disconnect();
+    try {
+      if (this.device?.gatt?.connected) this.device.gatt.disconnect();
+    } catch (error) {
+      reportTeardownFailure(error);
+    }
     this.server = null;
     this.device = null;
     this.onDisconnect = null;
     this.busy = false;
     this.setState('disconnected', {
-      reason,
+      reason: teardownFailed ? 'disconnect-failed' : reason,
       gattDurationMs:
         this.connectedAt === null
           ? 0
