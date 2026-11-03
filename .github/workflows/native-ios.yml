@@ -33,6 +33,8 @@ jobs:
         working-directory: native/ios
       - run: npm run build && npm run prepare:ios
         working-directory: native/ios
+      - name: Check simulator installation fail-closed behavior
+        run: python3 -m unittest discover -s native/ios -p 'test_smoke.py' -v
       - name: Build unsigned simulator app
         working-directory: native/ios
         run: xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration Debug -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' -derivedDataPath build CODE_SIGNING_ALLOWED=NO build
