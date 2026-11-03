@@ -21,11 +21,7 @@ import {
 } from './lib/hub-records.js?v=recognition-20261024';
 import { TVRemote } from './lib/tv-remote.js';
 import { TouchReactions, validateReactions } from './lib/reactions.js';
-import {
-  actionReceiptMessage,
-  deviceDetailModel,
-  mountDeviceDetail,
-} from './lib/device-detail.js';
+import { actionReceiptMessage, deviceDetailModel, mountDeviceDetail } from './lib/device-detail.js';
 import { createNativeBluetooth } from './lib/native-bluetooth.js';
 import { hostSupport, hostCanRecognize } from './lib/platform-capabilities.js';
 
