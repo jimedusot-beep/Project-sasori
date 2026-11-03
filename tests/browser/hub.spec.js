@@ -280,7 +280,9 @@ test('hosted TV guidance explains IR hardware and the demo remote and routine ne
   await page.locator('#hub-demo').click();
   await expect(page.locator('#connection-state')).toHaveText('Demo · ready');
   await page.locator('[data-tv-key="select"]').click();
-  await expect(page.locator('#connection-message')).toContainText('Remote button request sent');
+  await expect(page.locator('#connection-message')).toContainText(
+    'No real device was contacted or commanded',
+  );
   await starter(page);
   await page.locator('#run-routine').click();
   await expect(page.locator('#routine-progress')).toContainText('Routine completed: 3 steps');
