@@ -70,3 +70,35 @@ test('Explore keeps legacy research routes reachable without starting hardware',
       .getByRole('link', { name: 'Routines' }),
   ).toHaveAttribute('aria-current', 'page');
 });
+
+test('Explore and Saved fit narrow phones, support keyboard focus and remain screen-reader friendly', async ({
+  page,
+}, info) => {
+  for (const width of [360, 390]) {
+    await page.setViewportSize({ width, height: 800 });
+    for (const route of ['explore.html', 'projects.html']) {
+      await page.goto('/' + route);
+      if (route === 'projects.html') {
+        await expect(page.locator('#project-refresh')).toBeEnabled();
+        await expect(page.locator('#project-summary')).toContainText('sections available');
+      }
+      const firstLink = page.locator('#workspace a').first();
+      await firstLink.focus();
+      await expect(firstLink).toBeFocused();
+      await page.keyboard.press('Tab');
+      expect(
+        await page.evaluate(() =>
+          ['A', 'BUTTON', 'INPUT', 'SUMMARY'].includes(document.activeElement?.tagName),
+        ),
+      ).toBe(true);
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(
+        true,
+      );
+      expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
+      await page.screenshot({
+        path: info.outputPath(route + '-' + width + '-after.png'),
+        fullPage: true,
+      });
+    }
+  }
+});
