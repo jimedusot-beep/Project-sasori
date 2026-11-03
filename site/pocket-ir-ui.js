@@ -7,7 +7,13 @@ import {
   validatePocketProfile,
 } from './lib/pocket-ir-setups.js';
 import { ResearchStore } from './lib/storage.js';
+import { deviceDetailModel, mountDeviceDetail } from './lib/device-detail.js';
 const $ = (id) => document.getElementById(id);
+const updateDeviceDetail = mountDeviceDetail($('pocket-device-detail'));
+const liveSupported =
+  window.isSecureContext &&
+  !globalThis.SasoriNativeBluetooth &&
+  typeof navigator.bluetooth?.requestDevice === 'function';
 const store = await new ResearchStore().open();
 let data = emptyPocketData(),
   writable = true,
@@ -16,7 +22,9 @@ let data = emptyPocketData(),
   session = null,
   preparedId = '',
   attempts = 0,
-  irImport = null;
+  irImport = null,
+  lastAction = '',
+  lastFailed = false;
 try {
   data = await store.getPocketData();
 } catch {
@@ -57,7 +65,7 @@ function render() {
     profile.buttons.every((b) => session.prepared.has(b.slot));
   $('profile').value = data.selected;
   $('profile').disabled = !free;
-  $('connect').disabled = !$('owner-check').checked || connected || !free;
+  $('connect').disabled = !liveSupported || !$('owner-check').checked || connected || !free;
   $('demo').disabled = connected || !free;
   $('disconnect').disabled = !connected && !acting;
   $('prepare').disabled = !allowed || !connected || !free;
@@ -72,6 +80,18 @@ function render() {
     ? 'Remote ready · five slots maximum · one press, one request.'
     : 'Connect, then prepare this remote. Preparation stores buttons without emitting IR.';
   $('attempts').textContent = String(attempts);
+  updateDeviceDetail(
+    deviceDetailModel({
+      deviceName: session?.device?.name || 'Pocket IR bridge',
+      familyName: 'Pocket IR bridge',
+      state: connected ? 'connected' : session?.busy ? 'connecting' : session ? 'disconnected' : 'idle',
+      synthetic: demo,
+      canConnect: liveSupported,
+      nativeUnsupported: !!globalThis.SasoriNativeBluetooth,
+      lastAction,
+      failure: lastFailed,
+    }),
+  );
   $('remote').replaceChildren(
     ...profile.buttons.map((button) => {
       const key = document.createElement('button');
@@ -87,6 +107,7 @@ function render() {
           if (preparedId !== chosen().id || (!demo && !$('owner-check').checked)) return;
           await session.transmit(button.slot);
           attempts++;
+          lastAction = 'key-requested';
           record(button.label + ': bridge reports transmit attempted; physical effect unverified.');
         }),
       );
@@ -99,11 +120,13 @@ function render() {
 async function perform(operation) {
   if (acting) return;
   acting = true;
+  lastFailed = false;
   render();
   try {
     await operation();
     return { ok: true };
   } catch (error) {
+    lastFailed = true;
     $('connection').textContent = error.message || 'Request failed. Reconnect and try again.';
     record($('connection').textContent);
     return { ok: false, message: $('connection').textContent };
@@ -116,6 +139,8 @@ function makeSession(isDemo) {
   demo = isDemo;
   preparedId = '';
   attempts = 0;
+  lastAction = '';
+  lastFailed = false;
   session = new PocketIRSession({
     bluetooth: isDemo ? createPocketDemo() : navigator.bluetooth,
     onState: (message) => {
@@ -132,6 +157,7 @@ function makeSession(isDemo) {
 }
 function stop(reason) {
   preparedId = '';
+  lastFailed = false;
   session?.disconnect(reason);
   irImport?.cancelRead();
   render();
@@ -269,5 +295,8 @@ irImport = setupIRImport({
       session?.clearPrepared();
     }),
 });
+if (!liveSupported)
+  $('connection').textContent =
+    'Live Pocket IR requires a compatible Web Bluetooth browser and a reviewed ESP32 bridge. The offline demo works here.';
 options();
 render();
