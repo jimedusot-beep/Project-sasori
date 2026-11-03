@@ -136,5 +136,8 @@ test('live action receipts never claim independent physical verification', () =>
     actionReceiptMessage({ lastAction: 'greeting-requested' }),
     /needs your observation/,
   );
-  assert.equal(actionReceiptMessage({ lastAction: 'arbitrary-unsafe-code' }), 'No action recorded.');
+  assert.equal(
+    actionReceiptMessage({ lastAction: 'arbitrary-unsafe-code' }),
+    'No action recorded.',
+  );
 });
