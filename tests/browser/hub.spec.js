@@ -139,7 +139,9 @@ test('Elmo hub demo clears credentials, exposes bounded sound and volume control
   await page.locator('#sound-choice').selectOption('444');
   await page.locator('#hub-sound').click();
   await expect(page.locator('#hub-sound')).toBeDisabled();
-  await expect(page.locator('#connection-message')).toContainText('Sound request sent');
+  await expect(page.locator('#connection-message')).toContainText(
+    'No real device was contacted or commanded',
+  );
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(
     true,
