@@ -45,6 +45,17 @@ test('offline phone remote prepares named buttons and sends without radio, netwo
   await expect(page.getByRole('button', { name: 'Power', exact: true })).toBeDisabled();
   await demoReady(page);
   await page.getByRole('button', { name: 'Power', exact: true }).click();
+  const detail = page.getByRole('region', { name: 'Device details' });
+  await expect(detail.locator('[data-detail-field="progress"]')).toHaveText('Demo ready');
+  await expect(detail.locator('[data-detail-field="lastAction"]')).toHaveText(
+    'Remote button request',
+  );
+  await expect(detail.locator('[data-detail-field="outcome"]')).toHaveText(
+    'Demo only · no physical command sent',
+  );
+  await expect(detail.locator('[data-detail-field="physical"]')).toHaveText(
+    'Not independently verified',
+  );
   await expect(page.locator('#attempts')).toHaveText('1');
   await expect(page.locator('#mode')).toContainText('OFFLINE DEMO');
   expect(await page.evaluate(() => window.pocketRadioCalls)).toBe(0);
@@ -71,6 +82,9 @@ test('saved setup reload is inert; profile changes and reconnect require prepara
   await page.locator('#prepare').click();
   await expect(page.locator('#connection')).toContainText('Demo remote ready');
   await page.locator('#disconnect').click();
+  await expect(
+    page.getByRole('region', { name: 'Device details' }).locator('[data-detail-field="progress"]'),
+  ).toHaveText('Disconnected');
   await expect(page.getByRole('button', { name: 'Power', exact: true })).toBeDisabled();
   await page.locator('#demo').click();
   await expect(page.locator('#prepare')).toBeEnabled();
@@ -176,6 +190,16 @@ test('selected real-interface fixture requires current preparation, rejects unso
   expect(
     await page.evaluate(() => window.pocketWrites.filter((w) => w.type === 'sent').length),
   ).toBe(1);
+  const liveDetail = page.getByRole('region', { name: 'Device details' });
+  await expect(liveDetail.locator('[data-detail-field="lastAction"]')).toHaveText(
+    'Remote button request',
+  );
+  await expect(liveDetail.locator('[data-detail-field="outcome"]')).toHaveText(
+    'Command sent · physical effect not confirmed',
+  );
+  await expect(liveDetail.locator('[data-detail-field="physical"]')).toHaveText(
+    'Not independently verified',
+  );
   await page.locator('#owner-check').uncheck();
   await expect(page.locator('#connection')).toContainText('Permission unchecked');
   await expect(page.getByRole('button', { name: 'Mute', exact: true })).toBeDisabled();
@@ -207,5 +231,52 @@ test('remote has accessible contrast, labels, mobile fit, and large buttons', as
   )) {
     expect(box.w).toBeGreaterThanOrEqual(44);
     expect(box.h).toBeGreaterThanOrEqual(44);
+  }
+});
+
+test('Pocket IR native shell never advertises unsupported live bridge controls', async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    window.pocketNativeCalls = 0;
+    window.SasoriNativeBluetooth = {
+      requestDevice() {
+        window.pocketNativeCalls++;
+        throw new Error('Unsupported native Pocket IR must not request a device');
+      },
+    };
+    Object.defineProperty(navigator, 'bluetooth', { configurable: true, value: undefined });
+  });
+  await open(page);
+  await page.locator('#owner-check').check();
+  await expect(page.locator('#connect')).toBeDisabled();
+  const detail = page.getByRole('region', { name: 'Device details' });
+  await expect(detail.locator('[data-detail-field="compatibility"]')).toHaveText(
+    'Not supported by this native adapter',
+  );
+  await expect(page.locator('#demo')).toBeEnabled();
+  await page.locator('#demo').click();
+  await expect(detail.locator('[data-detail-field="progress"]')).toHaveText('Demo ready');
+  expect(await page.evaluate(() => window.pocketNativeCalls)).toBe(0);
+});
+
+test('shared Pocket IR status fits 360px and 390px with accessible Stop', async ({ page }) => {
+  for (const width of [360, 390]) {
+    await page.setViewportSize({ width, height: 800 });
+    await open(page);
+    const detail = page.getByRole('region', { name: 'Device details' });
+    await expect(detail).toBeVisible();
+    await expect(detail.locator('[data-detail-field="progress"]')).toHaveText('Not connected');
+    expect(
+      await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1),
+    ).toBe(true);
+    await page.locator('#demo').click();
+    await expect(detail.locator('[data-detail-field="progress"]')).toHaveText('Demo ready');
+    await expect(page.locator('#disconnect')).toBeEnabled();
+    await page.locator('#disconnect').click();
+    await expect(detail.locator('[data-detail-field="progress"]')).toHaveText('Disconnected');
+    await expect(detail.locator('[data-detail-field="physical"]')).toHaveText(
+      'Not independently verified',
+    );
   }
 });
