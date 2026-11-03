@@ -45,6 +45,17 @@ test('offline phone remote prepares named buttons and sends without radio, netwo
   await expect(page.getByRole('button', { name: 'Power', exact: true })).toBeDisabled();
   await demoReady(page);
   await page.getByRole('button', { name: 'Power', exact: true }).click();
+  const detail = page.getByRole('region', { name: 'Device details' });
+  await expect(detail.locator('[data-detail-field="progress"]')).toHaveText('Demo ready');
+  await expect(detail.locator('[data-detail-field="lastAction"]')).toHaveText(
+    'Remote button request',
+  );
+  await expect(detail.locator('[data-detail-field="outcome"]')).toHaveText(
+    'Demo only · no physical command sent',
+  );
+  await expect(detail.locator('[data-detail-field="physical"]')).toHaveText(
+    'Not independently verified',
+  );
   await expect(page.locator('#attempts')).toHaveText('1');
   await expect(page.locator('#mode')).toContainText('OFFLINE DEMO');
   expect(await page.evaluate(() => window.pocketRadioCalls)).toBe(0);
@@ -71,6 +82,11 @@ test('saved setup reload is inert; profile changes and reconnect require prepara
   await page.locator('#prepare').click();
   await expect(page.locator('#connection')).toContainText('Demo remote ready');
   await page.locator('#disconnect').click();
+  await expect(
+    page
+      .getByRole('region', { name: 'Device details' })
+      .locator('[data-detail-field="progress"]'),
+  ).toHaveText('Disconnected');
   await expect(page.getByRole('button', { name: 'Power', exact: true })).toBeDisabled();
   await page.locator('#demo').click();
   await expect(page.locator('#prepare')).toBeEnabled();
@@ -208,4 +224,30 @@ test('remote has accessible contrast, labels, mobile fit, and large buttons', as
     expect(box.w).toBeGreaterThanOrEqual(44);
     expect(box.h).toBeGreaterThanOrEqual(44);
   }
+});
+
+test('Pocket IR native shell never advertises unsupported live bridge controls', async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    window.pocketNativeCalls = 0;
+    window.SasoriNativeBluetooth = {
+      requestDevice() {
+        window.pocketNativeCalls++;
+        throw new Error('Unsupported native Pocket IR must not request a device');
+      },
+    };
+    Object.defineProperty(navigator, 'bluetooth', { configurable: true, value: undefined });
+  });
+  await open(page);
+  await page.locator('#owner-check').check();
+  await expect(page.locator('#connect')).toBeDisabled();
+  const detail = page.getByRole('region', { name: 'Device details' });
+  await expect(detail.locator('[data-detail-field="compatibility"]')).toHaveText(
+    'Not supported by this native adapter',
+  );
+  await expect(page.locator('#demo')).toBeEnabled();
+  await page.locator('#demo').click();
+  await expect(detail.locator('[data-detail-field="progress"]')).toHaveText('Demo ready');
+  expect(await page.evaluate(() => window.pocketNativeCalls)).toBe(0);
 });
