@@ -249,3 +249,24 @@ test('Pocket IR native shell never advertises unsupported live bridge controls',
   await expect(detail.locator('[data-detail-field="progress"]')).toHaveText('Demo ready');
   expect(await page.evaluate(() => window.pocketNativeCalls)).toBe(0);
 });
+
+test('shared Pocket IR status fits 360px and 390px with accessible Stop', async ({ page }) => {
+  for (const width of [360, 390]) {
+    await page.setViewportSize({ width, height: 800 });
+    await open(page);
+    const detail = page.getByRole('region', { name: 'Device details' });
+    await expect(detail).toBeVisible();
+    await expect(detail.locator('[data-detail-field="progress"]')).toHaveText('Not connected');
+    expect(
+      await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1),
+    ).toBe(true);
+    await page.locator('#demo').click();
+    await expect(detail.locator('[data-detail-field="progress"]')).toHaveText('Demo ready');
+    await expect(page.locator('#disconnect')).toBeEnabled();
+    await page.locator('#disconnect').click();
+    await expect(detail.locator('[data-detail-field="progress"]')).toHaveText('Disconnected');
+    await expect(detail.locator('[data-detail-field="physical"]')).toHaveText(
+      'Not independently verified',
+    );
+  }
+});
