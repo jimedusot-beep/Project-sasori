@@ -9,6 +9,38 @@ def command(*args, timeout=120):
     return subprocess.check_output(args, text=True, timeout=timeout).strip()
 
 
+def install_with_evidence(
+    device, run=command, pause=time.sleep,
+    bundle="org.sasori.laboratory",
+    application="build/Build/Products/Debug-iphonesimulator/App.app",
+):
+    """Require installed bundle evidence, even when simctl install returns success.
+
+    A fresh simulator is created by main(). A timed-out simctl request may still
+    install the app; get_app_container independently checks installation before
+    one bounded retry. Neither a timeout nor a 0 exit code alone is acceptance.
+    """
+    for attempt in range(2):
+        try:
+            run("xcrun", "simctl", "install", device, application, timeout=180)
+        except (subprocess.TimeoutExpired, subprocess.CalledProcessError):
+            print("Simulator install did not confirm; inspecting installed app container.", flush=True)
+        try:
+            installed = run(
+                "xcrun", "simctl", "get_app_container", device, bundle, "app", timeout=30
+            )
+            directory = Path(installed.strip())
+            if directory.suffix == ".app" and directory.is_dir():
+                print("Fresh simulator app container verified.", flush=True)
+                return directory
+        except (subprocess.TimeoutExpired, subprocess.CalledProcessError, OSError):
+            pass
+        if attempt == 0:
+            print("No confirmed app installation; retrying once.", flush=True)
+            pause(5)
+    raise RuntimeError("Simulator app installation unverified after two bounded attempts.")
+
+
 def verify_workspace(device, run=command, pause=time.sleep, screenshot="build/sasori-iphone.png"):
     # simctl sometimes hangs after launching successfully. A timeout is not success:
     # the fresh simulator must still supply the app's readiness marker and a screenshot.
@@ -57,7 +89,7 @@ def main():
         command("xcrun", "simctl", "boot", device)
         command("xcrun", "simctl", "bootstatus", device, "-b", timeout=600)
         print("Installing and launching Sasori.", flush=True)
-        command("xcrun", "simctl", "install", device, "build/Build/Products/Debug-iphonesimulator/App.app")
+        install_with_evidence(device)
         verify_workspace(device)
     finally:
         subprocess.run(["xcrun", "simctl", "shutdown", device], check=False)
