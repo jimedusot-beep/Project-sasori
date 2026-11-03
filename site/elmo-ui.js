@@ -1,6 +1,7 @@
 import { ElmoRemote, createElmoDemo } from './lib/elmo-remote.js';
 import { ELMO_INPUTS } from './lib/elmo-codec.js';
 import {
+  actionReceiptMessage,
   connectionSourceLabel,
   deviceDetailModel,
   mountDeviceDetail,
@@ -162,9 +163,11 @@ function render(next = state) {
             : connected && state.busy
               ? 'Reading the toy’s available state…'
               : connected && report?.helloQueued
-                ? state.synthetic
-                  ? 'Demo greeting request completed. No real toy was commanded.'
-                  : 'Greeting request sent. Listen to your toy; actual playback still needs your observation.'
+                ? actionReceiptMessage({
+                    synthetic: !!state.synthetic,
+                    lastAction: 'greeting-requested',
+                    familyId: 'elmo-l2l/v1',
+                  })
                 : connected
                   ? state.synthetic
                     ? 'The demo handshake is complete. Try the simulated greeting.'
