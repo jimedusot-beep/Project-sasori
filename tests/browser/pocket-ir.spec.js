@@ -190,6 +190,16 @@ test('selected real-interface fixture requires current preparation, rejects unso
   expect(
     await page.evaluate(() => window.pocketWrites.filter((w) => w.type === 'sent').length),
   ).toBe(1);
+  const liveDetail = page.getByRole('region', { name: 'Device details' });
+  await expect(liveDetail.locator('[data-detail-field="lastAction"]')).toHaveText(
+    'Remote button request',
+  );
+  await expect(liveDetail.locator('[data-detail-field="outcome"]')).toHaveText(
+    'Command sent · physical effect not confirmed',
+  );
+  await expect(liveDetail.locator('[data-detail-field="physical"]')).toHaveText(
+    'Not independently verified',
+  );
   await page.locator('#owner-check').uncheck();
   await expect(page.locator('#connection')).toContainText('Permission unchecked');
   await expect(page.getByRole('button', { name: 'Mute', exact: true })).toBeDisabled();
