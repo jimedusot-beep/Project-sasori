@@ -1,0 +1,22 @@
+name: Temporary Pocket Detail Formatter
+on:
+  push:
+    branches: [feat/pocket-ir-shared-device-detail-20261102]
+permissions:
+  contents: read
+jobs:
+  format-preview:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - name: Print exact formatted Pocket UI and test as JSON
+        run: |
+          npx prettier site/pocket-ir-ui.js > /tmp/pocket-ir-ui.js
+          npx prettier tests/browser/pocket-ir.spec.js > /tmp/pocket-ir.spec.js
+          node -e 'const fs=require("node:fs");for(const [tag,p] of [["UI","/tmp/pocket-ir-ui.js"],["TEST","/tmp/pocket-ir.spec.js"]])console.log("SASORI_POCKET_FORMAT_"+tag+"_BEGIN"+JSON.stringify(fs.readFileSync(p,"utf8"))+"SASORI_POCKET_FORMAT_"+tag+"_END")'
