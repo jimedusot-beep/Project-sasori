@@ -24,12 +24,17 @@ test('Hub reuses the selected adapter and explains demo results without Bluetoot
     'Not independently verified',
   );
   await page.locator('#hub-sound').click();
+  await expect(page.locator('#connection-message')).toContainText(
+    'No real device was contacted or commanded',
+  );
   await expect(detail.locator('[data-detail-field="outcome"]')).toHaveText(
     'Demo only · no physical command sent',
   );
   await expect(detail.locator('[data-detail-guidance]')).toContainText(
     'without sending a device command',
   );
+  await expect(page.locator('#failure-help')).toHaveAttribute('role', 'alert');
+  await expect(page.locator('#connection-message')).toHaveAttribute('role', 'status');
   await expect(page.locator('#quick-stop')).toBeVisible();
   await page.screenshot({ path: info.outputPath('device-detail-hub-phone.png'), fullPage: true });
   await page.locator('#quick-stop').click();
@@ -49,6 +54,9 @@ test('Elmo legacy remote shares device details and keeps Stop reachable in demo'
   await expect(page.locator('#elmo-connect')).toHaveText('Demo ready');
   await expect(page.locator('#elmo-sticky-session')).toBeVisible();
   await page.locator('#elmo-greet').click();
+  await expect(page.locator('#elmo-message')).toContainText(
+    'No real toy was commanded',
+  );
   await expect(detail.locator('[data-detail-field="lastAction"]')).toHaveText('Greeting request');
   await expect(detail.locator('[data-detail-field="outcome"]')).toContainText(
     'no physical command sent',
