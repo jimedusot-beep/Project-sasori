@@ -51,6 +51,8 @@ export class BluetoothTransport {
     this.startedAt = 0;
     this.currentStage = null;
     this.connectedAt = null;
+    // An unconfirmed Stop must not permit another live attempt in this page.
+    this.disconnectUncertain = false;
   }
   markStage(stage) {
     this.currentStage = stage;
@@ -79,6 +81,11 @@ export class BluetoothTransport {
   }) {
     if (this.busy || ACTIVE.has(this.state) || this.state === 'disconnecting')
       throw new Error('An inspection is already active.');
+    if (this.disconnectUncertain)
+      throw new DOMException(
+        'The previous Bluetooth disconnect was not confirmed. Power off your toy and reload the page before inspecting again.',
+        'InvalidStateError',
+      );
     service = normalizeUUID(service);
     if (notify) notify = normalizeUUID(notify);
     if (
@@ -299,6 +306,7 @@ export class BluetoothTransport {
     let teardownFailed = false;
     const reportTeardownFailure = (error) => {
       teardownFailed = true;
+      this.disconnectUncertain = true;
       this.emit({
         type: 'error',
         error: {
