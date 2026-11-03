@@ -83,9 +83,7 @@ test('saved setup reload is inert; profile changes and reconnect require prepara
   await expect(page.locator('#connection')).toContainText('Demo remote ready');
   await page.locator('#disconnect').click();
   await expect(
-    page
-      .getByRole('region', { name: 'Device details' })
-      .locator('[data-detail-field="progress"]'),
+    page.getByRole('region', { name: 'Device details' }).locator('[data-detail-field="progress"]'),
   ).toHaveText('Disconnected');
   await expect(page.getByRole('button', { name: 'Power', exact: true })).toBeDisabled();
   await page.locator('#demo').click();
