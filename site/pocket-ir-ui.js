@@ -84,7 +84,13 @@ function render() {
     deviceDetailModel({
       deviceName: session?.device?.name || 'Pocket IR bridge',
       familyName: 'Pocket IR bridge',
-      state: connected ? 'connected' : session?.busy ? 'connecting' : session ? 'disconnected' : 'idle',
+      state: connected
+        ? 'connected'
+        : session?.busy
+          ? 'connecting'
+          : session
+            ? 'disconnected'
+            : 'idle',
       synthetic: demo,
       canConnect: liveSupported,
       nativeUnsupported: !!globalThis.SasoriNativeBluetooth,
