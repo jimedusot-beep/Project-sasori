@@ -22,6 +22,7 @@ test('a failed Stop reports uncertain disconnect rather than confirmed safety', 
   const result = connectionResult(record('disconnect-failed'));
   assert.match(result.title, /disconnect not confirmed/i);
   assert.match(result.detail, /incomplete/);
-  assert.match(result.next, /power switch/);
+  assert.match(result.next, /Power off/);
+  assert.match(result.next, /Reload Sasori/);
   assert.deepEqual(result.channels, []);
 });
