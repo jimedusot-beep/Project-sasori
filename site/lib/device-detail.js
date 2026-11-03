@@ -26,6 +26,26 @@ function actionName(action) {
   return 'No action recorded';
 }
 
+// Keep action receipts consistent across beginner pages. An adapter request never
+// establishes a physical effect, and a demo never sends a hardware command.
+export function actionReceiptMessage({ lastAction = '', synthetic = false, familyId = '' } = {}) {
+  if (actionName(lastAction) === 'No action recorded') return 'No action recorded.';
+  if (synthetic) {
+    if (lastAction === 'greeting-requested')
+      return 'Demo greeting request completed. No real toy was commanded.';
+    return 'Demo action handled. No real device was contacted or commanded.';
+  }
+  if (lastAction === 'sound-requested')
+    return 'Sound request sent. Listen to your toy to check playback; actual playback is not verified.';
+  if (lastAction === 'greeting-requested')
+    return 'Greeting request sent. Listen to your toy; actual playback still needs your observation.';
+  if (lastAction === 'volume-requested')
+    return 'Volume request sent. The reported value is shown separately; a physical change is not verified.';
+  if (familyId === 'tv-local/v1' && lastAction.endsWith('-requested'))
+    return 'Remote button request sent. Check the physical device; its response is not verified.';
+  return 'Action request sent. Results reflect replies or queued requests, not independent physical verification.';
+}
+
 // Shared display contract for the legacy remote and future device views.
 // A selected/saved profile is not evidence of a live Bluetooth connection.
 export function connectionSourceLabel({ state = 'idle', synthetic = false } = {}) {
