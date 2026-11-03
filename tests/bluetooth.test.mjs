@@ -271,6 +271,11 @@ test('a failed GATT disconnect still retires session and reports unconfirmed tea
   );
   assert.equal(f.characteristic.listeners.size, 0);
   assert.equal(f.bluetooth.requests.length, 1);
+  assert.equal(f.transport.disconnectUncertain, true);
+  await assert.rejects(f.transport.connect({ service, notify }), {
+    name: 'InvalidStateError',
+  });
+  assert.equal(f.bluetooth.requests.length, 1);
 });
 
 test('a failed chooser cancellation still clears pending inspection state', async () => {
@@ -289,4 +294,9 @@ test('a failed chooser cancellation still clears pending inspection state', asyn
   assert.equal(f.transport.busy, false);
   assert.equal(f.gatt.connectCount, 0);
   assert.equal(f.events.at(-1).reason, 'disconnect-failed');
+  assert.equal(f.transport.disconnectUncertain, true);
+  await assert.rejects(f.transport.connect({ service, notify }), {
+    name: 'InvalidStateError',
+  });
+  assert.equal(f.gatt.connectCount, 0);
 });
