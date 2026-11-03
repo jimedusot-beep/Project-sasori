@@ -56,7 +56,7 @@ export function connectionResult(record, { running = false, state = 'idle' } = {
     return {
       title: prefix + 'Bluetooth disconnect not confirmed',
       detail: 'Sasori could not confirm the link closed. Treat this result as incomplete.',
-      next: 'Check the device and use its power switch if needed. Start another inspection only after confirming the connection has ended.',
+      next: 'Power off the device and confirm the link has ended. Reload Sasori before manually starting another inspection.',
       channels: [],
     };
   if (record.outcome === 'selection-cancelled')
