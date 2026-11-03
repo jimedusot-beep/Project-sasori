@@ -1,6 +1,10 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { connectionSourceLabel, deviceDetailModel } from '../site/lib/device-detail.js';
+import {
+  actionReceiptMessage,
+  connectionSourceLabel,
+  deviceDetailModel,
+} from '../site/lib/device-detail.js';
 
 test('demo never implies a hardware command or verification', () => {
   const model = deviceDetailModel({
@@ -92,4 +96,45 @@ test('failed sessions never imply a completed command or independent verificatio
     lastAction: 'sound-requested',
   });
   assert.match(demo.outcome, /no physical command sent/);
+});
+
+test('shared action receipts never make a synthetic request sound like a hardware send', () => {
+  for (const lastAction of [
+    'sound-requested',
+    'volume-requested',
+    'effect-requested',
+    'select-requested',
+  ]) {
+    const message = actionReceiptMessage({
+      lastAction,
+      synthetic: true,
+      familyId: 'tv-local/v1',
+    });
+    assert.match(message, /Demo/);
+    assert.match(message, /No real device was contacted or commanded/);
+    assert.doesNotMatch(message, /request sent/i);
+  }
+  assert.match(
+    actionReceiptMessage({ lastAction: 'greeting-requested', synthetic: true }),
+    /No real toy was commanded/,
+  );
+});
+
+test('live action receipts never claim independent physical verification', () => {
+  assert.match(
+    actionReceiptMessage({ lastAction: 'sound-requested' }),
+    /actual playback is not verified/,
+  );
+  assert.match(
+    actionReceiptMessage({
+      lastAction: 'select-requested',
+      familyId: 'tv-local/v1',
+    }),
+    /response is not verified/,
+  );
+  assert.match(
+    actionReceiptMessage({ lastAction: 'greeting-requested' }),
+    /needs your observation/,
+  );
+  assert.equal(actionReceiptMessage({ lastAction: 'arbitrary-unsafe-code' }), 'No action recorded.');
 });
