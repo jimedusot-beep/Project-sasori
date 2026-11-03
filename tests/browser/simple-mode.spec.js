@@ -40,7 +40,9 @@ test('first-use Simple Mode exposes Connect, Demo and Research with a short devi
   await expect(page.locator('#controls-title')).toBeFocused();
   await expect(page.locator('#hub-sound')).toBeEnabled();
   await page.locator('#hub-sound').click();
-  await expect(page.locator('#connection-message')).toContainText('Sound request sent');
+  await expect(page.locator('#connection-message')).toContainText(
+    'No real device was contacted or commanded',
+  );
   await page.locator('#quick-stop').click();
   await expect(page.locator('#sticky-session')).toBeHidden();
   await expect(page.locator('#connection-state')).toHaveText('Not connected');
