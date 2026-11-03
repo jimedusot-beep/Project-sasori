@@ -21,7 +21,11 @@ import {
 } from './lib/hub-records.js?v=recognition-20261024';
 import { TVRemote } from './lib/tv-remote.js';
 import { TouchReactions, validateReactions } from './lib/reactions.js';
-import { deviceDetailModel, mountDeviceDetail } from './lib/device-detail.js';
+import {
+  actionReceiptMessage,
+  deviceDetailModel,
+  mountDeviceDetail,
+} from './lib/device-detail.js';
 import { createNativeBluetooth } from './lib/native-bluetooth.js';
 import { hostSupport, hostCanRecognize } from './lib/platform-capabilities.js';
 
@@ -614,13 +618,11 @@ function render() {
       : connected() && s.busy
         ? 'Waiting for the device’s available state…'
         : connected() && s.lastAction
-          ? s.lastAction === 'sound-requested'
-            ? 'Sound request sent. Listen to your toy to check playback.'
-            : s.lastAction === 'volume-requested'
-              ? 'Volume request sent. The reported value is shown separately.'
-              : s.familyId === 'tv-local/v1' && s.lastAction.endsWith('-requested')
-                ? 'Remote button request sent. Check the physical device.'
-                : 'Action finished. Results reflect replies or queued requests, not independent physical verification.'
+          ? actionReceiptMessage({
+              lastAction: s.lastAction,
+              synthetic: !!s.synthetic,
+              familyId: s.familyId,
+            })
           : connected()
             ? s.passwordSetupOutcome === 'toy-reported-acceptance'
               ? 'New-password acceptance reported. Reconnect afterward with setup unchecked to test retention.'
