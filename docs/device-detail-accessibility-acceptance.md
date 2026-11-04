@@ -1,48 +1,72 @@
-# Issue #52 — device-detail accessibility acceptance worksheet
+# Issue #52: device-detail accessibility acceptance
 
-This worksheet is for the **remaining human checks** before closing [issue #52](https://github.com/jimedusot-beep/Project-sasori/issues/52). It complements the browser regression test `tests/browser/device-detail-mobile-keyboard.spec.js`; it is **not** evidence of a completed physical VoiceOver test.
+This worksheet records the human checks still needed before issue #52 can close.
+The browser regression test is in `tests/browser/device-detail-mobile-keyboard.spec.js`.
+Neither fixture tests nor automated axe scans establish a real iPhone VoiceOver pass.
 
-## Record test environment
+## Test environment
 
 - Tester:
 - Date/time:
 - Entry: Hub / Elmo Remote / Pocket IR / Companion settings
 - Host: hosted Safari / desktop browser / native iPhone shell / local companion
 - Device and iOS/browser/app version:
-- Layout width or Display Zoom/text size:
+- Layout width, Display Zoom and text size:
 - Screen reader and keyboard configuration:
 - Git commit/build tested:
-- Evidence link (optional; no credentials or private BLE payloads):
+- Evidence link (do not publish credentials or private Bluetooth payloads):
 
-Use **Pass**, **Fail**, **Not tested**, or **Not applicable** for each item. Describe observed behavior, not expected behavior.
+## Repeat for each entry and relevant host
 
-## Repeat for each relevant entry and host
+Record **Pass**, **Fail**, **Not tested** or **Not applicable** for each check.
+Include what you actually observed and any reproduction steps.
 
-| Check | Result | Observation / evidence |
-| --- | --- | --- |
-| Initial page loads without a Bluetooth permission prompt | Not tested | |
-| Selected device/family is labeled; unknown model or revision is not presented as physically verified | Not tested | |
-| Compatibility and available live controls reflect this host, including a disabled unsupported path | Not tested | |
-| At 360px, no horizontal overflow or obscured Connect/Demo/Stop | Not tested | |
-| At 390px, no horizontal overflow or obscured Connect/Demo/Stop | Not tested | |
-| With keyboard or external switch, focus order is understandable and focus remains visible | Not tested | |
-| VoiceOver announces Connect, Demo, result/status and Stop with meaningful names | Not tested | |
-| VoiceOver can reach and activate Stop during a demo and when connecting (where available) | Not tested | |
-| Demo remains labeled simulated and never triggers a Bluetooth permission request | Not tested | |
-| Stop cancels current session; re-entry is predictable and does not silently reconnect | Not tested | |
-| Last action/result does not imply physical movement, sound, IR emission or verification | Not tested | |
-| Large Text / Display Zoom does not cover actions or obscure recovery guidance | Not tested | |
+- [ ] Loading the page never requests Bluetooth permission.
+- [ ] The selected family is labeled; unknown models remain unverified.
+- [ ] Live controls reflect this host's supported capabilities.
+- [ ] An unsupported native live control is disabled, while Demo remains usable.
+- [ ] At 360px, Connect, Demo and Stop are visible with no horizontal overflow.
+- [ ] At 390px, Connect, Demo and Stop are visible with no horizontal overflow.
+- [ ] Keyboard or external-switch focus has a logical order and visible indicator.
+- [ ] VoiceOver announces Connect, Demo, progress/status, result and Stop clearly.
+- [ ] VoiceOver reaches and activates Stop in Demo and during connection.
+- [ ] Demo remains simulated and does not request a Bluetooth device.
+- [ ] Stop cancels the session without unexplained reconnects.
+- [ ] Action receipts never claim physical playback, movement or IR emission.
+- [ ] Large Text and Display Zoom preserve actions and recovery guidance.
 
-### Entry-specific checks
+## Entry-specific checks
 
-- **Hub:** Switch to a family unsupported by the current native adapter. Live Connect must remain unavailable while Demo is usable. Confirm that switching families does not turn an earlier saved setup into a live connection.
-- **Elmo Remote:** Verify the sticky Stop remains reachable while the page is scrolled and that Demo's greeting never claims physical playback. Do not use real hardware commands for this worksheet.
-- **Pocket IR:** Require the ownership/permission checkbox for live connections. Stop must remain reachable after Demo/Prepare. A simulator receipt is not physical IR emission.
-- **Companion settings:** This page is **not** a device controller. Hosted settings must remain disabled; credentials can only be configured on the authorized local companion. Never photograph or publish tokens or pairing codes.
+### Hub
 
-## Decision
+Switch to a family unavailable through the current native adapter.
+Live Connect must remain unavailable; Demo must still work.
+Switching families must not turn a saved setup into a live connection.
 
-- **Automated software test**: Record exact PR, commit and browser/CI job after it finishes; do not prefill this as passed.
-- **Human phone accessibility checks**: Mark separately by device, host, and build. A simulator or automated axe result does **not** equal a physical VoiceOver pass.
-- **Issue #52 closure**: Close only when required host-specific negative cases, 360/390px focus/navigation, a real screen-reader session and the four-entry matrix have recorded results. Link failures to a narrow follow-up issue only when the failure is reproduced.
-- **Out of scope**: Real Elmo service UUIDs and five read-only sessions remain under [#4](https://github.com/jimedusot-beep/Project-sasori/issues/4); physical IR bridge identity and emission remain under [#35](https://github.com/jimedusot-beep/Project-sasori/issues/35). Do not publish BLE identifiers, packets, device secrets, or credentials.
+### Elmo Remote
+
+Check sticky Stop while scrolled and while Demo is active.
+Demo greetings must not claim physical playback.
+Do not send actual toy commands for this worksheet.
+
+### Pocket IR
+
+Check the owner-permission gate before live connection.
+After Demo and Prepare, Stop must remain reachable.
+A software receipt is not proof of physical IR emission.
+
+### Companion settings
+
+This page configures credentials; it is not a hardware controller.
+Hosted credential fields must stay disabled.
+Only the authorized local companion can accept credentials.
+Do not include tokens or pairing codes in screenshots or reports.
+
+## Closure decision
+
+- Automated checks: link the exact commit and completed CI result.
+- Human checks: record the phone, host, build and screen-reader results separately.
+- Leave #52 open until narrow-screen focus, host-specific negative cases and
+  the four-entry acceptance matrix are documented.
+- Keep real Elmo inspections in #4 and actual IR bridge verification in #35.
+- Do not publish BLE identifiers, raw packets, passwords or credentials.
