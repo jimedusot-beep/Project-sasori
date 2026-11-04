@@ -89,7 +89,10 @@ test('hosted companion settings stay unavailable and fit 360/390px', async ({ pa
   for (const width of [360, 390]) {
     await page.setViewportSize({ width, height: 800 });
     await page.goto('/companion.html');
-    await expect(page.locator('#setup-message')).toContainText('localhost');
+    await expect(page.locator('#setup-message')).toContainText(/127\.0\.0\.1|localhost/);
+    await expect(page.locator('#setup-message')).toContainText(
+      'Credentials cannot be entered on the hosted site',
+    );
     for (const selector of ['#setup-pin', '#ha-url', '#ha-token', '#ha-remember', '#save-ha']) {
       await expect(page.locator(selector)).toBeDisabled();
     }
