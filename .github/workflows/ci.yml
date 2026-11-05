@@ -59,7 +59,7 @@ jobs:
           /tmp/sasori-desktop-env/bin/python -m unittest discover -s desktop/tests -v
           /tmp/sasori-desktop-env/bin/python desktop/sasori_ble.py --simulate --output /tmp/sasori-desktop-ci.json
           node scripts/verify-desktop-export.mjs /tmp/sasori-desktop-ci.json
-      - run: npm audit --audit-level=high
+      - run: npm audit --audit-level=moderate
       - run: npx playwright install --with-deps chromium webkit
       - run: npm run test:browser
       - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
