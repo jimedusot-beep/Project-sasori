@@ -71,7 +71,6 @@ Do not include tokens or pairing codes in screenshots or reports.
 - Keep real Elmo inspections in #4 and actual IR bridge verification in #35.
 - Do not publish BLE identifiers, raw packets, passwords or credentials.
 
-
 ## Physical iPhone keyboard and Stop
 
 Record the commit, iPhone model, iOS version, browser and orientation. Disconnect any external keyboard. Start the offline demo and focus an editable field on the same screen as Stop. Record the field label and confirm the software keyboard is visible. With the keyboard still open, locate Stop, tap it once and record the resulting demo status. Repeat with VoiceOver and in landscape. Record any scrolling, keyboard dismissal, obscured control or unexpected activation. If the surface has no editable field in this state, record that observation and the route. Leave the result blank until tested on the phone.
