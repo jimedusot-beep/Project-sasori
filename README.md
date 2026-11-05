@@ -121,6 +121,16 @@ The site serves on port 4173. Live Web Bluetooth requires HTTPS or an eligible l
 
 The earlier dossier is preserved as a dated research record. The current source register and protocol document supersede its statements that no published Elmo UUID table has been found.
 
+## Related repositories and offline handoff
+
+Sasori is a standalone device-inspection and control research workspace. These links are related projects, **not** a shared application, automatic data synchronization or permission to send device commands.
+
+- **[REA-Recovery-Kit](https://github.com/jimedusot-beep/REA-Recovery-Kit) (private)** — a separate, owner-run **offline capture-analysis** repository. Public readers or people without access may see a GitHub 404. Sasori's implemented [local file handoff](docs/rea-handoff.md) uses [`scripts/rea-handoff.mjs`](scripts/rea-handoff.mjs) to review session metadata without exposing raw bytes by default, or to export eligible, explicitly approved complete raw live-session notifications as a private JSONL file for REA's `protocol_capture.py`. The file's claimed provenance is not independent hardware verification. This is a **file-format handoff**, not a connected runtime or remote-control interface.
+- **[H.E.R.B.I.E.](https://github.com/jimedusot-beep/Herbie) (private)** — separate robot software. Importing Sasori session envelopes into Herbie is a **future proposal**, described in [interoperability notes](docs/interoperability.md); it is not an implemented live session bridge or command authorization.
+- **[Project McGruber](https://github.com/jimedusot-beep/project-mcgruber)** — independent salvage, parts and invention research. Shared research topics do not mean shared inventory, cross-device backups or synchronized experiments.
+
+Raw captures can contain sensitive device information. Export and process them intentionally on your own computer, keep private outputs outside the repositories, and do not treat imported or simulated sessions as evidence of physical device behavior.
+
 ## My Projects
 
 [Open My Projects](https://jimedusot-beep.github.io/Project-sasori/projects.html) for a searchable overview of saved devices, routines, experiments, Discovery records and trace notebooks. Each workspace keeps its own data format and backup. See the [backup and restore guide](docs/projects.md) and the [Simple Mode release evidence](docs/simple-mode-release-2026-10-25.md). Private automatic sync remains future work.
