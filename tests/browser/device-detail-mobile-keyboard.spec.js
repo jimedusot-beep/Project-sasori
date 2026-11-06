@@ -2,6 +2,12 @@ import { test, expect } from '@playwright/test';
 
 // These are software browser checks, not real VoiceOver or physical hardware evidence.
 // Every demo must stay offline, expose a keyboard-operable Stop, and fit small screens.
+// Emulated landscape coverage is not evidence of real iPhone rotation or VoiceOver.
+const viewports = [
+  { width: 360, height: 800 },
+  { width: 390, height: 800 },
+  { width: 844, height: 390 },
+];
 const surfaces = [
   {
     name: 'Hub',
@@ -25,7 +31,7 @@ const surfaces = [
 ];
 
 for (const surface of surfaces) {
-  test(`${surface.name}: 360/390px demo and Stop work with the keyboard, without radio`, async ({
+  test(`${surface.name}: portrait and landscape demo/Stop work with keyboard and no radio`, async ({
     page,
   }) => {
     await page.addInitScript(() => {
@@ -41,8 +47,8 @@ for (const surface of surfaces) {
       });
     });
 
-    for (const width of [360, 390]) {
-      await page.setViewportSize({ width, height: 800 });
+    for (const viewport of viewports) {
+      await page.setViewportSize(viewport);
       await page.goto(surface.route);
       const detail = page.getByRole('region', { name: 'Device details' });
       await expect(detail).toBeVisible();
@@ -85,9 +91,9 @@ for (const surface of surfaces) {
   });
 }
 
-test('hosted companion settings stay unavailable and fit 360/390px', async ({ page }) => {
-  for (const width of [360, 390]) {
-    await page.setViewportSize({ width, height: 800 });
+test('hosted companion settings stay unavailable and fit portrait/landscape', async ({ page }) => {
+  for (const viewport of viewports) {
+    await page.setViewportSize(viewport);
     await page.goto('/companion.html');
     await expect(page.locator('#setup-message')).toContainText(/127\.0\.0\.1|localhost/);
     await expect(page.locator('#setup-message')).toContainText(
