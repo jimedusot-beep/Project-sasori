@@ -49,6 +49,8 @@ for (const surface of surfaces) {
 
     for (const viewport of viewports) {
       await page.setViewportSize(viewport);
+      // Exercise both native keyboard activation keys, not just Enter.
+      const activateKey = viewport.width === 390 ? 'Space' : 'Enter';
       await page.goto(surface.route);
       const detail = page.getByRole('region', { name: 'Device details' });
       await expect(detail).toBeVisible();
@@ -64,12 +66,12 @@ for (const surface of surfaces) {
       await expect(demo).toBeEnabled();
       await demo.focus();
       await expect(demo).toBeFocused();
-      await page.keyboard.press('Enter');
+      await page.keyboard.press(activateKey);
       if (surface.prepare) {
         const prepare = page.locator(surface.prepare);
         await expect(prepare).toBeEnabled();
         await prepare.focus();
-        await page.keyboard.press('Enter');
+        await page.keyboard.press(activateKey);
       }
       await expect(detail.locator('[data-detail-field="progress"]')).toHaveText('Demo ready');
 
@@ -78,7 +80,7 @@ for (const surface of surfaces) {
       await expect(stop).toBeEnabled();
       await stop.focus();
       await expect(stop).toBeFocused();
-      await page.keyboard.press('Enter');
+      await page.keyboard.press(activateKey);
       await expect(detail.locator('[data-detail-field="progress"]')).not.toHaveText('Demo ready');
       await expect(detail.locator('[data-detail-field="physical"]')).toHaveText(
         'Not independently verified',
